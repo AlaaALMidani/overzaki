@@ -1,6 +1,6 @@
+/* eslint-disable prettier/prettier */
 import { Controller, Get } from '@nestjs/common';
-import { AppService } from './services/app.service';
-
+import { AppService } from './app.service';
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
@@ -9,4 +9,5 @@ export class AppController {
   getHello(): string {
     return this.appService.getHello();
   }
+  
 }
