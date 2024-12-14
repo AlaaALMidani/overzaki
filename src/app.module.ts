@@ -4,8 +4,8 @@ import { AppService } from './app.service';
 import { GoogleCampaignModule } from './google-campaign/google-campaign.module';
 
 @Module({
-  imports: [],
-  controllers: [AppController, GoogleCampaignModule],
+  imports: [GoogleCampaignModule],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}

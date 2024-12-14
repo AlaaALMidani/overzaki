@@ -17,9 +17,9 @@ export class GoogleCampaignService {
       const tokenResponse = await axios.post(
         'https://oauth2.googleapis.com/token',
         {
-          client_id: process.env.CLIENT_ID,
-          client_secret: process.env.CLIENT_SECRET,
-          refresh_token: process.env.REFRESH_TOKEN,
+          client_id: process.env.GOOGLE_ADS_CLIENT_ID,
+          client_secret: process.env.GOOGLE_ADS_CLIENT_SECRET,
+          refresh_token: process.env.GOOGLE_ADS_REFRESH_TOKEN,
           grant_type: 'refresh_token',
         },
       );
@@ -44,15 +44,15 @@ export class GoogleCampaignService {
 
       // Step 3: Send Request to Google Ads API
       const apiResponse = await axios.post(
-        `https://googleads.googleapis.com/v14/customers/${process.env.CUSTOMER_ID}/campaigns:mutate`,
+        `https://googleads.googleapis.com/v14/customers/${process.env.GOOGLE_ADS_CUSTOMER_ID}/campaigns:mutate`,
         {
           operations: [{ create: campaignPayload }],
         },
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
-            'developer-token': process.env.DEVELOPER_TOKEN,
-            'login-customer-id': process.env.LOGIN_CUSTOMER_ID,
+            'developer-token': process.env.GOOGLE_ADS_DEVELOPER_TOKEN,
+            'login-customer-id': process.env.GOOGLE_ADS_LOGIN_CUSTOMER_ID,
           },
         },
       );
