@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { GoogleCampaignService } from './google-campaign.service';
 
-@Controller('campaign')
+@Controller('google-campaign')
 export class GoogleCampaignController {
   constructor(private readonly campaignService: GoogleCampaignService) {}
 
