@@ -17,27 +17,41 @@ export class TiktokCampaignService {
   // Generate TikTok OAuth URL
   getAuthUrl() {
     const state = Math.random().toString(36).substring(2, 15);
-    return `https://ads.tiktok.com/marketing_api/auth?app_id=${process.env.TIKTOK_CLIENT_ID}&redirect_uri=${encodeURIComponent(
+    return `https://business-api.tiktok.com/portal/auth?app_id=${process.env.TIKTOK_CLIENT_ID}&state=${state}&redirect_uri=${encodeURIComponent(
       process.env.TIKTOK_REDIRECT_URI,
-    )}&state=${state}&scope=advertiser_management`;
+    )}&scope=advertiser_management`;
   }
-
+  
+  
   // Exchange Authorization Code for Access Token
-  async getAccessToken(code: string) {
+  async getAccessToken(authCode: string, version: string = 'v1.3') {
+    const endpoint = `${this.getBaseUrl()}${version}/oauth2/access_token/`;
+  
+    const payload = {
+      app_id: process.env.TIKTOK_CLIENT_ID,
+      secret: process.env.TIKTOK_CLIENT_SECRET,
+      auth_code: authCode,
+      grant_type: 'authorization_code',
+    };
+  
     try {
-      const response = await axios.post(`${this.getBaseUrl()}v1.2/oauth2/access_token/`, {
-        app_id: process.env.TIKTOK_CLIENT_ID,
-        secret: process.env.TIKTOK_CLIENT_SECRET,
-        auth_code: code,
-        grant_type: 'authorization_code',
+      const response = await axios.post(endpoint, payload, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
-
+  
+      this.logger.log(`Access token response: ${JSON.stringify(response.data)}`);
       return response.data.data;
     } catch (error) {
-      this.logger.error('Error exchanging authorization code for access token', error.response?.data || error.message);
-      throw new Error(error.response?.data?.message || 'Failed to retrieve access token');
+      const errorDetails = error.response?.data || error.message;
+      this.logger.error(`Error retrieving access token: ${JSON.stringify(errorDetails)}`);
+      throw new Error(errorDetails?.message || 'Failed to retrieve access token');
     }
   }
+  
+  
+  
   
   // Fetch User Videos from TikTok
   async fetchUserVideos(
@@ -146,39 +160,41 @@ export class TiktokCampaignService {
     }
   }
   // Create Feed Ad
-  async createFeedAd(
-    accessToken: string,
-    advertiserId: string,
-    campaignId: string,
-    adDetails: { ad_name: string; video_id: string },
-  ) {
-    try {
-      const payload = {
-        advertiser_id: advertiserId,
-        adgroup_id: campaignId,
-        ad_name: adDetails.ad_name,
-        promotion_type: 'CUSTOM_CREATIVE',
-        creative: {
-          video_id: adDetails.video_id,
-          call_to_action: 'LEARN_MORE',
-        },
-      };
-      const response = await axios.post(
-        `${this.getBaseUrl()}v1.2/ad/create/`,
-        payload,
-        {
-          headers: {
-            'Access-Token': accessToken,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
+ async createFeedAd(
+  accessToken: string,
+  advertiserId: string,
+  campaignId: string,
+  adDetails: { ad_name: string; video_id: string },
+) {
+  try {
+    const payload = {
+      advertiser_id: advertiserId,
+      adgroup_id: campaignId,
+      ad_name: adDetails.ad_name,
+      promotion_type: 'CUSTOM_CREATIVE',
+      creative: {
+        video_id: adDetails.video_id,
+        call_to_action: 'LEARN_MORE',
+      },
+    };
 
-      return response.data;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || 'Feed Ad creation failed');
-    }
+    const response = await axios.post(
+      `${this.getBaseUrl()}v1.2/ad/create/`,
+      payload,
+      {
+        headers: {
+          'Access-Token': accessToken,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    return response.data;
+  } catch (error) {
+    throw new Error(error.response?.data?.message || 'Feed Ad creation failed');
   }
+}
+
   // Create Spark Ad
   async createSparkAd(
     accessToken: string,
