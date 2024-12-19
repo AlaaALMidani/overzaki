@@ -39,18 +39,49 @@ export class TiktokCampaignService {
     }
   }
   
+  // Fetch User Videos from TikTok
+  async fetchUserVideos(
+    accessToken: string,
+    businessId: string,
+    filters: string | null,
+    fields: string[],
+  ): Promise<any[]> {
+    try {
+      const response = await axios.get(
+        `${this.getBaseUrl()}v1.3/business/video/list/`,
+        {
+          headers: {
+            'Access-Token': accessToken,
+          },
+          params: {
+            business_id: businessId,
+            filters,
+            fields: JSON.stringify(fields),
+          },
+        },
+      );
+
+      this.logger.log(`Videos fetched successfully: ${JSON.stringify(response.data)}`);
+      return response.data?.data || [];
+    } catch (error) {
+      this.logger.error(`Error fetching user videos: ${error.response?.data || error.message}`);
+      throw new Error(error.response?.data?.message || 'Failed to fetch user videos');
+    }
+  }
+  // Upload Video to TikTok
   async uploadVideoToTikTok(file: Express.Multer.File, accessToken: string, advertiserId: string): Promise<string> {
     if (!file?.path) {
       throw new Error('Invalid file or file path not provided');
     }
+
     const videoPath = file.path;
     const videoSignature = crypto.createHash('sha256').update(fs.readFileSync(videoPath)).digest('hex');
     const formData = new FormData();
     formData.append('advertiser_id', advertiserId);
     formData.append('video_file', fs.createReadStream(videoPath));
     formData.append('video_signature', videoSignature);
+
     try {
-      this.logger.log(`Uploading video with signature: ${videoSignature}`);
       const response = await axios.post(
         `${this.getBaseUrl()}v1.2/file/video/ad/upload/`,
         formData,
@@ -61,16 +92,17 @@ export class TiktokCampaignService {
           },
         },
       );
-      this.logger.log(`TikTok video upload response: ${JSON.stringify(response.data)}`);
-      const { data } = response.data;
-      if (!data?.video_id) {
+
+      const videoId = response.data?.data?.video_id;
+      if (!videoId) {
         throw new Error('Video upload succeeded, but no video_id returned.');
       }
-      return data.video_id;
+      return videoId;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
-      this.logger.error(`Video upload failed: ${JSON.stringify(errorDetails)}`);
       throw new Error(errorDetails?.message || 'Video upload failed');
+    } finally {
+      fs.unlinkSync(videoPath);
     }
   }
 
@@ -98,9 +130,6 @@ export class TiktokCampaignService {
         schedule_type: 'SCHEDULE_FROM_NOW',
         schedule_start_time: campaignDetails.scheduleStartTime,
       };
-
-      this.logger.log(`Creating Campaign in TikTok - Payload: ${JSON.stringify(payload)}`);
-
       const response = await axios.post(
         `${this.getBaseUrl()}v1.2/campaign/create/`,
         payload,
@@ -111,14 +140,11 @@ export class TiktokCampaignService {
           },
         },
       );
-
       return response.data;
     } catch (error) {
-      this.logger.error('Error creating campaign', error.response?.data || error.message);
       throw new Error(error.response?.data?.message || 'Campaign creation failed');
     }
   }
-
   // Create Feed Ad
   async createFeedAd(
     accessToken: string,
@@ -137,9 +163,6 @@ export class TiktokCampaignService {
           call_to_action: 'LEARN_MORE',
         },
       };
-
-      this.logger.log(`Feed Ad Payload: ${JSON.stringify(payload)}`);
-
       const response = await axios.post(
         `${this.getBaseUrl()}v1.2/ad/create/`,
         payload,
@@ -153,11 +176,9 @@ export class TiktokCampaignService {
 
       return response.data;
     } catch (error) {
-      this.logger.error('Error creating Feed Ad', error.response?.data || error.message);
       throw new Error(error.response?.data?.message || 'Feed Ad creation failed');
     }
   }
-
   // Create Spark Ad
   async createSparkAd(
     accessToken: string,
@@ -173,9 +194,6 @@ export class TiktokCampaignService {
         promotion_type: 'POST',
         post_id: adDetails.post_id,
       };
-
-      this.logger.log(`Spark Ad Payload: ${JSON.stringify(payload)}`);
-
       const response = await axios.post(
         `${this.getBaseUrl()}v1.2/ad/create/`,
         payload,
@@ -189,8 +207,50 @@ export class TiktokCampaignService {
 
       return response.data;
     } catch (error) {
-      this.logger.error('Error creating Spark Ad', error.response?.data || error.message);
       throw new Error(error.response?.data?.message || 'Spark Ad creation failed');
     }
   }
+  async getCampaignReport(
+    accessToken: string,
+    advertiserId: string,
+    campaignId: string,
+    startDate: string,
+    endDate: string,
+  ): Promise<any> {
+    try {
+      const payload = {
+        advertiser_id: advertiserId,
+        dimensions: ["campaign_id"],
+        metrics: ["spend", "impressions", "clicks", "ctr", "cpc", "cpm"],
+        filters: [
+          {
+            field: "campaign_id",
+            operator: "EQUALS",
+            value: campaignId,
+          },
+        ],
+        start_date: startDate,
+        end_date: endDate,
+        page: 1,
+        page_size: 20,
+      };
+
+      const response = await axios.post(
+        `${this.getBaseUrl()}v1.2/report/integrated/get/`,
+        payload,
+        {
+          headers: {
+            "Access-Token": accessToken,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      return response.data;
+    } catch (error) {
+      console.error("Error fetching campaign report:", error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || "Failed to fetch campaign report.");
+    }
+  }
+
 }

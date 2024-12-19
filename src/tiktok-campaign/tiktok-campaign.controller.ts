@@ -8,15 +8,14 @@ import {
   HttpException,
   HttpStatus,
   Req,
-  Logger ,
+  Logger,
 } from '@nestjs/common';
 import { TiktokCampaignService } from './tiktok-campaign.service';
 
 @Controller('tiktok-campaign')
 export class TiktokCampaignController {
-
-  private readonly logger = new Logger(TiktokCampaignController.name); // Initialize Logger
-  constructor(private readonly campaignService: TiktokCampaignService) {}
+  private readonly logger = new Logger(TiktokCampaignController.name);
+  constructor(private readonly campaignService: TiktokCampaignService) { }
 
   @Get('login')
   @Redirect()
@@ -42,31 +41,71 @@ export class TiktokCampaignController {
     }
   }
 
+
+  @Get('fetch-videos')
+  async fetchVideos(
+    @Query('accessToken') accessToken: string,
+    @Query('business_id') businessId: string,
+    @Query('filters') filters: string | null,
+    @Query('fields') fields: string,
+  ) {
+    if (!accessToken || !businessId) {
+      throw new HttpException(
+        'Access token and business_id are required',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    try {
+      const parsedFields = JSON.parse(fields || '[]');
+      const videos = await this.campaignService.fetchUserVideos(accessToken, businessId, filters, parsedFields);
+      return {
+        message: 'Videos fetched successfully',
+        data: videos,
+      };
+    } catch (error) {
+      this.logger.error(`Error fetching videos: ${error.message}`);
+      throw new HttpException(
+        error.message || 'Failed to fetch user videos',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   @Post('create-campaign')
   async createCampaign(@Body() body: any, @Req() req: any) {
-    const { accessToken, advertiser_id, adType, campaignDetails, adDetails } = body;
-  
+    const { accessToken, advertiser_id, adType, campaignDetails, adDetails, video_id } = body;
+
     if (!accessToken || !advertiser_id || !adType) {
       throw new HttpException('Access token, advertiser_id, and adType are required', HttpStatus.BAD_REQUEST);
     }
-  
-    let parsedCampaignDetails, parsedAdDetails, videoId = null;
-  
+
+    let parsedCampaignDetails, parsedAdDetails, uploadedVideoId = null;
+
     try {
       parsedCampaignDetails = this.parseJson(campaignDetails, 'campaignDetails');
       parsedAdDetails = this.parseJson(adDetails, 'adDetails');
-  
+
+      // Handle video selection or upload
       if (['Spark Ad', 'Feed Ad'].includes(adType)) {
-        if (!req.file) {
-          throw new HttpException('Video file is required for Spark and Feed Ads', HttpStatus.BAD_REQUEST);
+        if (video_id) {
+          // Use an existing video
+          uploadedVideoId = video_id;
+        } else if (req.file) {
+          // Upload a new video
+          uploadedVideoId = await this.campaignService.uploadVideoToTikTok(req.file, accessToken, advertiser_id);
+        } else {
+          throw new HttpException(
+            'Either video_id (for existing videos) or a video file (for uploads) is required for Spark and Feed Ads',
+            HttpStatus.BAD_REQUEST,
+          );
         }
-        videoId = await this.campaignService.uploadVideoToTikTok(req.file, accessToken, advertiser_id);
-        this.logger.log(`Video uploaded successfully. Video ID: ${videoId}`);
       }
-  
+
+      // Create campaign
       const campaignResult = await this.campaignService.createCampaign(accessToken, advertiser_id, parsedCampaignDetails);
       const campaignId = campaignResult.data.campaign_id;
-  
+
       let adResult;
       if (adType === 'Spark Ad') {
         if (!parsedAdDetails.post_id) {
@@ -77,31 +116,54 @@ export class TiktokCampaignController {
           post_id: parsedAdDetails.post_id,
         });
       } else if (adType === 'Feed Ad') {
-        if (!videoId) {
-          throw new HttpException('Video upload failed. Cannot create Feed Ad.', HttpStatus.INTERNAL_SERVER_ERROR);
+        if (!uploadedVideoId) {
+          throw new HttpException('Video selection or upload failed. Cannot create Feed Ad.', HttpStatus.INTERNAL_SERVER_ERROR);
         }
         adResult = await this.campaignService.createFeedAd(accessToken, advertiser_id, campaignId, {
           ad_name: parsedAdDetails.ad_name,
-          video_id: videoId,
+          video_id: uploadedVideoId,
         });
       } else {
         throw new HttpException('Invalid ad type', HttpStatus.BAD_REQUEST);
       }
-  
+
       return { message: 'Campaign and Ad created successfully', data: { campaignResult, adResult } };
     } catch (error) {
-      this.logger.error(`Error creating campaign or ad: ${error.message}`);
       throw new HttpException(error.message || 'Campaign creation failed', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-  
-  parseJson(json: any, field: string) {
+
+  private parseJson(json: any, field: string) {
     try {
       return typeof json === 'string' ? JSON.parse(json) : json;
     } catch (error) {
-      this.logger.error(`Invalid JSON for ${field}: ${json}`);
       throw new HttpException(`Invalid JSON format for ${field}`, HttpStatus.BAD_REQUEST);
     }
   }
-  
+
+  @Post('campaign-report')
+  async getCampaignReport(@Body() body: any) {
+    const { accessToken, advertiser_id, campaign_id, start_date, end_date } = body;
+
+    if (!accessToken || !advertiser_id || !campaign_id || !start_date || !end_date) {
+      throw new HttpException('Missing required fields', HttpStatus.BAD_REQUEST);
+    }
+    try {
+      const report = await this.campaignService.getCampaignReport(
+        accessToken,
+        advertiser_id,
+        campaign_id,
+        start_date,
+        end_date,
+      );
+
+      return {
+        message: 'Campaign report fetched successfully',
+        data: report,
+      };
+    } catch (error) {
+      throw new HttpException(error.message || 'Failed to fetch campaign report', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
 }
