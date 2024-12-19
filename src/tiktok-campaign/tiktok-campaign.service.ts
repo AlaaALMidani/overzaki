@@ -1,9 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { Multer } from 'multer';
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import * as fs from 'fs';
 import * as FormData from 'form-data';
 import * as crypto from 'crypto';
-import { Multer } from 'multer';
 @Injectable()
 export class TiktokCampaignService {
   private readonly logger = new Logger(TiktokCampaignService.name);
@@ -48,67 +49,67 @@ export class TiktokCampaignService {
     }
   }
 
-  async uploadVideoToTikTok(
-    file: Multer.File,
-    accessToken: string,
-    advertiserId: string,
-  ): Promise<string> {
-    if (!file?.path) {
-      throw new Error('Invalid file or file path not provided');
-    }
+  // async uploadVideoToTikTok(
+  //   file: Multer.File,
+  //   accessToken: string,
+  //   advertiserId: string,
+  // ): Promise<string> {
+  //   if (!file?.path) {
+  //     throw new Error('Invalid file or file path not provided');
+  //   }
 
-    const videoPath = file.path;
-    const videoSignature = crypto
-      .createHash('sha256')
-      .update(fs.readFileSync(videoPath))
-      .digest('hex');
+  //   const videoPath = file.path;
+  //   const videoSignature = crypto
+  //     .createHash('sha256')
+  //     .update(fs.readFileSync(videoPath))
+  //     .digest('hex');
 
-    const formData = new FormData();
-    formData.append('advertiser_id', advertiserId);
-    formData.append('video_file', fs.createReadStream(videoPath));
-    formData.append('video_signature', videoSignature);
+  //   const formData = new FormData();
+  //   formData.append('advertiser_id', advertiserId);
+  //   formData.append('video_file', fs.createReadStream(videoPath));
+  //   formData.append('video_signature', videoSignature);
 
-    try {
-      this.logger.log(`Uploading video with signature: ${videoSignature}`);
+  //   try {
+  //     this.logger.log(`Uploading video with signature: ${videoSignature}`);
 
-      // Ensure that the base URL is correct and the endpoint is correct
-      const uploadUrl = `${this.getBaseUrl()}v1.2/file/video/ad/upload/`;
+  //     // Ensure that the base URL is correct and the endpoint is correct
+  //     const uploadUrl = `${this.getBaseUrl()}v1.2/file/video/ad/upload/`;
 
-      // Upload the video to TikTok
-      const response = await axios.post(uploadUrl, formData, {
-        headers: {
-          'Access-Token': accessToken,
-          ...formData.getHeaders(),
-        },
-      });
+  //     // Upload the video to TikTok
+  //     const response = await axios.post(uploadUrl, formData, {
+  //       headers: {
+  //         'Access-Token': accessToken,
+  //         ...formData.getHeaders(),
+  //       },
+  //     });
 
-      // Log the full response for debugging purposes
-      this.logger.log(
-        `TikTok video upload response: ${JSON.stringify(response.data)}`,
-      );
+  //     // Log the full response for debugging purposes
+  //     this.logger.log(
+  //       `TikTok video upload response: ${JSON.stringify(response.data)}`,
+  //     );
 
-      // Check the response and ensure we have the expected data
-      const { data } = response.data;
-      if (!data?.video_id) {
-        throw new Error('Video upload succeeded, but no video_id returned.');
-      }
+  //     // Check the response and ensure we have the expected data
+  //     const { data } = response.data;
+  //     if (!data?.video_id) {
+  //       throw new Error('Video upload succeeded, but no video_id returned.');
+  //     }
 
-      // Return the video_id
-      return data.video_id;
-    } catch (error) {
-      // Log detailed error information
-      const errorDetails = error.response?.data || error.message;
-      this.logger.error(`Video upload failed: ${JSON.stringify(errorDetails)}`);
+  //     // Return the video_id
+  //     return data.video_id;
+  //   } catch (error) {
+  //     // Log detailed error information
+  //     const errorDetails = error.response?.data || error.message;
+  //     this.logger.error(`Video upload failed: ${JSON.stringify(errorDetails)}`);
 
-      // If there's an error message, throw it back
-      if (errorDetails?.message) {
-        throw new Error(errorDetails.message);
-      }
+  //     // If there's an error message, throw it back
+  //     if (errorDetails?.message) {
+  //       throw new Error(errorDetails.message);
+  //     }
 
-      // If no message, throw a generic error
-      throw new Error('Video upload failed for an unknown reason');
-    }
-  }
+  //     // If no message, throw a generic error
+  //     throw new Error('Video upload failed for an unknown reason');
+  //   }
+  // }
 
   // Create Campaign
   async createCampaign(

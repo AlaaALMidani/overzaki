@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Controller,
   Get,
@@ -47,100 +48,100 @@ export class TiktokCampaignController {
     }
   }
 
-  @Post('create-campaign')
-  async createCampaign(@Body() body: any, @Req() req: any) {
-    const { accessToken, advertiser_id, adType, campaignDetails, adDetails } =
-      body;
+  // @Post('create-campaign')
+  // async createCampaign(@Body() body: any, @Req() req: any) {
+  //   const { accessToken, advertiser_id, adType, campaignDetails, adDetails } =
+  //     body;
 
-    if (!accessToken || !advertiser_id || !adType) {
-      throw new HttpException(
-        'Access token, advertiser_id, and adType are required',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+  //   if (!accessToken || !advertiser_id || !adType) {
+  //     throw new HttpException(
+  //       'Access token, advertiser_id, and adType are required',
+  //       HttpStatus.BAD_REQUEST,
+  //     );
+  //   }
 
-    let parsedCampaignDetails,
-      parsedAdDetails,
-      videoId = null;
+  //   let parsedCampaignDetails,
+  //     parsedAdDetails,
+  //     videoId = null;
 
-    try {
-      parsedCampaignDetails = this.parseJson(
-        campaignDetails,
-        'campaignDetails',
-      );
-      parsedAdDetails = this.parseJson(adDetails, 'adDetails');
+  //   try {
+  //     parsedCampaignDetails = this.parseJson(
+  //       campaignDetails,
+  //       'campaignDetails',
+  //     );
+  //     parsedAdDetails = this.parseJson(adDetails, 'adDetails');
 
-      if (['Spark Ad', 'Feed Ad'].includes(adType)) {
-        if (!req.file) {
-          throw new HttpException(
-            'Video file is required for Spark and Feed Ads',
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-        videoId = await this.campaignService.uploadVideoToTikTok(
-          req.file,
-          accessToken,
-          advertiser_id,
-        );
-        this.logger.log(`Video uploaded successfully. Video ID: ${videoId}`);
-      }
+  //     if (['Spark Ad', 'Feed Ad'].includes(adType)) {
+  //       if (!req.file) {
+  //         throw new HttpException(
+  //           'Video file is required for Spark and Feed Ads',
+  //           HttpStatus.BAD_REQUEST,
+  //         );
+  //       }
+  //       videoId = await this.campaignService.uploadVideoToTikTok(
+  //         req.file,
+  //         accessToken,
+  //         advertiser_id,
+  //       );
+  //       this.logger.log(`Video uploaded successfully. Video ID: ${videoId}`);
+  //     }
 
-      const campaignResult = await this.campaignService.createCampaign(
-        accessToken,
-        advertiser_id,
-        parsedCampaignDetails,
-      );
-      const campaignId = campaignResult.data.campaign_id;
+  //     const campaignResult = await this.campaignService.createCampaign(
+  //       accessToken,
+  //       advertiser_id,
+  //       parsedCampaignDetails,
+  //     );
+  //     const campaignId = campaignResult.data.campaign_id;
 
-      let adResult;
-      if (adType === 'Spark Ad') {
-        if (!parsedAdDetails.post_id) {
-          throw new HttpException(
-            'post_id is required for Spark Ads',
-            HttpStatus.BAD_REQUEST,
-          );
-        }
-        adResult = await this.campaignService.createSparkAd(
-          accessToken,
-          advertiser_id,
-          campaignId,
-          {
-            ad_name: parsedAdDetails.ad_name,
-            post_id: parsedAdDetails.post_id,
-          },
-        );
-      } else if (adType === 'Feed Ad') {
-        if (!videoId) {
-          throw new HttpException(
-            'Video upload failed. Cannot create Feed Ad.',
-            HttpStatus.INTERNAL_SERVER_ERROR,
-          );
-        }
-        adResult = await this.campaignService.createFeedAd(
-          accessToken,
-          advertiser_id,
-          campaignId,
-          {
-            ad_name: parsedAdDetails.ad_name,
-            video_id: videoId,
-          },
-        );
-      } else {
-        throw new HttpException('Invalid ad type', HttpStatus.BAD_REQUEST);
-      }
+  //     let adResult;
+  //     if (adType === 'Spark Ad') {
+  //       if (!parsedAdDetails.post_id) {
+  //         throw new HttpException(
+  //           'post_id is required for Spark Ads',
+  //           HttpStatus.BAD_REQUEST,
+  //         );
+  //       }
+  //       adResult = await this.campaignService.createSparkAd(
+  //         accessToken,
+  //         advertiser_id,
+  //         campaignId,
+  //         {
+  //           ad_name: parsedAdDetails.ad_name,
+  //           post_id: parsedAdDetails.post_id,
+  //         },
+  //       );
+  //     } else if (adType === 'Feed Ad') {
+  //       if (!videoId) {
+  //         throw new HttpException(
+  //           'Video upload failed. Cannot create Feed Ad.',
+  //           HttpStatus.INTERNAL_SERVER_ERROR,
+  //         );
+  //       }
+  //       adResult = await this.campaignService.createFeedAd(
+  //         accessToken,
+  //         advertiser_id,
+  //         campaignId,
+  //         {
+  //           ad_name: parsedAdDetails.ad_name,
+  //           video_id: videoId,
+  //         },
+  //       );
+  //     } else {
+  //       throw new HttpException('Invalid ad type', HttpStatus.BAD_REQUEST);
+  //     }
 
-      return {
-        message: 'Campaign and Ad created successfully',
-        data: { campaignResult, adResult },
-      };
-    } catch (error) {
-      this.logger.error(`Error creating campaign or ad: ${error.message}`);
-      throw new HttpException(
-        error.message || 'Campaign creation failed',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
+  //     return {
+  //       message: 'Campaign and Ad created successfully',
+  //       data: { campaignResult, adResult },
+  //     };
+  //   } catch (error) {
+  //     this.logger.error(`Error creating campaign or ad: ${error.message}`);
+  //     throw new HttpException(
+  //       error.message || 'Campaign creation failed',
+  //       HttpStatus.INTERNAL_SERVER_ERROR,
+  //     );
+  //   }
+  // }
 
   parseJson(json: any, field: string) {
     try {
