@@ -11,7 +11,7 @@ import { GoogleCampaignService } from './google-campaign.service';
 
 @Controller('google-campaign')
 export class GoogleCampaignController {
-  constructor(private readonly campaignService: GoogleCampaignService) {}
+  constructor(private readonly campaignService: GoogleCampaignService) { }
 
   // Route to create a campaign
   @Post('create')
@@ -98,14 +98,14 @@ export class GoogleCampaignController {
   @Post('report')
   async getCampaignReport(@Body() body: any) {
     const { customerId, refreshToken, campaignResourceName } = body;
-  
+
     if (!customerId || !refreshToken || !campaignResourceName) {
       throw new HttpException(
         'Missing required fields in the body',
         HttpStatus.BAD_REQUEST,
       );
     }
-  
+
     try {
       const report = await this.campaignService.getCampaignReport(
         customerId,
@@ -123,5 +123,4 @@ export class GoogleCampaignController {
       );
     }
   }
-  
 }
