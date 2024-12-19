@@ -1,17 +1,16 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Controller,
   Post,
-  Get,
   Body,
-  Query,
   HttpException,
   HttpStatus,
 } from '@nestjs/common';
 import { GoogleCampaignService } from './google-campaign.service';
-
 @Controller('google-campaign')
 export class GoogleCampaignController {
-  constructor(private readonly campaignService: GoogleCampaignService) { }
+  constructor(private readonly campaignService: GoogleCampaignService) {}
 
   // Route to create a campaign
   @Post('create')
@@ -24,13 +23,15 @@ export class GoogleCampaignController {
         HttpStatus.BAD_REQUEST,
       );
     }
-
     try {
+      const formatedStrtDate = new Date(startDate).toISOString().split('T')[0];
+      const formatedEndDate = new Date(endDate).toISOString().split('T')[0];
+      const budgetAmount = budgetAmountMicros * 10000000;
       const result = await this.campaignService.createCampaign(
         name,
-        budgetAmountMicros,
-        startDate,
-        endDate,
+        budgetAmount,
+        formatedStrtDate,
+        formatedEndDate,
       );
       return {
         message: 'Campaign created successfully',
@@ -68,31 +69,31 @@ export class GoogleCampaignController {
   }
 
   // Route to fetch accessible accounts using the user's refresh token
-  @Post('accounts')
-  async getAccessibleAccounts(@Body() body: any) {
-    const { refreshToken } = body;
+  // @Post('accounts')
+  // async getAccessibleAccounts(@Body() body: any) {
+  //   const { refreshToken } = body;
 
-    if (!refreshToken) {
-      throw new HttpException(
-        'Refresh token is required',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+  //   if (!refreshToken) {
+  //     throw new HttpException(
+  //       'Refresh token is required',
+  //       HttpStatus.BAD_REQUEST,
+  //     );
+  //   }
 
-    try {
-      const accounts =
-        await this.campaignService.getAccessibleAccounts(refreshToken);
-      return {
-        message: 'Accessible accounts retrieved successfully',
-        data: accounts,
-      };
-    } catch (error) {
-      throw new HttpException(
-        error.message || 'Failed to fetch accessible accounts',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
+  //   try {
+  //     const accounts =
+  //       await this.campaignService.getAccessibleAccounts(refreshToken);
+  //     return {
+  //       message: 'Accessible accounts retrieved successfully',
+  //       data: accounts,
+  //     };
+  //   } catch (error) {
+  //     throw new HttpException(
+  //       error.message || 'Failed to fetch accessible accounts',
+  //       HttpStatus.INTERNAL_SERVER_ERROR,
+  //     );
+  //   }
+  // }
 
   // Route to get a campaign report
   @Post('report')
