@@ -10,7 +10,7 @@ import {
 import { GoogleCampaignService } from './google-campaign.service';
 @Controller('google-campaign')
 export class GoogleCampaignController {
-  constructor(private readonly campaignService: GoogleCampaignService) {}
+  constructor(private readonly campaignService: GoogleCampaignService) { }
 
   // Route to create a campaign
   @Post('create')
