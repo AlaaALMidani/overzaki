@@ -51,26 +51,26 @@ export class GoogleCampaignService {
   }
 
   // Step 2: Fetch accessible customer accounts using the user's refresh token
-  async getAccessibleAccounts(refreshToken: string) {
-    const customer = this.googleAdsApi.Customer({
-      refresh_token: refreshToken,
-      customer_id: '',
-    });
+  // async getAccessibleAccounts(refreshToken: string) {
+  //   const customer = this.googleAdsApi.Customer({
+  //     refresh_token: refreshToken,
+  //     customer_id: '',
+  //   });
 
-    const response = await customer.customerClients.list({
-      query: `
-        SELECT customer_client.client_customer, 
-               customer_client.descriptive_name 
-        FROM customer_client 
-        WHERE customer_client.status = 'ENABLED'
-      `,
-    });
+  //   const response = await customer.customerClients.list({
+  //     query: `
+  //       SELECT customer_client.client_customer,
+  //              customer_client.descriptive_name
+  //       FROM customer_client
+  //       WHERE customer_client.status = 'ENABLED'
+  //     `,
+  //   });
 
-    return response.results.map((account) => ({
-      id: account.customer_client?.client_customer,
-      name: account.customer_client?.descriptive_name,
-    }));
-  }
+  //   return response.results.map((account) => ({
+  //     id: account.customer_client?.client_customer,
+  //     name: account.customer_client?.descriptive_name,
+  //   }));
+  // }
 
   async createCampaign(
     name: string,
