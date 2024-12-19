@@ -1,16 +1,31 @@
 import { Injectable } from '@nestjs/common';
 import { GoogleAdsApi, Customer } from 'google-ads-api';
 import * as dotenv from 'dotenv';
+import { OAuth2Client } from 'google-auth-library';
 
 dotenv.config();
 
 @Injectable()
 export class GoogleCampaignService {
   private readonly googleAdsClient: Customer;
+  private readonly oauth2Client: OAuth2Client;
+  private readonly googleAdsApi: GoogleAdsApi;
 
   constructor() {
     // Initialize the Google Ads API Client
     const client = new GoogleAdsApi({
+      client_id: process.env.GOOGLE_ADS_CLIENT_ID,
+      client_secret: process.env.GOOGLE_ADS_CLIENT_SECRET,
+      developer_token: process.env.GOOGLE_ADS_DEVELOPER_TOKEN,
+    });
+
+    this.oauth2Client = new OAuth2Client(
+      process.env.GOOGLE_ADS_CLIENT_ID,
+      process.env.GOOGLE_ADS_CLIENT_SECRET,
+      process.env.GOOGLE_REDIRECT_URI,
+    );
+    //temp
+    this.googleAdsApi = new GoogleAdsApi({
       client_id: process.env.GOOGLE_ADS_CLIENT_ID,
       client_secret: process.env.GOOGLE_ADS_CLIENT_SECRET,
       developer_token: process.env.GOOGLE_ADS_DEVELOPER_TOKEN,
@@ -23,6 +38,39 @@ export class GoogleCampaignService {
       refresh_token: process.env.GOOGLE_ADS_REFRESH_TOKEN,
     });
   }
+  // Step 1: Verify the user's ID token
+  async verifyIdToken(idToken: string) {
+    const ticket = await this.oauth2Client.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_ADS_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload) throw new Error('Invalid ID token');
+    return { userId: payload.sub, email: payload.email };
+  }
+
+  // Step 2: Fetch accessible customer accounts using the user's refresh token
+  async getAccessibleAccounts(refreshToken: string) {
+    const customer = this.googleAdsApi.Customer({
+      refresh_token: refreshToken,
+      customer_id: '',
+    });
+
+    const response = await customer.customerClients.list({
+      query: `
+        SELECT customer_client.client_customer, 
+               customer_client.descriptive_name 
+        FROM customer_client 
+        WHERE customer_client.status = 'ENABLED'
+      `,
+    });
+
+    return response.results.map((account) => ({
+      id: account.customer_client?.client_customer,
+      name: account.customer_client?.descriptive_name,
+    }));
+  }
 
   async createCampaign(
     name: string,
@@ -31,7 +79,7 @@ export class GoogleCampaignService {
     endDate: string,
   ) {
     try {
-      // Step 1: Create the Campaign Budget
+      // Create the Campaign Budget
       const budgetResponse = await this.googleAdsClient.campaignBudgets.create([
         {
           name: `${name}_Budget`,
@@ -50,7 +98,7 @@ export class GoogleCampaignService {
 
       console.log('Campaign Budget Created:', budgetResourceName);
 
-      // Step 2: Create the Campaign
+      // Create the Campaign
       const campaignResponse = await this.googleAdsClient.campaigns.create([
         {
           name,
@@ -77,12 +125,57 @@ export class GoogleCampaignService {
         campaign: campaignResourceName,
       };
     } catch (error) {
-      // Enhanced Error Handling
       console.error('Error creating campaign:', error);
-      throw new Error(
-        error?.response?.data?.error?.message ||
-          'Failed to create campaign. Please check logs for details.',
-      );
+      throw new Error(error?.response?.data?.error?.message);
+    }
+  }
+  async getCampaignReport(
+    customerId: string,
+    refreshToken: string,
+    campaignResourceName: string,
+  ) {
+    // const customer = this.googleAdsApi.Customer({
+    //   refresh_token: refreshToken,
+    //   customer_id: customerId,
+    // });
+
+    try {
+      const report = await this.googleAdsClient.report({
+        entity: 'campaign',
+        attributes: [
+          'campaign.id',
+          'campaign.name',
+          'campaign.status',
+          'campaign.start_date',
+          'campaign.end_date',
+          'campaign.bidding_strategy_type',
+          'campaign.advertising_channel_type',
+          'campaign_budget.amount_micros',
+        ],
+        metrics: [
+          'metrics.impressions',
+          'metrics.clicks',
+          'metrics.ctr',
+          'metrics.cost_micros',
+          'metrics.conversions',
+          'metrics.conversions_value',
+          'metrics.average_cpc',
+          'metrics.search_impression_share',
+        ],
+        constraints: [
+          {
+            key: 'campaign.resource_name',
+            op: '=',
+            val: campaignResourceName,
+          },
+        ],
+        limit: 1000,
+      });
+
+      return report;
+    } catch (error) {
+      console.error('Error fetching campaign report:', error);
+      throw new Error('Failed to fetch campaign report.');
     }
   }
 }
