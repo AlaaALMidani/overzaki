@@ -2,7 +2,6 @@ import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TiktokCampaignController } from './tiktok-campaign.controller';
 import { TiktokCampaignService } from './tiktok-campaign.service';
 import { VideoValidationMiddleware } from './tiktok-campaign.middleware';
-
 @Module({
   controllers: [TiktokCampaignController],
   providers: [TiktokCampaignService],

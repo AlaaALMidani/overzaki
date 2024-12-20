@@ -2,11 +2,9 @@ import { Injectable, NestMiddleware, BadRequestException, Logger } from '@nestjs
 import * as multer from 'multer';
 import { Request, Response, NextFunction } from 'express';
 import { extname } from 'path';
-
 @Injectable()
 export class VideoValidationMiddleware implements NestMiddleware {
   private readonly logger = new Logger(VideoValidationMiddleware.name);
-
   private upload = multer({
     limits: { fileSize: 500 * 1024 * 1024 }, 
     fileFilter: (req, file, callback) => {
@@ -26,18 +24,15 @@ export class VideoValidationMiddleware implements NestMiddleware {
       },
     }),
   }).single('videoFile');
-
   use(req: Request, res: Response, next: NextFunction) {
     this.upload(req, res, (err) => {
       if (err) {
         this.logger.error('File upload error:', err.message);
         throw new BadRequestException(err.message || 'Invalid file upload');
       }
-
       if (req['fileValidationError']) {
         throw new BadRequestException(req['fileValidationError']);
       }
-
       next();
     });
   }
