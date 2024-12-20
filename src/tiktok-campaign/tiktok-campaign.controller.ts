@@ -7,13 +7,11 @@ import {
   Redirect,
   HttpException,
   HttpStatus,
-  Req,
   Logger,
   UploadedFile, UseInterceptors
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { TiktokCampaignService } from './tiktok-campaign.service';
-import * as path from 'path';
 @Controller('tiktok-campaign')
 export class TiktokCampaignController {
   private readonly logger = new Logger(TiktokCampaignController.name);
@@ -33,13 +31,11 @@ export class TiktokCampaignController {
     }
     try {
       const authData = await this.campaignService.getAccessToken(auth_code);
-      this.logger.log(`Authentication successful: ${JSON.stringify(authData)}`);
       return {
         message: 'Authentication successful',
         data: authData,
       };
     } catch (error) {
-      this.logger.error(`Error during authentication: ${error.message}`);
       throw new HttpException(error.message || 'Authentication failed', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
@@ -61,12 +57,9 @@ export class TiktokCampaignController {
         data: campaignResult,
       };
     } catch (error) {
-      this.logger.error(`Error creating campaign: ${error.message}`);
       throw new HttpException(error.message || 'Campaign creation failed', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-
-
 
   @Get('uploaded-videos')
   async fetchUploadedVideos(@Query() query: { accessToken: string; advertiserId: string }) {
@@ -83,32 +76,44 @@ export class TiktokCampaignController {
         data: videos,
       };
     } catch (error) {
-      this.logger.error(`Error fetching uploaded videos: ${error.message}`);
       throw new HttpException(error.message || 'Failed to fetch uploaded videos', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
+  
   @Post('upload-video')
+  @UseInterceptors(FileInterceptor('videoFile'))
   async uploadVideo(
-    @Body() body: { accessToken: string; advertiserId: string; videoUrl: string; fileName: string },
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: { accessToken: string; advertiserId: string; flawDetect?: boolean; autoFixEnabled?: boolean; autoBindEnabled?: boolean; },
   ) {
-    const { accessToken, advertiserId, videoUrl, fileName } = body;
-    if (!accessToken || !advertiserId || !videoUrl || !fileName) {
-      throw new HttpException('Missing required fields', HttpStatus.BAD_REQUEST);
+    const { accessToken, advertiserId, flawDetect, autoFixEnabled, autoBindEnabled } = body;
+  
+    if (!accessToken || !advertiserId) {
+      throw new HttpException('Access token and advertiser ID are required', HttpStatus.BAD_REQUEST);
     }
+  
+    if (!file) {
+      throw new HttpException('Video file is required', HttpStatus.BAD_REQUEST);
+    }
+  
     try {
-      const videoData = await this.campaignService.uploadVideo(accessToken, advertiserId, videoUrl, fileName);
+      const uploadResult = await this.campaignService.uploadVideoByFile(
+        file,
+        accessToken,
+        advertiserId,
+        flawDetect,
+        autoFixEnabled,
+        autoBindEnabled,
+      );
       return {
         message: 'Video uploaded successfully',
-        data: videoData,
+        data: uploadResult,
       };
     } catch (error) {
-      throw new HttpException(error.message || 'Failed to upload video', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(error.message || 'Video upload failed', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-
-
-  
   // @Post('create-campaign')
   // async createCampaign(@Body() body: any, @Req() req: any) {
   //   const { accessToken, advertiser_id,campaignDetails, } = body;

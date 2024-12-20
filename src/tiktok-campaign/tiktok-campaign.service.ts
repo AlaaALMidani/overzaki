@@ -1,12 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
-import * as fs from 'fs';
 import * as FormData from 'form-data';
 import * as crypto from 'crypto';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class TiktokCampaignService {
   private readonly logger = new Logger(TiktokCampaignService.name);
+
+  constructor(private readonly httpService: HttpService) { }
 
   private getBaseUrl(): string {
     return process.env.NODE_ENV === 'production'
@@ -22,18 +25,15 @@ export class TiktokCampaignService {
     )}&scope=advertiser_management`;
   }
 
-
   // Exchange Authorization Code for Access Token
   async getAccessToken(authCode: string, version: string = 'v1.3') {
     const endpoint = `${this.getBaseUrl()}${version}/oauth2/access_token/`;
-
     const payload = {
       app_id: process.env.TIKTOK_CLIENT_ID,
       secret: process.env.TIKTOK_CLIENT_SECRET,
       auth_code: authCode,
       grant_type: 'authorization_code',
     };
-
     try {
       const response = await axios.post(endpoint, payload, {
         headers: {
@@ -47,48 +47,48 @@ export class TiktokCampaignService {
     }
   }
 
-  async computeFileHash(filePath: string): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const hash = crypto.createHash('md5');
-      const stream = fs.createReadStream(filePath);
-
-      stream.on('data', (data) => hash.update(data));
-      stream.on('end', () => resolve(hash.digest('hex')));
-      stream.on('error', (err) => reject(err));
-    });
-  }
-
   // Upload Video to TikTok
-  
-  async uploadVideo(
+  async uploadVideoByFile(
+    file: Express.Multer.File,
     accessToken: string,
     advertiserId: string,
-    videoUrl: string,
-    fileName: string,
+    flawDetect: boolean = false,
+    autoFixEnabled: boolean = false,
+    autoBindEnabled: boolean = false,
   ): Promise<any> {
-    const url = `${this.getBaseUrl()}v1.2/file/video/ad/upload/`;
-    const payload = {
-      advertiser_id: advertiserId,
-      upload_type: 'UPLOAD_BY_URL',
-      video_url: videoUrl,
-      file_name: fileName,
-    };
+    const endpoint = `${this.getBaseUrl()}v1.3/file/video/ad/upload/`;
+
+    const formData = new FormData();
+    formData.append('advertiser_id', advertiserId);
+    formData.append('file_name', file.originalname);
+    formData.append('upload_type', 'UPLOAD_BY_FILE');
+    formData.append('video_file', file.buffer, { filename: file.originalname });
+    formData.append('video_signature', await this.computeFileHash(file.buffer));
+    formData.append('flaw_detect', flawDetect.toString());
+    formData.append('auto_fix_enabled', autoFixEnabled.toString());
+    formData.append('auto_bind_enabled', autoBindEnabled.toString());
+
     try {
-      const response = await axios.post(url, payload, {
+      const response = await axios.post(endpoint, formData, {
         headers: {
+          ...formData.getHeaders(),
           'Access-Token': accessToken,
-          'Content-Type': 'application/json',
         },
       });
-      this.logger.log(`Video uploaded successfully: ${JSON.stringify(response.data)}`);
+
       return response.data?.data;
     } catch (error) {
-      this.logger.error(`Error uploading video: ${error.response?.data?.message || error.message}`);
-      throw new Error(error.response?.data?.message || 'Video upload to TikTok failed.');
+      const errorDetails = error.response?.data || error.message;
+      throw new Error(errorDetails?.message || 'Video upload failed');
     }
   }
-
-  
+  async computeFileHash(fileBuffer: Buffer): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const hash = crypto.createHash('md5');
+      hash.update(fileBuffer);
+      resolve(hash.digest('hex'));
+    });
+  }
 
   // Create Campaign
   async createCampaign(
@@ -129,6 +129,7 @@ export class TiktokCampaignService {
       throw new Error(error.response?.data?.message || 'Campaign creation failed');
     }
   }
+
   // Create Feed Ad
   async createFeedAd(
     accessToken: string,
@@ -197,7 +198,7 @@ export class TiktokCampaignService {
     }
   }
 
-
+  // Get User's Videos
   async fetchUploadedVideos(accessToken: string, advertiserId: string): Promise<any> {
     const endpoint = `${this.getBaseUrl()}v1.3/file/video/ad/search/`;
 
@@ -213,10 +214,10 @@ export class TiktokCampaignService {
       return response.data?.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
-      this.logger.error(`Error fetching uploaded videos: ${errorDetails?.message || error.message}`);
       throw new Error(errorDetails?.message || 'Failed to fetch uploaded videos');
     }
   }
+
 
   async getCampaignReport(
     accessToken: string,
