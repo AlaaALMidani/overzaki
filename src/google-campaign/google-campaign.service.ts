@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { GoogleAdsApi, Customer } from 'google-ads-api';
 import * as dotenv from 'dotenv';
 import { OAuth2Client } from 'google-auth-library';
@@ -125,8 +125,8 @@ export class GoogleCampaignService {
         campaign: campaignResourceName,
       };
     } catch (error) {
-      console.error('Error creating campaign:', error);
-      throw new Error(error?.response?.data?.error?.message);
+      console.error('Error creating campaign:', error.errors);
+      throw new HttpException({ error: error.errors }, HttpStatus.BAD_REQUEST);
     }
   }
   async getCampaignReport(

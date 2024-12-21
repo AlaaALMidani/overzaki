@@ -39,8 +39,8 @@ export class GoogleCampaignController {
       };
     } catch (error) {
       throw new HttpException(
-        error.message || 'Failed to create campaign',
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        error.response || 'Failed to create campaign',
+        HttpStatus.BAD_REQUEST,
       );
     }
   }
@@ -62,7 +62,7 @@ export class GoogleCampaignController {
       };
     } catch (error) {
       throw new HttpException(
-        error.message || 'Failed to verify ID token',
+        error.errors || 'Failed to verify ID token',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -119,7 +119,7 @@ export class GoogleCampaignController {
       };
     } catch (error) {
       throw new HttpException(
-        error.message || 'Failed to fetch campaign report',
+        JSON.stringify(error, null, 2) || 'Failed to fetch campaign report',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
