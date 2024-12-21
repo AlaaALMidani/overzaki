@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+import { Multer } from 'multer';
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import * as FormData from 'form-data';
@@ -9,12 +12,13 @@ import { firstValueFrom } from 'rxjs';
 export class TiktokCampaignService {
   private readonly logger = new Logger(TiktokCampaignService.name);
 
-  constructor(private readonly httpService: HttpService) { }
+  constructor(private readonly httpService: HttpService) {}
 
   private getBaseUrl(): string {
     return process.env.NODE_ENV === 'production'
       ? 'https://business-api.tiktok.com/open_api/'
-      : process.env.TIKTOK_BASE_URL || 'https://sandbox-ads.tiktok.com/open_api/';
+      : process.env.TIKTOK_BASE_URL ||
+          'https://sandbox-ads.tiktok.com/open_api/';
   }
 
   // Generate TikTok OAuth URL
@@ -43,7 +47,9 @@ export class TiktokCampaignService {
       return response.data.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
-      throw new Error(errorDetails?.message || 'Failed to retrieve access token');
+      throw new Error(
+        errorDetails?.message || 'Failed to retrieve access token',
+      );
     }
   }
 
@@ -126,51 +132,53 @@ export class TiktokCampaignService {
       );
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Campaign creation failed');
+      throw new Error(
+        error.response?.data?.message || 'Campaign creation failed',
+      );
     }
   }
 
   async createAdGroup(
     accessToken: string,
     advertiserId: string,
-    adGroupDetails:{
-    campaignId:string,
-    adgroupName:string,
-    promotionType:string,
-    placementType:string,
-    placements:Array<string>,
-    locationIds:Array<string>,
-    budgetMode:string,
-    budget:number,
-    scheduleType:string,
-    scheduleEndTime:string,
-    scheduleStartTime:string,
-    optimizationGoal:string,
-    bidType:string,
-    billingEvent:string,
-    pacing:string,
-    operationStatus:string
-    }
+    adGroupDetails: {
+      campaignId: string;
+      adgroupName: string;
+      promotionType: string;
+      placementType: string;
+      placements: Array<string>;
+      locationIds: Array<string>;
+      budgetMode: string;
+      budget: number;
+      scheduleType: string;
+      scheduleEndTime: string;
+      scheduleStartTime: string;
+      optimizationGoal: string;
+      bidType: string;
+      billingEvent: string;
+      pacing: string;
+      operationStatus: string;
+    },
   ) {
     try {
       const payload = {
         advertiser_id: advertiserId,
-        campaign_id:adGroupDetails.campaignId,
-        adgroup_name:adGroupDetails.adgroupName,
-        promotion_type:adGroupDetails.promotionType,
-        placement_type:adGroupDetails.placementType,
-        placements:adGroupDetails.placements,
-        location_ids:adGroupDetails.locationIds,
-        budget_mode:adGroupDetails.budgetMode,
-        budget:adGroupDetails.budget,
-        schedule_type:adGroupDetails.scheduleType,
-        schedule_end_time:adGroupDetails.scheduleEndTime,
-        schedule_start_time:adGroupDetails.scheduleStartTime,
-        optimization_goal:adGroupDetails.optimizationGoal,
-        bid_type:adGroupDetails.bidType,
-        billing_event:adGroupDetails.billingEvent,
-        pacing:adGroupDetails.pacing,
-        operation_status:adGroupDetails.operationStatus
+        campaign_id: adGroupDetails.campaignId,
+        adgroup_name: adGroupDetails.adgroupName,
+        promotion_type: adGroupDetails.promotionType,
+        placement_type: adGroupDetails.placementType,
+        placements: adGroupDetails.placements,
+        location_ids: adGroupDetails.locationIds,
+        budget_mode: adGroupDetails.budgetMode,
+        budget: adGroupDetails.budget,
+        schedule_type: adGroupDetails.scheduleType,
+        schedule_end_time: adGroupDetails.scheduleEndTime,
+        schedule_start_time: adGroupDetails.scheduleStartTime,
+        optimization_goal: adGroupDetails.optimizationGoal,
+        bid_type: adGroupDetails.bidType,
+        billing_event: adGroupDetails.billingEvent,
+        pacing: adGroupDetails.pacing,
+        operation_status: adGroupDetails.operationStatus,
       };
       const response = await axios.post(
         `${this.getBaseUrl()}v1.3/adgroup/create/`,
@@ -184,7 +192,9 @@ export class TiktokCampaignService {
       );
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Ad group creation failed');
+      throw new Error(
+        error.response?.data?.message || 'Ad group creation failed',
+      );
     }
   }
 
@@ -220,7 +230,9 @@ export class TiktokCampaignService {
 
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Feed Ad creation failed');
+      throw new Error(
+        error.response?.data?.message || 'Feed Ad creation failed',
+      );
     }
   }
 
@@ -252,12 +264,17 @@ export class TiktokCampaignService {
 
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Spark Ad creation failed');
+      throw new Error(
+        error.response?.data?.message || 'Spark Ad creation failed',
+      );
     }
   }
 
   // Get User's Videos
-  async fetchUploadedVideos(accessToken: string, advertiserId: string): Promise<any> {
+  async fetchUploadedVideos(
+    accessToken: string,
+    advertiserId: string,
+  ): Promise<any> {
     const endpoint = `${this.getBaseUrl()}v1.3/file/video/ad/search/`;
     try {
       const response = await axios.get(endpoint, {
@@ -271,20 +288,23 @@ export class TiktokCampaignService {
       return response.data?.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
-      throw new Error(errorDetails?.message || 'Failed to fetch uploaded videos');
+      throw new Error(
+        errorDetails?.message || 'Failed to fetch uploaded videos',
+      );
     }
   }
 
-  async fetchIdentity(accessToken:string,advertiserId:string):Promise<any>{
+  async fetchIdentity(accessToken: string, advertiserId: string): Promise<any> {
     const endpoint = `${this.getBaseUrl()}v1.3/identity/get/`;
-    try{
-      const response=await axios.get(endpoint,{
-        headers:{
+    try {
+      const response = await axios.get(endpoint, {
+        headers: {
           'Access-Token': accessToken,
           'Content-Type': 'application/json',
         },
         params: { advertiser_id: advertiserId },
-      });return response.data?.data;
+      });
+      return response.data?.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
       throw new Error(errorDetails?.message || 'Failed to fetch');
@@ -301,12 +321,12 @@ export class TiktokCampaignService {
     try {
       const payload = {
         advertiser_id: advertiserId,
-        dimensions: ["campaign_id"],
-        metrics: ["spend", "impressions", "clicks", "ctr", "cpc", "cpm"],
+        dimensions: ['campaign_id'],
+        metrics: ['spend', 'impressions', 'clicks', 'ctr', 'cpc', 'cpm'],
         filters: [
           {
-            field: "campaign_id",
-            operator: "EQUALS",
+            field: 'campaign_id',
+            operator: 'EQUALS',
             value: campaignId,
           },
         ],
@@ -321,17 +341,21 @@ export class TiktokCampaignService {
         payload,
         {
           headers: {
-            "Access-Token": accessToken,
-            "Content-Type": "application/json",
+            'Access-Token': accessToken,
+            'Content-Type': 'application/json',
           },
         },
       );
 
       return response.data;
     } catch (error) {
-      console.error("Error fetching campaign report:", error.response?.data || error.message);
-      throw new Error(error.response?.data?.message || "Failed to fetch campaign report.");
+      console.error(
+        'Error fetching campaign report:',
+        error.response?.data || error.message,
+      );
+      throw new Error(
+        error.response?.data?.message || 'Failed to fetch campaign report.',
+      );
     }
   }
-
 }
