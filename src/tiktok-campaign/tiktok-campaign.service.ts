@@ -115,7 +115,7 @@ export class TiktokCampaignService {
         schedule_start_time: campaignDetails.scheduleStartTime,
       };
       const response = await axios.post(
-        `${this.getBaseUrl()}v1.2/campaign/create/`,
+        `${this.getBaseUrl()}v1.3/campaign/create/`,
         payload,
         {
           headers: {
@@ -127,6 +127,64 @@ export class TiktokCampaignService {
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'Campaign creation failed');
+    }
+  }
+
+  async createAdGroup(
+    accessToken: string,
+    advertiserId: string,
+    adGroupDetails:{
+    campaignId:string,
+    adgroupName:string,
+    promotionType:string,
+    placementType:string,
+    placements:Array<string>,
+    locationIds:Array<string>,
+    budgetMode:string,
+    budget:number,
+    scheduleType:string,
+    scheduleEndTime:string,
+    scheduleStartTime:string,
+    optimizationGoal:string,
+    bidType:string,
+    billingEvent:string,
+    pacing:string,
+    operationStatus:string
+    }
+  ) {
+    try {
+      const payload = {
+        advertiser_id: advertiserId,
+        campaign_id:adGroupDetails.campaignId,
+        adgroup_name:adGroupDetails.adgroupName,
+        promotion_type:adGroupDetails.promotionType,
+        placement_type:adGroupDetails.placementType,
+        placements:adGroupDetails.placements,
+        location_ids:adGroupDetails.locationIds,
+        budget_mode:adGroupDetails.budgetMode,
+        budget:adGroupDetails.budget,
+        schedule_type:adGroupDetails.scheduleType,
+        schedule_end_time:adGroupDetails.scheduleEndTime,
+        schedule_start_time:adGroupDetails.scheduleStartTime,
+        optimization_goal:adGroupDetails.optimizationGoal,
+        bid_type:adGroupDetails.bidType,
+        billing_event:adGroupDetails.billingEvent,
+        pacing:adGroupDetails.pacing,
+        operation_status:adGroupDetails.operationStatus
+      };
+      const response = await axios.post(
+        `${this.getBaseUrl()}v1.3/adgroup/create/`,
+        payload,
+        {
+          headers: {
+            'Access-Token': accessToken,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'Ad group creation failed');
     }
   }
 
@@ -201,7 +259,6 @@ export class TiktokCampaignService {
   // Get User's Videos
   async fetchUploadedVideos(accessToken: string, advertiserId: string): Promise<any> {
     const endpoint = `${this.getBaseUrl()}v1.3/file/video/ad/search/`;
-
     try {
       const response = await axios.get(endpoint, {
         headers: {
@@ -218,6 +275,21 @@ export class TiktokCampaignService {
     }
   }
 
+  async fetchIdentity(accessToken:string,advertiserId:string):Promise<any>{
+    const endpoint = `${this.getBaseUrl()}v1.3/identity/get/`;
+    try{
+      const response=await axios.get(endpoint,{
+        headers:{
+          'Access-Token': accessToken,
+          'Content-Type': 'application/json',
+        },
+        params: { advertiser_id: advertiserId },
+      });return response.data?.data;
+    } catch (error) {
+      const errorDetails = error.response?.data || error.message;
+      throw new Error(errorDetails?.message || 'Failed to fetch');
+    }
+  }
 
   async getCampaignReport(
     accessToken: string,

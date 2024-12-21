@@ -43,21 +43,40 @@ export class TiktokCampaignController {
   @Post('create-campaign')
   async createCampaign(@Body() body: any) {
     const { accessToken, advertiser_id, campaignDetails } = body;
-
     if (!accessToken || !advertiser_id || !campaignDetails) {
       throw new HttpException('Access token, advertiser_id, and campaignDetails are required', HttpStatus.BAD_REQUEST);
     }
-
     try {
       const parsedCampaignDetails = this.parseJson(campaignDetails, 'campaignDetails');
       const campaignResult = await this.campaignService.createCampaign(accessToken, advertiser_id, parsedCampaignDetails);
-
       return {
         message: 'Campaign created successfully',
         data: campaignResult,
       };
     } catch (error) {
       throw new HttpException(error.message || 'Campaign creation failed', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+
+  @Post('create-AdGroup')
+  async createAdGroup(@Body() body: any) {
+    const { accessToken, advertiser_id, adGroupDetails } = body;
+
+    if (!accessToken || !advertiser_id || !adGroupDetails) {
+      throw new HttpException('Access token, advertiser_id, and AdGroupDetails are required', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      const parsedAdGroupDetails = this.parseJson(adGroupDetails, 'adGroupDetails');
+      const adGroupResult = await this.campaignService.createAdGroup(accessToken, advertiser_id, parsedAdGroupDetails);
+
+      return {
+        message: 'AdGroup created successfully',
+        data: adGroupResult,
+      };
+    } catch (error) {
+      throw new HttpException(error.message || 'AdGroup creation failed', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
@@ -80,7 +99,25 @@ export class TiktokCampaignController {
     }
   }
 
-  
+  @Get('identity')
+  async fetchIdentity(@Query() query: { accessToken: string; advertiserId: string }) {
+    const { accessToken, advertiserId } = query;
+
+    if (!accessToken || !advertiserId) {
+      throw new HttpException('Access token and advertiser ID are required', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      const identity = await this.campaignService.fetchIdentity(accessToken, advertiserId);
+      return {
+        message: 'fetch identity successfully',
+        data: identity,
+      };
+    } catch (error) {
+      throw new HttpException(error.message || 'Failed to fetch uploaded videos', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
   @Post('upload-video')
   @UseInterceptors(FileInterceptor('videoFile'))
   async uploadVideo(
@@ -114,6 +151,7 @@ export class TiktokCampaignController {
       throw new HttpException(error.message || 'Video upload failed', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+  
   // @Post('create-campaign')
   // async createCampaign(@Body() body: any, @Req() req: any) {
   //   const { accessToken, advertiser_id,campaignDetails, } = body;
