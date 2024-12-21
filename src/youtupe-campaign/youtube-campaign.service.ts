@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { GoogleAdsApi, Customer } from 'google-ads-api';
 import * as dotenv from 'dotenv';
+import { Logger } from 'winston';
 
 dotenv.config();
 
@@ -160,42 +161,30 @@ export class YouTubeCampaignService {
   ): Promise<string> {
     console.log('Creating campaign...');
 
-    // Define the bidding strategy payload
-    let campaignBiddingStrategy: any;
-    switch (biddingStrategy) {
-      case 'MAXIMIZE_CONVERSIONS':
-        campaignBiddingStrategy = { maximize_conversions: {} };
-        break;
-      case 'TARGET_CPA':
-        campaignBiddingStrategy = {
-          target_cpa: { target_cpa_micros: 1000000 },
-        };
-        break;
-      default:
-        throw new Error(`Unsupported bidding strategy: ${biddingStrategy}`);
-    }
-    console.log('Campaign creation payload:', {
+    // Construct the campaign creation payload
+    const payload: any = {
       name,
       status: 'PAUSED',
       advertising_channel_type: 'VIDEO',
       campaign_budget: budgetResourceName,
       start_date: startDate,
       end_date: endDate,
-      campaignBiddingStrategy,
-    });
+      campaign_bidding_strategy: {},
+    };
+    console.log(payload);
+    // Map the bidding strategy to the appropriate field
+    if (biddingStrategy === 'MAXIMIZE_CONVERSIONS') {
+      payload.campaign_bidding_strategy.maximize_conversions = {};
+    } else if (biddingStrategy === 'TARGET_CPA') {
+      payload.campaign_bidding_strategy.target_cpa = {
+        target_cpa_micros: 1000000,
+      }; // Replace with actual CPA
+    } else {
+      throw new Error(`Unsupported bidding strategy: ${biddingStrategy}`);
+    }
 
-    // Create the campaign payload
-    const response = await this.googleAdsClient.campaigns.create([
-      {
-        name,
-        status: 'PAUSED',
-        advertising_channel_type: 'VIDEO',
-        campaign_budget: budgetResourceName,
-        start_date: startDate,
-        end_date: endDate,
-        campaign_bidding_strategy: campaignBiddingStrategy, // Make sure this is included
-      },
-    ]);
+    // Create the campaign
+    const response = await this.googleAdsClient.campaigns.create([payload]);
 
     const resourceName = response.results[0]?.resource_name;
     if (!resourceName) {
