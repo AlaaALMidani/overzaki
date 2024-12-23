@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 
 import { Multer } from 'multer';
 import { Injectable, Logger } from '@nestjs/common';
@@ -464,9 +464,6 @@ export class TiktokCampaignService {
       if (!adId) {
         throw new Error(`Ad creation failed: ${createAdResponse?.data?.message || 'Unknown error'}`);
       }
-      
-
-      // Return all created entities
       return {
         campaign,
         adGroup,

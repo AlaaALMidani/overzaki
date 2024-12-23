@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import {
   Controller,
   Get,
@@ -123,7 +123,7 @@ export class TiktokCampaignController {
       );
     }
   
-    // Validate uploaded files
+   
     if (!files.videoFile || !files.imageFile) {
       throw new HttpException(
         'Both video and image files are required.',
@@ -135,13 +135,13 @@ export class TiktokCampaignController {
     const imageFile = files.imageFile[0];
   
     try {
-      // Call the service to set up the ad campaign
+     
       const result = await this.campaignService.setupAdCampaign(
         accessToken,
         advertiserId,
         campaignName,
         budgetMode,
-        JSON.parse(locationIds), // Ensure locationIds are parsed if sent as a JSON string
+        JSON.parse(locationIds), 
         scheduleEndTime,
         scheduleStartTime,
         Number(budget),
