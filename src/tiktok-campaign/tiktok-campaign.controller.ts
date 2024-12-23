@@ -40,47 +40,122 @@ export class TiktokCampaignController {
       throw new HttpException(error.message || 'Authentication failed', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+ 
+  @Post('campaign-report')
+  async getCampaignReport(@Body() body: any) {
+    const { accessToken, advertiser_id, campaign_id, start_date, end_date } = body;
 
-  @Post('create-campaign')
-  async createCampaign(@Body() body: any) {
-    const { accessToken, advertiser_id, campaignDetails } = body;
-    if (!accessToken || !advertiser_id || !campaignDetails) {
-      throw new HttpException('Access token, advertiser_id, and campaignDetails are required', HttpStatus.BAD_REQUEST);
+    if (!accessToken || !advertiser_id || !campaign_id || !start_date || !end_date) {
+      throw new HttpException('Missing required fields', HttpStatus.BAD_REQUEST);
     }
     try {
-      const parsedCampaignDetails = this.parseJson(campaignDetails, 'campaignDetails');
-      const campaignResult = await this.campaignService.createCampaign(accessToken, advertiser_id, parsedCampaignDetails);
+      const report = await this.campaignService.getCampaignReport(
+        accessToken,
+        advertiser_id,
+        campaign_id,
+        start_date,
+        end_date,
+      );
+
       return {
-        message: 'Campaign created successfully',
-        data: campaignResult,
+        message: 'Campaign report fetched successfully',
+        data: report,
       };
     } catch (error) {
-      throw new HttpException(error.message || 'Campaign creation failed', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(error.message || 'Failed to fetch campaign report', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-
-  @Post('create-AdGroup')
-  async createAdGroup(@Body() body: any) {
-    const { accessToken, advertiser_id, adGroupDetails } = body;
-
-    if (!accessToken || !advertiser_id || !adGroupDetails) {
-      throw new HttpException('Access token, advertiser_id, and AdGroupDetails are required', HttpStatus.BAD_REQUEST);
+  @Post('setup')
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'videoFile', maxCount: 1 },
+      { name: 'imageFile', maxCount: 1 },
+    ])
+  )
+  async setupAdCampaign(
+    @Body() body: any,
+    @UploadedFiles()
+    files: {
+      videoFile?: Express.Multer.File[];
+      imageFile?: Express.Multer.File[];
+    },
+  ) {
+    const {
+      accessToken,
+      advertiserId,
+      campaignName,
+      budgetMode,
+      locationIds,
+      scheduleEndTime,
+      scheduleStartTime,
+      budget,
+      optimizationGoal,
+      displayName,
+      adText,
+    } = body;
+  
+    // Validate required fields
+    if (
+      !accessToken ||
+      !advertiserId ||
+      !campaignName ||
+      !budgetMode ||
+      !locationIds ||
+      !scheduleEndTime ||
+      !scheduleStartTime ||
+      !budget ||
+      !optimizationGoal ||
+      !displayName ||
+      !adText
+    ) {
+      throw new HttpException(
+        'Missing required fields for campaign setup.',
+        HttpStatus.BAD_REQUEST,
+      );
     }
-
+  
+    // Validate uploaded files
+    if (!files.videoFile || !files.imageFile) {
+      throw new HttpException(
+        'Both video and image files are required.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  
+    const videoFile = files.videoFile[0];
+    const imageFile = files.imageFile[0];
+  
     try {
-      const parsedAdGroupDetails = this.parseJson(adGroupDetails, 'adGroupDetails');
-      const adGroupResult = await this.campaignService.createAdGroup(accessToken, advertiser_id, parsedAdGroupDetails);
-
+      // Call the service to set up the ad campaign
+      const result = await this.campaignService.setupAdCampaign(
+        accessToken,
+        advertiserId,
+        campaignName,
+        budgetMode,
+        JSON.parse(locationIds), // Ensure locationIds are parsed if sent as a JSON string
+        scheduleEndTime,
+        scheduleStartTime,
+        Number(budget),
+        optimizationGoal,
+        displayName,
+        adText,
+        videoFile,
+        imageFile,
+      );
+  
       return {
-        message: 'AdGroup created successfully',
-        data: adGroupResult,
+        message: 'Ad campaign setup successfully.',
+        data: result,
       };
     } catch (error) {
-      throw new HttpException(error.message || 'AdGroup creation failed', HttpStatus.INTERNAL_SERVER_ERROR);
+      this.logger.error('Error setting up ad campaign', error.message);
+      throw new HttpException(
+        error.message || 'Failed to set up ad campaign.',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
-
   @Get('uploaded-videos')
   async fetchUploadedVideos(@Query() query: { accessToken: string; advertiserId: string }) {
     const { accessToken, advertiserId } = query;
@@ -210,120 +285,45 @@ export class TiktokCampaignController {
     }
   }
 
-  @Post('campaign-report')
-  async getCampaignReport(@Body() body: any) {
-    const { accessToken, advertiser_id, campaign_id, start_date, end_date } = body;
-
-    if (!accessToken || !advertiser_id || !campaign_id || !start_date || !end_date) {
-      throw new HttpException('Missing required fields', HttpStatus.BAD_REQUEST);
+@Post('create-campaign')
+  async createCampaign(@Body() body: any) {
+    const { accessToken, advertiser_id, campaignDetails } = body;
+    if (!accessToken || !advertiser_id || !campaignDetails) {
+      throw new HttpException('Access token, advertiser_id, and campaignDetails are required', HttpStatus.BAD_REQUEST);
     }
     try {
-      const report = await this.campaignService.getCampaignReport(
-        accessToken,
-        advertiser_id,
-        campaign_id,
-        start_date,
-        end_date,
-      );
-
+      const parsedCampaignDetails = this.parseJson(campaignDetails, 'campaignDetails');
+      const campaignResult = await this.campaignService.createCampaign(accessToken, advertiser_id, parsedCampaignDetails);
       return {
-        message: 'Campaign report fetched successfully',
-        data: report,
+        message: 'Campaign created successfully',
+        data: campaignResult,
       };
     } catch (error) {
-      throw new HttpException(error.message || 'Failed to fetch campaign report', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(error.message || 'Campaign creation failed', HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 
-@Post('setup')
-@UseInterceptors(
-  FileFieldsInterceptor([
-    { name: 'videoFile', maxCount: 1 }, // Handle video files
-    { name: 'imageFile', maxCount: 1 }, // Handle image files
-  ])
-)
-async setupAdCampaign(
-  @Body() body: any,
-  @UploadedFiles()
-  files: {
-    videoFile?: Express.Multer.File[];
-    imageFile?: Express.Multer.File[];
-  },
-) {
-  const {
-    accessToken,
-    advertiserId,
-    campaignName,
-    budgetMode,
-    locationIds,
-    scheduleEndTime,
-    scheduleStartTime,
-    budget,
-    optimizationGoal,
-    displayName,
-    adText,
-  } = body;
 
-  // Validate required fields
-  if (
-    !accessToken ||
-    !advertiserId ||
-    !campaignName ||
-    !budgetMode ||
-    !locationIds ||
-    !scheduleEndTime ||
-    !scheduleStartTime ||
-    !budget ||
-    !optimizationGoal ||
-    !displayName ||
-    !adText
-  ) {
-    throw new HttpException(
-      'Missing required fields for campaign setup.',
-      HttpStatus.BAD_REQUEST
-    );
+  @Post('create-AdGroup')
+  async createAdGroup(@Body() body: any) {
+    const { accessToken, advertiser_id, adGroupDetails } = body;
+
+    if (!accessToken || !advertiser_id || !adGroupDetails) {
+      throw new HttpException('Access token, advertiser_id, and AdGroupDetails are required', HttpStatus.BAD_REQUEST);
+    }
+
+    try {
+      const parsedAdGroupDetails = this.parseJson(adGroupDetails, 'adGroupDetails');
+      const adGroupResult = await this.campaignService.createAdGroup(accessToken, advertiser_id, parsedAdGroupDetails);
+
+      return {
+        message: 'AdGroup created successfully',
+        data: adGroupResult,
+      };
+    } catch (error) {
+      throw new HttpException(error.message || 'AdGroup creation failed', HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
-
-  // Validate uploaded files
-  if (!files.videoFile || !files.imageFile) {
-    throw new HttpException(
-      'Both video and image files are required.',
-      HttpStatus.BAD_REQUEST
-    );
-  }
-
-  const videoFile = files.videoFile[0];
-  const imageFile = files.imageFile[0];
-
-  try {
-    const result = await this.campaignService.setupAdCampaign(
-      accessToken,
-      advertiserId,
-      campaignName,
-      budgetMode,
-      JSON.parse(locationIds),
-      scheduleEndTime,
-      scheduleStartTime,
-      Number(budget),
-      optimizationGoal,
-      displayName,
-      adText,
-      videoFile,
-      imageFile,
-    );
-
-    return {
-      message: 'Ad campaign setup successfully.',
-      data: result,
-    };
-  } catch (error) {
-    this.logger.error('Error setting up ad campaign', error.message);
-    throw new HttpException(
-      error.message || 'Failed to set up ad campaign.',
-      HttpStatus.INTERNAL_SERVER_ERROR
-    );
-  }
-}
 
 
 }
