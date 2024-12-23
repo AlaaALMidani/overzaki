@@ -30,6 +30,7 @@ export class TiktokCampaignController {
     if (!auth_code) {
       throw new HttpException('Authorization code not provided', HttpStatus.BAD_REQUEST);
     }
+    this.logger.log(auth_code)
     try {
       const authData = await this.campaignService.getAccessToken(auth_code);
       return {

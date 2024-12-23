@@ -27,7 +27,7 @@ export class TiktokCampaignService {
 
   // Exchange Authorization Code for Access Token
   async getAccessToken(authCode: string, version: string = 'v1.3') {
-    const endpoint = `${this.getBaseUrl()}${version}/oauth2/access_token/`;
+    const endpoint = `https://business-api.tiktok.com/open_api/v1.3/oauth2/access_token/`;
     const payload = {
       app_id: process.env.TIKTOK_CLIENT_ID,
       secret: process.env.TIKTOK_CLIENT_SECRET,
@@ -40,6 +40,7 @@ export class TiktokCampaignService {
           'Content-Type': 'application/json',
         },
       });
+      this.logger.log(response.data)
       return response.data.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
