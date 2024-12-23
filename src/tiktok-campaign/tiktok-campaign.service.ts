@@ -1,20 +1,24 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
+import { Multer } from 'multer';
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import * as FormData from 'form-data';
 import * as crypto from 'crypto';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
+
 
 @Injectable()
 export class TiktokCampaignService {
   private readonly logger = new Logger(TiktokCampaignService.name);
 
-  constructor(private readonly httpService: HttpService) { }
+  constructor(private readonly httpService: HttpService) {}
 
   private getBaseUrl(): string {
     return process.env.NODE_ENV === 'production'
       ? 'https://business-api.tiktok.com/open_api/'
-      : process.env.TIKTOK_BASE_URL || 'https://sandbox-ads.tiktok.com/open_api/';
+      : process.env.TIKTOK_BASE_URL ||
+          'https://sandbox-ads.tiktok.com/open_api/';
   }
 
   // Generate TikTok OAuth URL
@@ -44,7 +48,9 @@ export class TiktokCampaignService {
       return response.data.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
-      throw new Error(errorDetails?.message || 'Failed to retrieve access token');
+      throw new Error(
+        errorDetails?.message || 'Failed to retrieve access token',
+      );
     }
   }
 
@@ -159,7 +165,9 @@ export class TiktokCampaignService {
       );
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Campaign creation failed');
+      throw new Error(
+        error.response?.data?.message || 'Campaign creation failed',
+      );
     }
   }
 
@@ -219,7 +227,9 @@ export class TiktokCampaignService {
       );
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'Ad group creation failed');
+      throw new Error(
+        error.response?.data?.message || 'Ad group creation failed',
+      );
     }
   }
 
@@ -250,7 +260,10 @@ export class TiktokCampaignService {
   }
 
   // Get User's Videos
-  async fetchUploadedVideos(accessToken: string, advertiserId: string): Promise<any> {
+  async fetchUploadedVideos(
+    accessToken: string,
+    advertiserId: string,
+  ): Promise<any> {
     const endpoint = `${this.getBaseUrl()}v1.3/file/video/ad/search/`;
     try {
       const response = await axios.get(endpoint, {
@@ -264,7 +277,9 @@ export class TiktokCampaignService {
       return response.data?.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
-      throw new Error(errorDetails?.message || 'Failed to fetch uploaded videos');
+      throw new Error(
+        errorDetails?.message || 'Failed to fetch uploaded videos',
+      );
     }
   }
 
@@ -294,12 +309,12 @@ export class TiktokCampaignService {
     try {
       const payload = {
         advertiser_id: advertiserId,
-        dimensions: ["campaign_id"],
-        metrics: ["spend", "impressions", "clicks", "ctr", "cpc", "cpm"],
+        dimensions: ['campaign_id'],
+        metrics: ['spend', 'impressions', 'clicks', 'ctr', 'cpc', 'cpm'],
         filters: [
           {
-            field: "campaign_id",
-            operator: "EQUALS",
+            field: 'campaign_id',
+            operator: 'EQUALS',
             value: campaignId,
           },
         ],
@@ -314,16 +329,21 @@ export class TiktokCampaignService {
         payload,
         {
           headers: {
-            "Access-Token": accessToken,
-            "Content-Type": "application/json",
+            'Access-Token': accessToken,
+            'Content-Type': 'application/json',
           },
         },
       );
 
       return response.data;
     } catch (error) {
-      console.error("Error fetching campaign report:", error.response?.data || error.message);
-      throw new Error(error.response?.data?.message || "Failed to fetch campaign report.");
+      console.error(
+        'Error fetching campaign report:',
+        error.response?.data || error.message,
+      );
+      throw new Error(
+        error.response?.data?.message || 'Failed to fetch campaign report.',
+      );
     }
   }
 

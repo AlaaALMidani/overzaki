@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Controller,
   Get,
@@ -16,7 +17,7 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 @Controller('tiktok-campaign')
 export class TiktokCampaignController {
   private readonly logger = new Logger(TiktokCampaignController.name);
-  constructor(private readonly campaignService: TiktokCampaignService) { }
+  constructor(private readonly campaignService: TiktokCampaignService) {}
 
   @Get('login')
   @Redirect()
@@ -28,7 +29,10 @@ export class TiktokCampaignController {
   @Get('callback')
   async handleCallback(@Query('auth_code') auth_code: string) {
     if (!auth_code) {
-      throw new HttpException('Authorization code not provided', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Authorization code not provided',
+        HttpStatus.BAD_REQUEST,
+      );
     }
     this.logger.log(auth_code)
     try {
@@ -38,7 +42,10 @@ export class TiktokCampaignController {
         data: authData,
       };
     } catch (error) {
-      throw new HttpException(error.message || 'Authentication failed', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        error.message || 'Authentication failed',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
  
@@ -158,40 +165,62 @@ export class TiktokCampaignController {
     }
   }
   @Get('uploaded-videos')
-  async fetchUploadedVideos(@Query() query: { accessToken: string; advertiserId: string }) {
+  async fetchUploadedVideos(
+    @Query() query: { accessToken: string; advertiserId: string },
+  ) {
     const { accessToken, advertiserId } = query;
 
     if (!accessToken || !advertiserId) {
-      throw new HttpException('Access token and advertiser ID are required', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Access token and advertiser ID are required',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     try {
-      const videos = await this.campaignService.fetchUploadedVideos(accessToken, advertiserId);
+      const videos = await this.campaignService.fetchUploadedVideos(
+        accessToken,
+        advertiserId,
+      );
       return {
         message: 'Uploaded videos fetched successfully',
         data: videos,
       };
     } catch (error) {
-      throw new HttpException(error.message || 'Failed to fetch uploaded videos', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        error.message || 'Failed to fetch uploaded videos',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
   @Get('identity')
-  async fetchIdentity(@Query() query: { accessToken: string; advertiserId: string }) {
+  async fetchIdentity(
+    @Query() query: { accessToken: string; advertiserId: string },
+  ) {
     const { accessToken, advertiserId } = query;
 
     if (!accessToken || !advertiserId) {
-      throw new HttpException('Access token and advertiser ID are required', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Access token and advertiser ID are required',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     try {
-      const identity = await this.campaignService.fetchIdentity(accessToken, advertiserId);
+      const identity = await this.campaignService.fetchIdentity(
+        accessToken,
+        advertiserId,
+      );
       return {
         message: 'fetch identity successfully',
         data: identity,
       };
     } catch (error) {
-      throw new HttpException(error.message || 'Failed to fetch uploaded videos', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        error.message || 'Failed to fetch uploaded videos',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -199,12 +228,22 @@ export class TiktokCampaignController {
   @UseInterceptors(FileInterceptor('videoFile'))
   async uploadVideo(
     @UploadedFile() file: Express.Multer.File,
-    @Body() body: { accessToken: string; advertiserId: string; flawDetect?: boolean; autoFixEnabled?: boolean; autoBindEnabled?: boolean; },
+    @Body()
+    body: {
+      accessToken: string;
+      advertiserId: string;
+      flawDetect?: boolean;
+      autoFixEnabled?: boolean;
+      autoBindEnabled?: boolean;
+    },
   ) {
     const { accessToken, advertiserId, flawDetect, autoFixEnabled, autoBindEnabled } = body;
 
     if (!accessToken || !advertiserId) {
-      throw new HttpException('Access token and advertiser ID are required', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Access token and advertiser ID are required',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     if (!file) {
@@ -225,7 +264,10 @@ export class TiktokCampaignController {
         data: uploadResult,
       };
     } catch (error) {
-      throw new HttpException(error.message || 'Video upload failed', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        error.message || 'Video upload failed',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -265,7 +307,10 @@ export class TiktokCampaignController {
     try {
       return typeof json === 'string' ? JSON.parse(json) : json;
     } catch (error) {
-      throw new HttpException(`Invalid JSON format for ${field}`, HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        `Invalid JSON format for ${field}`,
+        HttpStatus.BAD_REQUEST,
+      );
     }
   }
 
