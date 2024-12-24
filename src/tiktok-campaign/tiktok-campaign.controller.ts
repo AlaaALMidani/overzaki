@@ -436,4 +436,51 @@ export class TiktokCampaignController {
       );
     }
   }
+  @Post('create-feed')
+  async createFeed(
+    @Body() body: {
+      accessToken: string;
+      businessType: string;
+      timezone: string;
+      regionCode: string;
+      currency: string;
+      feedName: string;
+      updateMode: string;
+    },
+  ) {
+    try {
+      this.logger.log('Received request to create feed...');
+      const {
+        accessToken,
+        businessType,
+        timezone,
+        regionCode,
+        currency,
+        feedName,
+        updateMode,
+      } = body;
+
+      const result = await this.campaignService.createFeed(
+        accessToken,
+        businessType,
+        timezone,
+        regionCode,
+        currency,
+        feedName,
+      );
+
+      return {
+        status: 'success',
+        message: 'Feed created successfully',
+        data: result,
+      };
+    } catch (error) {
+      this.logger.error('Error creating feed:', error.message);
+      return {
+        status: 'error',
+        message: error.message || 'Failed to create feed',
+      };
+    }
+  }
+
 }
