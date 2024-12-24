@@ -11,8 +11,7 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
 
   constructor(private readonly httpService: HttpService) {
     super({
-      clientID: '1339742127198789',
-      clientSecret: 'ad7b0b3f168a3f37852991919eecd069',
+      
       callbackURL: 'http://localhost:3000/auth/facebook/callback', // Replace with production URL
       profileFields: ['id', 'emails', 'name'], // Fields to fetch
     });
