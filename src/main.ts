@@ -2,14 +2,16 @@
 
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-
+// import { join } from 'path';
+// import * as express from 'express';
 // Bootstrap Function
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  // app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
   const port = process.env.PORT || 3000;
   app.enableCors({
     origin: ['http://localhost:3001'],
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    methods: '*',
     credentials: true,
   });
   await app.listen(port);

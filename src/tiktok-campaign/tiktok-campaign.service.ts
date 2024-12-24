@@ -1,12 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 
-
-import { Multer } from 'multer';
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import * as FormData from 'form-data';
 import * as crypto from 'crypto';
 import { HttpService } from '@nestjs/axios';
-
 
 @Injectable()
 export class TiktokCampaignService {
@@ -44,7 +42,7 @@ export class TiktokCampaignService {
           'Content-Type': 'application/json',
         },
       });
-      this.logger.log(response.data)
+      this.logger.log(response.data);
       return response.data.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
@@ -101,9 +99,13 @@ export class TiktokCampaignService {
 
     const formData = new FormData();
     formData.append('advertiser_id', advertiserId);
-    formData.append('file_name', file.originalname);
+    formData.append('file_name', file.originalname, {
+      filename: `${Date.now()}_${file.originalname}`,
+    });
     formData.append('upload_type', 'UPLOAD_BY_FILE');
-    formData.append('image_file', file.buffer, { filename: file.originalname + Date.now() });
+    formData.append('image_file', file.buffer, {
+      filename: `${Date.now()}_${file.originalname}`,
+    });
     formData.append('image_signature', await this.computeFileHash(file.buffer));
     try {
       const response = await axios.post(endpoint, formData, {
@@ -112,14 +114,14 @@ export class TiktokCampaignService {
           'Access-Token': accessToken,
         },
       });
-
+      console.log('Upload response:', response.data);
       return response.data?.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
+      console.error('Image upload error details:', errorDetails);
       throw new Error(errorDetails?.message || 'Image upload failed');
     }
   }
-
 
   async computeFileHash(fileBuffer: Buffer): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -175,24 +177,24 @@ export class TiktokCampaignService {
     accessToken: string,
     advertiserId: string,
     adGroupDetails: {
-      campaignId: string,
-      adgroupName: string,
-      promotionType: string,
-      placementType: string,
-      placements: Array<string>,
-      locationIds: Array<string>,
-      budgetMode: string,
-      budget: number,
-      scheduleType: string,
-      scheduleEndTime: string,
-      scheduleStartTime: string,
-      optimizationGoal: string,
-      bidType: string,
-      billingEvent: string,
-      pacing: string,
-      operationStatus: string
-      identityId: string
-    }
+      campaignId: string;
+      adgroupName: string;
+      promotionType: string;
+      placementType: string;
+      placements: Array<string>;
+      locationIds: Array<string>;
+      budgetMode: string;
+      budget: number;
+      scheduleType: string;
+      scheduleEndTime: string;
+      scheduleStartTime: string;
+      optimizationGoal: string;
+      bidType: string;
+      billingEvent: string;
+      pacing: string;
+      operationStatus: string;
+      identityId: string;
+    },
   ) {
     try {
       const payload = {
@@ -213,7 +215,7 @@ export class TiktokCampaignService {
         billing_event: adGroupDetails.billingEvent,
         pacing: adGroupDetails.pacing,
         operation_status: adGroupDetails.operationStatus,
-        identity_id: adGroupDetails.identityId
+        identity_id: adGroupDetails.identityId,
       };
       const response = await axios.post(
         `${this.getBaseUrl()}v1.3/adgroup/create/`,
@@ -225,8 +227,10 @@ export class TiktokCampaignService {
           },
         },
       );
+      console.log('Upload response:', response.data);
       return response.data;
     } catch (error) {
+      console.error('Image upload error details:', error.message);
       throw new Error(
         error.response?.data?.message || 'Ad group creation failed',
       );
@@ -236,13 +240,13 @@ export class TiktokCampaignService {
   async createIdentity(
     accessToken: string,
     advertiserId: string,
-    displayName: string
+    displayName: string,
   ) {
     try {
       const payload = {
         advertiser_id: advertiserId,
         display_name: displayName,
-      }
+      };
       const response = await axios.post(
         `${this.getBaseUrl()}v1.3/identity/create/`,
         payload,
@@ -255,7 +259,9 @@ export class TiktokCampaignService {
       );
       return response.data;
     } catch (error) {
-      throw new Error(error.response?.data?.message || 'identity creation failed');
+      throw new Error(
+        error.response?.data?.message || 'identity creation failed',
+      );
     }
   }
 
@@ -292,7 +298,8 @@ export class TiktokCampaignService {
           'Content-Type': 'application/json',
         },
         params: { advertiser_id: advertiserId },
-      }); return response.data?.data;
+      });
+      return response.data?.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
       throw new Error(errorDetails?.message || 'Failed to fetch');
@@ -347,7 +354,6 @@ export class TiktokCampaignService {
     }
   }
 
-
   async setupAdCampaign(
     accessToken: string,
     advertiserId: string,
@@ -376,36 +382,56 @@ export class TiktokCampaignService {
         landingPageUrl: 'https://www.example.com/',
         scheduleStartTime: Number(scheduleStartTime),
       };
-      const campaign = await this.createCampaign(accessToken, advertiserId, campaignDetails);
+      const campaign = await this.createCampaign(
+        accessToken,
+        advertiserId,
+        campaignDetails,
+      );
       const campaignId = campaign?.data?.campaign_id;
-      if (!campaignId) throw new Error('Campaign creation failed: Missing campaign ID.');
+      if (!campaignId)
+        throw new Error('Campaign creation failed: Missing campaign ID.');
       this.logger.log(`Campaign created successfully with ID: ${campaignId}`);
 
       // Step 2: Upload Media Files
       this.logger.log('Uploading media files...');
-      const videoUpload = await this.uploadVideoByFile(videoFile, accessToken, advertiserId);
+      const videoUpload = await this.uploadVideoByFile(
+        videoFile,
+        accessToken,
+        advertiserId,
+      );
       const videoId = videoUpload?.video_id;
       if (!videoId) throw new Error('Video upload failed: Missing video ID.');
       this.logger.log(`Video uploaded successfully with ID: ${videoId}`);
 
-      const imageUpload = await this.uploadImageByFile(imageFile, accessToken, advertiserId);
+      const imageUpload = await this.uploadImageByFile(
+        imageFile,
+        accessToken,
+        advertiserId,
+      );
       const imageId = imageUpload?.image_id;
       if (!imageId) throw new Error('Image upload failed: Missing image ID.');
       this.logger.log(`Image uploaded successfully with ID: ${imageId}`);
 
       // Step 3: Create Identity
       this.logger.log('Creating identity...');
-      const existingIdentity = await this.fetchIdentity(accessToken, advertiserId);
+      const existingIdentity = await this.fetchIdentity(
+        accessToken,
+        advertiserId,
+      );
       let identityId = existingIdentity?.[0]?.identity_id;
       if (!identityId) {
-        const identity = await this.createIdentity(accessToken, advertiserId, displayName);
+        const identity = await this.createIdentity(
+          accessToken,
+          advertiserId,
+          displayName,
+        );
         identityId = identity?.data?.identity_id;
       }
-      if (!identityId) throw new Error('Identity creation failed: Missing identity ID.');
+      if (!identityId)
+        throw new Error('Identity creation failed: Missing identity ID.');
       this.logger.log(`Identity created successfully with ID: ${identityId}`);
 
       // Step 4: Create Ad Group
-      this.logger.log('Creating ad group...');
       const adGroupDetails = {
         adgroupName: campaignName,
         campaignId,
@@ -425,9 +451,14 @@ export class TiktokCampaignService {
         operationStatus: 'ENABLE',
         identityId,
       };
-      const adGroup = await this.createAdGroup(accessToken, advertiserId, adGroupDetails);
+      const adGroup = await this.createAdGroup(
+        accessToken,
+        advertiserId,
+        adGroupDetails,
+      );
       const adGroupId = adGroup?.data?.adgroup_id;
-      if (!adGroupId) throw new Error('Ad group creation failed: Missing ad group ID.');
+      if (!adGroupId)
+        throw new Error('Ad group creation failed: Missing ad group ID.');
       this.logger.log(`Ad group created successfully with ID: ${adGroupId}`);
 
       // Step 5: Create Ad
@@ -435,19 +466,21 @@ export class TiktokCampaignService {
       const adPayload = {
         advertiser_id: advertiserId,
         adgroup_id: adGroupId,
-        creatives: [{
-          ad_name:campaignName,
-          display_name:displayName,
-          app_name:"OverZaki",
-          call_to_action:"WATCH_NOW",
-          ad_text:adText,
-          video_id:videoId,
-          identity_id:identityId,
-          identity_type: "CUSTOMIZED_USER",
-          ad_format: "SINGLE_VIDEO",
-          image_ids: [imageId],
-          landing_page_url: "https://www.overzaki.com",
-        }]
+        creatives: [
+          {
+            ad_name: campaignName,
+            display_name: displayName,
+            app_name: 'OverZaki',
+            call_to_action: 'WATCH_NOW',
+            ad_text: adText,
+            video_id: videoId,
+            identity_id: identityId,
+            identity_type: 'CUSTOMIZED_USER',
+            ad_format: 'SINGLE_VIDEO',
+            image_ids: [imageId],
+            landing_page_url: 'https://www.overzaki.com',
+          },
+        ],
       };
 
       const createAdResponse = await axios.post(
@@ -461,8 +494,14 @@ export class TiktokCampaignService {
         },
       );
       const adId = createAdResponse.data.data.ad_ids?.[0];
+      console.log('adId', adId);
+      console.log('createAdResponse', createAdResponse);
+
       if (!adId) {
-        throw new Error(`Ad creation failed: ${createAdResponse?.data?.message || 'Unknown error'}`);
+        console.log('!adId', adId);
+        throw new Error(
+          `Ad creation failed: ${createAdResponse?.data?.message || 'Unknown error'}`,
+        );
       }
       return {
         campaign,
@@ -471,17 +510,12 @@ export class TiktokCampaignService {
         ad: createAdResponse.data,
       };
     } catch (error) {
+      console.log('!adId', error.message);
       const errorDetails = error.response?.data || error.message;
-      this.logger.error(`Failed to set up ad campaign: ${JSON.stringify(errorDetails)}`);
+      this.logger.error(
+        `Failed to set up ad campaign: ${JSON.stringify(errorDetails)}`,
+      );
       throw new Error(errorDetails?.message || 'Failed to set up ad campaign.');
     }
   }
-
-
-
-
-
 }
-
-
-
