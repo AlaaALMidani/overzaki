@@ -1,4 +1,4 @@
-
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Controller,
   Get,
@@ -9,11 +9,15 @@ import {
   HttpException,
   HttpStatus,
   Logger,
-  UploadedFile, UseInterceptors,  UploadedFiles, 
+  UploadedFile,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import {
+  FileInterceptor,
+  FileFieldsInterceptor,
+} from '@nestjs/platform-express';
 import { TiktokCampaignService } from './tiktok-campaign.service';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
 @Controller('tiktok-campaign')
 export class TiktokCampaignController {
   private readonly logger = new Logger(TiktokCampaignController.name);
@@ -34,7 +38,7 @@ export class TiktokCampaignController {
         HttpStatus.BAD_REQUEST,
       );
     }
-    this.logger.log(auth_code)
+    this.logger.log(auth_code);
     try {
       const authData = await this.campaignService.getAccessToken(auth_code);
       return {
@@ -48,13 +52,23 @@ export class TiktokCampaignController {
       );
     }
   }
- 
+
   @Post('campaign-report')
   async getCampaignReport(@Body() body: any) {
-    const { accessToken, advertiser_id, campaign_id, start_date, end_date } = body;
+    const { accessToken, advertiser_id, campaign_id, start_date, end_date } =
+      body;
 
-    if (!accessToken || !advertiser_id || !campaign_id || !start_date || !end_date) {
-      throw new HttpException('Missing required fields', HttpStatus.BAD_REQUEST);
+    if (
+      !accessToken ||
+      !advertiser_id ||
+      !campaign_id ||
+      !start_date ||
+      !end_date
+    ) {
+      throw new HttpException(
+        'Missing required fields',
+        HttpStatus.BAD_REQUEST,
+      );
     }
     try {
       const report = await this.campaignService.getCampaignReport(
@@ -70,7 +84,10 @@ export class TiktokCampaignController {
         data: report,
       };
     } catch (error) {
-      throw new HttpException(error.message || 'Failed to fetch campaign report', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        error.message || 'Failed to fetch campaign report',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
@@ -79,7 +96,7 @@ export class TiktokCampaignController {
     FileFieldsInterceptor([
       { name: 'videoFile', maxCount: 1 },
       { name: 'imageFile', maxCount: 1 },
-    ])
+    ]),
   )
   async setupAdCampaign(
     @Body() body: any,
@@ -94,7 +111,7 @@ export class TiktokCampaignController {
       advertiserId,
       campaignName,
       budgetMode,
-      locationIds,
+      locationIds: rawLocationIds,
       scheduleEndTime,
       scheduleStartTime,
       budget,
@@ -102,7 +119,9 @@ export class TiktokCampaignController {
       displayName,
       adText,
     } = body;
-  
+    const locationIds = rawLocationIds
+      .split(',')
+      .map((item) => item.replace(/"/g, ''));
     // Validate required fields
     if (
       !accessToken ||
@@ -122,26 +141,27 @@ export class TiktokCampaignController {
         HttpStatus.BAD_REQUEST,
       );
     }
-  
-   
-    if (!files.videoFile || !files.imageFile) {
+
+    if (
+      !files.videoFile ||
+      files.videoFile.length === 0 ||
+      !files.imageFile ||
+      files.imageFile.length === 0
+    ) {
       throw new HttpException(
         'Both video and image files are required.',
         HttpStatus.BAD_REQUEST,
       );
     }
-  
     const videoFile = files.videoFile[0];
     const imageFile = files.imageFile[0];
-  
     try {
-     
       const result = await this.campaignService.setupAdCampaign(
         accessToken,
         advertiserId,
         campaignName,
         budgetMode,
-        JSON.parse(locationIds), 
+        locationIds,
         scheduleEndTime,
         scheduleStartTime,
         Number(budget),
@@ -151,7 +171,7 @@ export class TiktokCampaignController {
         videoFile,
         imageFile,
       );
-  
+
       return {
         message: 'Ad campaign setup successfully.',
         data: result,
@@ -237,7 +257,13 @@ export class TiktokCampaignController {
       autoBindEnabled?: boolean;
     },
   ) {
-    const { accessToken, advertiserId, flawDetect, autoFixEnabled, autoBindEnabled } = body;
+    const {
+      accessToken,
+      advertiserId,
+      flawDetect,
+      autoFixEnabled,
+      autoBindEnabled,
+    } = body;
 
     if (!accessToken || !advertiserId) {
       throw new HttpException(
@@ -275,12 +301,15 @@ export class TiktokCampaignController {
   @UseInterceptors(FileInterceptor('imageFile'))
   async imageVideo(
     @UploadedFile() file: Express.Multer.File,
-    @Body() body: { accessToken: string; advertiserId: string; },
+    @Body() body: { accessToken: string; advertiserId: string },
   ) {
     const { accessToken, advertiserId } = body;
 
     if (!accessToken || !advertiserId) {
-      throw new HttpException('Access token and advertiser ID are required', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Access token and advertiser ID are required',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     if (!file) {
@@ -298,10 +327,12 @@ export class TiktokCampaignController {
         data: uploadResult,
       };
     } catch (error) {
-      throw new HttpException(error.message || 'Image upload failed', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        error.message || 'Image upload failed',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
-
 
   private parseJson(json: any, field: string) {
     try {
@@ -318,61 +349,91 @@ export class TiktokCampaignController {
   async createIdentity(@Body() body: any) {
     const { accessToken, advertiserId, displayName } = body;
     if (!accessToken || !advertiserId || !displayName) {
-      throw new HttpException('Access token, advertiserId, and displayName are required', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Access token, advertiserId, and displayName are required',
+        HttpStatus.BAD_REQUEST,
+      );
     }
     try {
-      const identityResult = await this.campaignService.createIdentity(accessToken, advertiserId, displayName)
+      const identityResult = await this.campaignService.createIdentity(
+        accessToken,
+        advertiserId,
+        displayName,
+      );
       return {
         message: 'Identity created successfully',
         data: identityResult,
       };
     } catch (error) {
-      throw new HttpException(error.message || 'Identity creation failed', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        error.message || 'Identity creation failed',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
-@Post('create-campaign')
+  @Post('create-campaign')
   async createCampaign(@Body() body: any) {
     const { accessToken, advertiser_id, campaignDetails } = body;
     if (!accessToken || !advertiser_id || !campaignDetails) {
-      throw new HttpException('Access token, advertiser_id, and campaignDetails are required', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Access token, advertiser_id, and campaignDetails are required',
+        HttpStatus.BAD_REQUEST,
+      );
     }
     try {
-      const parsedCampaignDetails = this.parseJson(campaignDetails, 'campaignDetails');
-      const campaignResult = await this.campaignService.createCampaign(accessToken, advertiser_id, parsedCampaignDetails);
+      const parsedCampaignDetails = this.parseJson(
+        campaignDetails,
+        'campaignDetails',
+      );
+      const campaignResult = await this.campaignService.createCampaign(
+        accessToken,
+        advertiser_id,
+        parsedCampaignDetails,
+      );
       return {
         message: 'Campaign created successfully',
         data: campaignResult,
       };
     } catch (error) {
-      throw new HttpException(error.message || 'Campaign creation failed', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        error.message || 'Campaign creation failed',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
-
 
   @Post('create-AdGroup')
   async createAdGroup(@Body() body: any) {
     const { accessToken, advertiser_id, adGroupDetails } = body;
 
     if (!accessToken || !advertiser_id || !adGroupDetails) {
-      throw new HttpException('Access token, advertiser_id, and AdGroupDetails are required', HttpStatus.BAD_REQUEST);
+      throw new HttpException(
+        'Access token, advertiser_id, and AdGroupDetails are required',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
     try {
-      const parsedAdGroupDetails = this.parseJson(adGroupDetails, 'adGroupDetails');
-      const adGroupResult = await this.campaignService.createAdGroup(accessToken, advertiser_id, parsedAdGroupDetails);
+      const parsedAdGroupDetails = this.parseJson(
+        adGroupDetails,
+        'adGroupDetails',
+      );
+      const adGroupResult = await this.campaignService.createAdGroup(
+        accessToken,
+        advertiser_id,
+        parsedAdGroupDetails,
+      );
 
       return {
         message: 'AdGroup created successfully',
         data: adGroupResult,
       };
     } catch (error) {
-      throw new HttpException(error.message || 'AdGroup creation failed', HttpStatus.INTERNAL_SERVER_ERROR);
+      throw new HttpException(
+        error.message || 'AdGroup creation failed',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
-
-
 }
-
-
-
