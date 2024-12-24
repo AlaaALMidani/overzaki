@@ -1,5 +1,4 @@
 
-
 import { Multer } from 'multer';
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
@@ -12,13 +11,13 @@ import { HttpService } from '@nestjs/axios';
 export class TiktokCampaignService {
   private readonly logger = new Logger(TiktokCampaignService.name);
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(private readonly httpService: HttpService) { }
 
   private getBaseUrl(): string {
     return process.env.NODE_ENV === 'production'
       ? 'https://business-api.tiktok.com/open_api/'
       : process.env.TIKTOK_BASE_URL ||
-          'https://sandbox-ads.tiktok.com/open_api/';
+      'https://sandbox-ads.tiktok.com/open_api/';
   }
 
   // Generate TikTok OAuth URL
@@ -44,7 +43,7 @@ export class TiktokCampaignService {
           'Content-Type': 'application/json',
         },
       });
-      this.logger.log(response.data)
+
       return response.data.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
@@ -87,7 +86,7 @@ export class TiktokCampaignService {
       return videoData;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
-      this.logger.error('Video upload error:', errorDetails);
+
       throw new Error(errorDetails?.message || 'Video upload failed');
     }
   }
@@ -253,9 +252,78 @@ export class TiktokCampaignService {
           },
         },
       );
-      return response.data;
+      return response.data?.data?.bc_id;
+
     } catch (error) {
       throw new Error(error.response?.data?.message || 'identity creation failed');
+    }
+  }
+  async createBC(
+    accessToken: string,
+    bc_name: string,
+    business_type: string,
+    timezone: string
+  ) {
+    try {
+      const payload = {
+        bc_name: bc_name + accessToken.slice(0, 3),
+        business_type: business_type,
+        timezone: timezone
+      }
+      const response = await axios.post("https://business-api.tiktok.com/open_api/v1.3/bc/create/", payload, {
+        headers: {
+          'Access-Token': accessToken,
+          'Content-Type': 'application/json',
+        },
+      })
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || 'BC creation failed');
+    }
+  }
+  async createCatalog(
+    accessToken: string,
+    bcId: string,
+    name: string,
+    catalogType: string,
+    regionCode: string,
+    currency: string
+  ): Promise<string> {
+    try {
+      const payload = {
+        bc_id: bcId,
+        name: name,
+        catalog_type: catalogType,
+        catalog_conf: {
+          region_code: regionCode,
+          currency: currency,
+        },
+      };
+
+      // Make the API call
+      const response = await axios.post(
+        "https://business-api.tiktok.com/open_api/v1.3/catalog/create/",
+        payload,
+        {
+          headers: {
+            'Access-Token': accessToken,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const catalogId = response.data?.data?.catalog_id;
+      if (!catalogId) {
+        throw new Error(
+          `Catalog creation failed: Missing catalog ID. Response: ${JSON.stringify(response.data)}`
+        );
+      }
+
+      return catalogId;
+    } catch (error) {
+      const errorDetails = error.response?.data || error.message;
+
+      throw new Error(errorDetails?.message || 'Catalog creation failed');
     }
   }
 
@@ -364,10 +432,9 @@ export class TiktokCampaignService {
     imageFile: Express.Multer.File,
   ) {
     try {
-      this.logger.log('Starting ad campaign setup...');
 
       // Step 1: Create Campaign
-      this.logger.log('Creating campaign...');
+
       const campaignDetails = {
         campaign_name: campaignName,
         objectiveType: 'TRAFFIC',
@@ -379,22 +446,21 @@ export class TiktokCampaignService {
       const campaign = await this.createCampaign(accessToken, advertiserId, campaignDetails);
       const campaignId = campaign?.data?.campaign_id;
       if (!campaignId) throw new Error('Campaign creation failed: Missing campaign ID.');
-      this.logger.log(`Campaign created successfully with ID: ${campaignId}`);
 
       // Step 2: Upload Media Files
-      this.logger.log('Uploading media files...');
+
       const videoUpload = await this.uploadVideoByFile(videoFile, accessToken, advertiserId);
       const videoId = videoUpload?.video_id;
       if (!videoId) throw new Error('Video upload failed: Missing video ID.');
-      this.logger.log(`Video uploaded successfully with ID: ${videoId}`);
+
 
       const imageUpload = await this.uploadImageByFile(imageFile, accessToken, advertiserId);
       const imageId = imageUpload?.image_id;
       if (!imageId) throw new Error('Image upload failed: Missing image ID.');
-      this.logger.log(`Image uploaded successfully with ID: ${imageId}`);
+
 
       // Step 3: Create Identity
-      this.logger.log('Creating identity...');
+
       const existingIdentity = await this.fetchIdentity(accessToken, advertiserId);
       let identityId = existingIdentity?.[0]?.identity_id;
       if (!identityId) {
@@ -402,10 +468,10 @@ export class TiktokCampaignService {
         identityId = identity?.data?.identity_id;
       }
       if (!identityId) throw new Error('Identity creation failed: Missing identity ID.');
-      this.logger.log(`Identity created successfully with ID: ${identityId}`);
+
 
       // Step 4: Create Ad Group
-      this.logger.log('Creating ad group...');
+
       const adGroupDetails = {
         adgroupName: campaignName,
         campaignId,
@@ -428,21 +494,21 @@ export class TiktokCampaignService {
       const adGroup = await this.createAdGroup(accessToken, advertiserId, adGroupDetails);
       const adGroupId = adGroup?.data?.adgroup_id;
       if (!adGroupId) throw new Error('Ad group creation failed: Missing ad group ID.');
-      this.logger.log(`Ad group created successfully with ID: ${adGroupId}`);
+
 
       // Step 5: Create Ad
-      this.logger.log('Creating ad...');
+
       const adPayload = {
         advertiser_id: advertiserId,
         adgroup_id: adGroupId,
         creatives: [{
-          ad_name:campaignName,
-          display_name:displayName,
-          app_name:"OverZaki",
-          call_to_action:"WATCH_NOW",
-          ad_text:adText,
-          video_id:videoId,
-          identity_id:identityId,
+          ad_name: campaignName,
+          display_name: displayName,
+          app_name: "OverZaki",
+          call_to_action: "WATCH_NOW",
+          ad_text: adText,
+          video_id: videoId,
+          identity_id: identityId,
           identity_type: "CUSTOMIZED_USER",
           ad_format: "SINGLE_VIDEO",
           image_ids: [imageId],
@@ -472,12 +538,96 @@ export class TiktokCampaignService {
       };
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
-      this.logger.error(`Failed to set up ad campaign: ${JSON.stringify(errorDetails)}`);
+
       throw new Error(errorDetails?.message || 'Failed to set up ad campaign.');
     }
   }
+  async getBCDetails(accessToken: string) {
+    try {
+      const response = await axios.get('https://business-api.tiktok.com/open_api/v1.3/bc/get/', {
+        headers: {
+          'Access-Token': accessToken,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (response.status === 200) {
+        console.log('BC details fetched successfully:', response.data);
+        return response.data;
+      } else {
+        console.error('Error fetching BC details:', response);
+        throw new Error('Failed to fetch BC details');
+      }
+    } catch (error) {
+      console.error('Error during BC details request:', error.response?.data || error.message);
+      throw new Error(error.response?.data?.message || 'Error fetching BC details');
+    }
+  }
+  async createFeed(
+    accessToken: string,
+    businessType: string,
+    timezone: string,
+    regionCode: string,
+    currency: string,
+    feedName: string,
+
+  ) {
+    try {
 
 
+      // Step 1: Fetch or Create Business Center
+
+      const bcResponse = await this.getBCDetails(accessToken);
+      let bcId: string;
+
+      if (bcResponse?.data?.list?.length > 0) {
+        // Use the first available BC
+        bcId = bcResponse.data.list[0].bc_info.bc_id;
+
+      } else {
+        // Create a new BC if none exists
+
+        const newBcResponse = await this.createBC(accessToken, feedName, businessType, timezone);
+        bcId = newBcResponse?.data?.bc_id;
+        if (!bcId) throw new Error('BC creation failed: Missing BC ID.');
+
+      }
+
+      // Step 2: Create Catalog
+
+      const catalogId = await this.createCatalog(accessToken, bcId, feedName, "ECOM", regionCode, currency);
+
+      if (!catalogId) throw new Error('Catalog creation failed: Missing catalog ID.');
+      // Step 3: Create Feed
+      const feedPayload = {
+        bc_id: bcId,
+        catalog_id: catalogId,
+        feed_name: feedName,
+        update_mode: "INCREMENTAL",
+      };
+
+      const feedResponse = await axios.post(
+        "https://business-api.tiktok.com/open_api/v1.3/catalog/feed/create/",
+        feedPayload,
+        {
+          headers: {
+            'Access-Token': accessToken,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+      const feedId = feedResponse.data?.data?.feed_id;
+      if (!feedId) {
+        throw new Error(
+          `Feed creation failed: Missing feed ID. Response: ${JSON.stringify(feedResponse.data)}`
+        );
+      }
+      return feedId;
+    } catch (error) {
+      const errorDetails = error.response?.data || error.message;
+      throw new Error(errorDetails?.message || 'Feed creation failed');
+    }
+  }
 
 
 
