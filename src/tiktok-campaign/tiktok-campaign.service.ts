@@ -10,13 +10,13 @@ import { HttpService } from '@nestjs/axios';
 export class TiktokCampaignService {
   private readonly logger = new Logger(TiktokCampaignService.name);
 
-  constructor(private readonly httpService: HttpService) { }
+  constructor(private readonly httpService: HttpService) {}
 
   private getBaseUrl(): string {
     return process.env.NODE_ENV === 'production'
       ? 'https://business-api.tiktok.com/open_api/'
       : process.env.TIKTOK_BASE_URL ||
-      'https://sandbox-ads.tiktok.com/open_api/';
+          'https://sandbox-ads.tiktok.com/open_api/';
   }
 
   // Generate TikTok OAuth URL
@@ -257,7 +257,6 @@ export class TiktokCampaignService {
         },
       );
       return response.data?.data?.bc_id;
-
     } catch (error) {
       throw new Error(
         error.response?.data?.message || 'identity creation failed',
@@ -268,20 +267,24 @@ export class TiktokCampaignService {
     accessToken: string,
     bc_name: string,
     business_type: string,
-    timezone: string
+    timezone: string,
   ) {
     try {
       const payload = {
         bc_name: bc_name + accessToken.slice(0, 3),
         business_type: business_type,
-        timezone: timezone
-      }
-      const response = await axios.post("https://business-api.tiktok.com/open_api/v1.3/bc/create/", payload, {
-        headers: {
-          'Access-Token': accessToken,
-          'Content-Type': 'application/json',
+        timezone: timezone,
+      };
+      const response = await axios.post(
+        'https://business-api.tiktok.com/open_api/v1.3/bc/create/',
+        payload,
+        {
+          headers: {
+            'Access-Token': accessToken,
+            'Content-Type': 'application/json',
+          },
         },
-      })
+      );
       return response.data;
     } catch (error) {
       throw new Error(error.response?.data?.message || 'BC creation failed');
@@ -293,7 +296,7 @@ export class TiktokCampaignService {
     name: string,
     catalogType: string,
     regionCode: string,
-    currency: string
+    currency: string,
   ): Promise<string> {
     try {
       const payload = {
@@ -308,20 +311,20 @@ export class TiktokCampaignService {
 
       // Make the API call
       const response = await axios.post(
-        "https://business-api.tiktok.com/open_api/v1.3/catalog/create/",
+        'https://business-api.tiktok.com/open_api/v1.3/catalog/create/',
         payload,
         {
           headers: {
             'Access-Token': accessToken,
             'Content-Type': 'application/json',
           },
-        }
+        },
       );
 
       const catalogId = response.data?.data?.catalog_id;
       if (!catalogId) {
         throw new Error(
-          `Catalog creation failed: Missing catalog ID. Response: ${JSON.stringify(response.data)}`
+          `Catalog creation failed: Missing catalog ID. Response: ${JSON.stringify(response.data)}`,
         );
       }
 
@@ -438,7 +441,6 @@ export class TiktokCampaignService {
     imageFile: Express.Multer.File,
   ) {
     try {
-
       // Step 1: Create Campaign
 
       const campaignDetails = {
@@ -469,7 +471,6 @@ export class TiktokCampaignService {
       const videoId = videoUpload?.video_id;
       if (!videoId) throw new Error('Video upload failed: Missing video ID.');
 
-
       const imageUpload = await this.uploadImageByFile(
         imageFile,
         accessToken,
@@ -477,7 +478,6 @@ export class TiktokCampaignService {
       );
       const imageId = imageUpload?.image_id;
       if (!imageId) throw new Error('Image upload failed: Missing image ID.');
-
 
       // Step 3: Create Identity
       this.logger.log('Creating identity...');
@@ -585,12 +585,15 @@ export class TiktokCampaignService {
   }
   async getBCDetails(accessToken: string) {
     try {
-      const response = await axios.get('https://business-api.tiktok.com/open_api/v1.3/bc/get/', {
-        headers: {
-          'Access-Token': accessToken,
-          'Content-Type': 'application/json',
+      const response = await axios.get(
+        'https://business-api.tiktok.com/open_api/v1.3/bc/get/',
+        {
+          headers: {
+            'Access-Token': accessToken,
+            'Content-Type': 'application/json',
+          },
         },
-      });
+      );
 
       if (response.status === 200) {
         console.log('BC details fetched successfully:', response.data);
@@ -600,8 +603,13 @@ export class TiktokCampaignService {
         throw new Error('Failed to fetch BC details');
       }
     } catch (error) {
-      console.error('Error during BC details request:', error.response?.data || error.message);
-      throw new Error(error.response?.data?.message || 'Error fetching BC details');
+      console.error(
+        'Error during BC details request:',
+        error.response?.data || error.message,
+      );
+      throw new Error(
+        error.response?.data?.message || 'Error fetching BC details',
+      );
     }
   }
   async createFeed(
@@ -611,11 +619,8 @@ export class TiktokCampaignService {
     regionCode: string,
     currency: string,
     feedName: string,
-
   ) {
     try {
-
-
       // Step 1: Fetch or Create Business Center
 
       const bcResponse = await this.getBCDetails(accessToken);
@@ -624,31 +629,42 @@ export class TiktokCampaignService {
       if (bcResponse?.data?.list?.length > 0) {
         // Use the first available BC
         bcId = bcResponse.data.list[0].bc_info.bc_id;
-
       } else {
         // Create a new BC if none exists
 
-        const newBcResponse = await this.createBC(accessToken, feedName, businessType, timezone);
+        const newBcResponse = await this.createBC(
+          accessToken,
+          feedName,
+          businessType,
+          timezone,
+        );
         bcId = newBcResponse?.data?.bc_id;
         if (!bcId) throw new Error('BC creation failed: Missing BC ID.');
-
       }
 
       // Step 2: Create Catalog
 
-      const catalogId = await this.createCatalog(accessToken, bcId, feedName, "ECOM", regionCode, currency);
+      const catalogId = await this.createCatalog(
+        accessToken,
+        bcId,
+        feedName,
+        'ECOM',
+        regionCode,
+        currency,
+      );
 
-      if (!catalogId) throw new Error('Catalog creation failed: Missing catalog ID.');
+      if (!catalogId)
+        throw new Error('Catalog creation failed: Missing catalog ID.');
       // Step 3: Create Feed
       const feedPayload = {
         bc_id: bcId,
         catalog_id: catalogId,
         feed_name: feedName,
-        update_mode: "INCREMENTAL",
+        update_mode: 'INCREMENTAL',
       };
 
       const feedResponse = await axios.post(
-        "https://business-api.tiktok.com/open_api/v1.3/catalog/feed/create/",
+        'https://business-api.tiktok.com/open_api/v1.3/catalog/feed/create/',
         feedPayload,
         {
           headers: {
@@ -660,7 +676,7 @@ export class TiktokCampaignService {
       const feedId = feedResponse.data?.data?.feed_id;
       if (!feedId) {
         throw new Error(
-          `Feed creation failed: Missing feed ID. Response: ${JSON.stringify(feedResponse.data)}`
+          `Feed creation failed: Missing feed ID. Response: ${JSON.stringify(feedResponse.data)}`,
         );
       }
       return feedId;
@@ -669,7 +685,4 @@ export class TiktokCampaignService {
       throw new Error(errorDetails?.message || 'Feed creation failed');
     }
   }
-
-
-
 }
