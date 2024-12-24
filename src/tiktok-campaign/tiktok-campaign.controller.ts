@@ -436,4 +436,54 @@ export class TiktokCampaignController {
       );
     }
   }
+  @Post('create-feed')
+  async createFeed(
+    @Body()
+    body: any,
+  ) {
+    this.logger.log('Received request to create feed...');
+    const {
+      accessToken,
+      businessType,
+      timezone,
+      regionCode,
+      currency,
+      feedName,
+    } = body;
+    if (
+      !accessToken ||
+      !businessType ||
+      !timezone ||
+      !regionCode ||
+      !currency ||
+      !feedName
+    ) {
+      throw new HttpException(
+        'Missing required fields for create-feed.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    try {
+      const result = await this.campaignService.createFeed(
+        accessToken,
+        businessType,
+        timezone,
+        regionCode,
+        currency,
+        feedName,
+      );
+
+      return {
+        status: 'success',
+        message: 'Feed created successfully',
+        data: result,
+      };
+    } catch (error) {
+      this.logger.error('Error creating Tiktok feed:', error.message);
+      return {
+        status: 'error',
+        message: error.message || 'Failed to create feed',
+      };
+    }
+  }
 }
