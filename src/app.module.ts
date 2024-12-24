@@ -3,10 +3,25 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { GoogleCampaignModule } from './google-campaign/google-campaign.module';
 import { TiktokCampaignModule } from './tiktok-campaign/tiktok-campaign.module';
-
+import { UserModule } from './user/user.module';
+import { StripeController } from './stripe/stripe.controller';
+import { StripeService } from './stripe/stripe.service';
+import { StripeModule } from './stripe/stripe.module';
+import { OrderModule } from './order/order.module';
+import { UserService } from './user/user.service';
+import { ConfigModule } from '@nestjs/config';
 @Module({
-  imports: [GoogleCampaignModule,TiktokCampaignModule],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    GoogleCampaignModule,
+    TiktokCampaignModule,
+    UserModule,
+    StripeModule,
+    OrderModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
+  ],
+  controllers: [AppController, StripeController],
+  providers: [AppService, StripeService, UserService],
 })
 export class AppModule {}
