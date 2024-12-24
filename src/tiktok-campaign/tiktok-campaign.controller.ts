@@ -119,9 +119,9 @@ export class TiktokCampaignController {
       displayName,
       adText,
     } = body;
-    const locationIds = Array.isArray(rawLocationIds)
-      ? rawLocationIds
-      : JSON.parse(rawLocationIds);
+    const locationIds = rawLocationIds
+      .split(',')
+      .map((item) => item.replace(/"/g, ''));
     // Validate required fields
     if (
       !accessToken ||
@@ -155,7 +155,6 @@ export class TiktokCampaignController {
     }
     const videoFile = files.videoFile[0];
     const imageFile = files.imageFile[0];
-    console.log('videoFile type:', body);
     try {
       const result = await this.campaignService.setupAdCampaign(
         accessToken,
