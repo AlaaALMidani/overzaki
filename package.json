@@ -24,18 +24,14 @@
     "@nestjs/axios": "^3.1.3",
     "@nestjs/common": "^10.4.13",
     "@nestjs/config": "^3.3.0",
-<<<<<<< HEAD
     "@nestjs/core": "^10.4.15",
-    "@nestjs/platform-express": "^10.4.13",
+    "@nestjs/platform-express": "^10.4.15",
     "@nestjs/platform-socket.io": "^10.4.15",
     "@nestjs/websockets": "^10.4.15",
-=======
-    "@nestjs/core": "^10.4.13",
-    "@nestjs/platform-express": "^10.4.15",
->>>>>>> 66a001ff14fd9bb8aa719e1ac4b11557dfb71505
     "axios": "^1.7.9",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "form-data": "^4.0.1",
     "google-ads-api": "^17.1.0-rest-beta",
