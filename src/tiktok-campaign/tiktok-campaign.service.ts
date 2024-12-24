@@ -1,12 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-import { Multer } from 'multer';
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import * as FormData from 'form-data';
 import * as crypto from 'crypto';
 import { HttpService } from '@nestjs/axios';
-import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class TiktokCampaignService {
@@ -31,7 +29,7 @@ export class TiktokCampaignService {
 
   // Exchange Authorization Code for Access Token
   async getAccessToken(authCode: string, version: string = 'v1.3') {
-    const endpoint = `${this.getBaseUrl()}${version}/oauth2/access_token/`;
+    const endpoint = `https://business-api.tiktok.com/open_api/v1.3/oauth2/access_token/`;
     const payload = {
       app_id: process.env.TIKTOK_CLIENT_ID,
       secret: process.env.TIKTOK_CLIENT_SECRET,
@@ -44,6 +42,7 @@ export class TiktokCampaignService {
           'Content-Type': 'application/json',
         },
       });
+      this.logger.log(response.data);
       return response.data.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
@@ -63,17 +62,15 @@ export class TiktokCampaignService {
     autoBindEnabled: boolean = false,
   ): Promise<any> {
     const endpoint = `${this.getBaseUrl()}v1.3/file/video/ad/upload/`;
-
     const formData = new FormData();
     formData.append('advertiser_id', advertiserId);
-    formData.append('file_name', file.originalname);
+    formData.append('file_name', file.originalname + Date.now());
     formData.append('upload_type', 'UPLOAD_BY_FILE');
     formData.append('video_file', file.buffer, { filename: file.originalname });
     formData.append('video_signature', await this.computeFileHash(file.buffer));
     formData.append('flaw_detect', flawDetect.toString());
     formData.append('auto_fix_enabled', autoFixEnabled.toString());
     formData.append('auto_bind_enabled', autoBindEnabled.toString());
-
     try {
       const response = await axios.post(endpoint, formData, {
         headers: {
@@ -81,13 +78,51 @@ export class TiktokCampaignService {
           'Access-Token': accessToken,
         },
       });
-
-      return response.data?.data;
+      const videoData = response.data?.data?.[0];
+      if (!videoData?.video_id) {
+        throw new Error('Video upload failed: Missing video ID.');
+      }
+      return videoData;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
+      this.logger.error('Video upload error:', errorDetails);
       throw new Error(errorDetails?.message || 'Video upload failed');
     }
   }
+
+  async uploadImageByFile(
+    file: Express.Multer.File,
+    accessToken: string,
+    advertiserId: string,
+  ): Promise<any> {
+    const endpoint = `${this.getBaseUrl()}v1.3/file/image/ad/upload/`;
+
+    const formData = new FormData();
+    formData.append('advertiser_id', advertiserId);
+    formData.append('file_name', file.originalname, {
+      filename: `${Date.now()}_${file.originalname}`,
+    });
+    formData.append('upload_type', 'UPLOAD_BY_FILE');
+    formData.append('image_file', file.buffer, {
+      filename: `${Date.now()}_${file.originalname}`,
+    });
+    formData.append('image_signature', await this.computeFileHash(file.buffer));
+    try {
+      const response = await axios.post(endpoint, formData, {
+        headers: {
+          ...formData.getHeaders(),
+          'Access-Token': accessToken,
+        },
+      });
+      console.log('Upload response:', response.data);
+      return response.data?.data;
+    } catch (error) {
+      const errorDetails = error.response?.data || error.message;
+      console.error('Image upload error details:', errorDetails);
+      throw new Error(errorDetails?.message || 'Image upload failed');
+    }
+  }
+
   async computeFileHash(fileBuffer: Buffer): Promise<string> {
     return new Promise((resolve, reject) => {
       const hash = crypto.createHash('md5');
@@ -158,6 +193,7 @@ export class TiktokCampaignService {
       billingEvent: string;
       pacing: string;
       operationStatus: string;
+      identityId: string;
     },
   ) {
     try {
@@ -179,6 +215,7 @@ export class TiktokCampaignService {
         billing_event: adGroupDetails.billingEvent,
         pacing: adGroupDetails.pacing,
         operation_status: adGroupDetails.operationStatus,
+        identity_id: adGroupDetails.identityId,
       };
       const response = await axios.post(
         `${this.getBaseUrl()}v1.3/adgroup/create/`,
@@ -190,35 +227,28 @@ export class TiktokCampaignService {
           },
         },
       );
+      console.log('Upload response:', response.data);
       return response.data;
     } catch (error) {
+      console.error('Image upload error details:', error.message);
       throw new Error(
         error.response?.data?.message || 'Ad group creation failed',
       );
     }
   }
 
-  // Create Feed Ad
-  async createFeedAd(
+  async createIdentity(
     accessToken: string,
     advertiserId: string,
-    campaignId: string,
-    adDetails: { ad_name: string; video_id: string },
+    displayName: string,
   ) {
     try {
       const payload = {
         advertiser_id: advertiserId,
-        adgroup_id: campaignId,
-        ad_name: adDetails.ad_name,
-        promotion_type: 'CUSTOM_CREATIVE',
-        creative: {
-          video_id: adDetails.video_id,
-          call_to_action: 'LEARN_MORE',
-        },
+        display_name: displayName,
       };
-
       const response = await axios.post(
-        `${this.getBaseUrl()}v1.2/ad/create/`,
+        `${this.getBaseUrl()}v1.3/identity/create/`,
         payload,
         {
           headers: {
@@ -227,45 +257,10 @@ export class TiktokCampaignService {
           },
         },
       );
-
       return response.data;
     } catch (error) {
       throw new Error(
-        error.response?.data?.message || 'Feed Ad creation failed',
-      );
-    }
-  }
-
-  // Create Spark Ad
-  async createSparkAd(
-    accessToken: string,
-    advertiserId: string,
-    campaignId: string,
-    adDetails: { ad_name: string; post_id: string },
-  ) {
-    try {
-      const payload = {
-        advertiser_id: advertiserId,
-        adgroup_id: campaignId,
-        ad_name: adDetails.ad_name,
-        promotion_type: 'POST',
-        post_id: adDetails.post_id,
-      };
-      const response = await axios.post(
-        `${this.getBaseUrl()}v1.2/ad/create/`,
-        payload,
-        {
-          headers: {
-            'Access-Token': accessToken,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-
-      return response.data;
-    } catch (error) {
-      throw new Error(
-        error.response?.data?.message || 'Spark Ad creation failed',
+        error.response?.data?.message || 'identity creation failed',
       );
     }
   }
@@ -356,6 +351,171 @@ export class TiktokCampaignService {
       throw new Error(
         error.response?.data?.message || 'Failed to fetch campaign report.',
       );
+    }
+  }
+
+  async setupAdCampaign(
+    accessToken: string,
+    advertiserId: string,
+    campaignName: string,
+    budgetMode: string,
+    locationIds: Array<string>,
+    scheduleEndTime: string,
+    scheduleStartTime: string,
+    budget: number,
+    optimizationGoal: string,
+    displayName: string,
+    adText: string,
+    videoFile: Express.Multer.File,
+    imageFile: Express.Multer.File,
+  ) {
+    try {
+      this.logger.log('Starting ad campaign setup...');
+
+      // Step 1: Create Campaign
+      this.logger.log('Creating campaign...');
+      const campaignDetails = {
+        campaign_name: campaignName,
+        objectiveType: 'TRAFFIC',
+        budgetMode,
+        budget,
+        landingPageUrl: 'https://www.example.com/',
+        scheduleStartTime: Number(scheduleStartTime),
+      };
+      const campaign = await this.createCampaign(
+        accessToken,
+        advertiserId,
+        campaignDetails,
+      );
+      const campaignId = campaign?.data?.campaign_id;
+      if (!campaignId)
+        throw new Error('Campaign creation failed: Missing campaign ID.');
+      this.logger.log(`Campaign created successfully with ID: ${campaignId}`);
+
+      // Step 2: Upload Media Files
+      this.logger.log('Uploading media files...');
+      const videoUpload = await this.uploadVideoByFile(
+        videoFile,
+        accessToken,
+        advertiserId,
+      );
+      const videoId = videoUpload?.video_id;
+      if (!videoId) throw new Error('Video upload failed: Missing video ID.');
+      this.logger.log(`Video uploaded successfully with ID: ${videoId}`);
+
+      const imageUpload = await this.uploadImageByFile(
+        imageFile,
+        accessToken,
+        advertiserId,
+      );
+      const imageId = imageUpload?.image_id;
+      if (!imageId) throw new Error('Image upload failed: Missing image ID.');
+      this.logger.log(`Image uploaded successfully with ID: ${imageId}`);
+
+      // Step 3: Create Identity
+      this.logger.log('Creating identity...');
+      const existingIdentity = await this.fetchIdentity(
+        accessToken,
+        advertiserId,
+      );
+      let identityId = existingIdentity?.[0]?.identity_id;
+      if (!identityId) {
+        const identity = await this.createIdentity(
+          accessToken,
+          advertiserId,
+          displayName,
+        );
+        identityId = identity?.data?.identity_id;
+      }
+      if (!identityId)
+        throw new Error('Identity creation failed: Missing identity ID.');
+      this.logger.log(`Identity created successfully with ID: ${identityId}`);
+
+      // Step 4: Create Ad Group
+      const adGroupDetails = {
+        adgroupName: campaignName,
+        campaignId,
+        promotionType: 'WEBSITE',
+        placementType: 'PLACEMENT_TYPE_NORMAL',
+        placements: ['PLACEMENT_TIKTOK'],
+        locationIds,
+        budgetMode,
+        budget,
+        scheduleType: 'SCHEDULE_START_END',
+        scheduleEndTime,
+        scheduleStartTime,
+        optimizationGoal,
+        bidType: 'BID_TYPE_NO_BID',
+        billingEvent: 'CPC',
+        pacing: 'PACING_MODE_SMOOTH',
+        operationStatus: 'ENABLE',
+        identityId,
+      };
+      const adGroup = await this.createAdGroup(
+        accessToken,
+        advertiserId,
+        adGroupDetails,
+      );
+      const adGroupId = adGroup?.data?.adgroup_id;
+      if (!adGroupId)
+        throw new Error('Ad group creation failed: Missing ad group ID.');
+      this.logger.log(`Ad group created successfully with ID: ${adGroupId}`);
+
+      // Step 5: Create Ad
+      this.logger.log('Creating ad...');
+      const adPayload = {
+        advertiser_id: advertiserId,
+        adgroup_id: adGroupId,
+        creatives: [
+          {
+            ad_name: campaignName,
+            display_name: displayName,
+            app_name: 'OverZaki',
+            call_to_action: 'WATCH_NOW',
+            ad_text: adText,
+            video_id: videoId,
+            identity_id: identityId,
+            identity_type: 'CUSTOMIZED_USER',
+            ad_format: 'SINGLE_VIDEO',
+            image_ids: [imageId],
+            landing_page_url: 'https://www.overzaki.com',
+          },
+        ],
+      };
+
+      const createAdResponse = await axios.post(
+        `${this.getBaseUrl()}v1.3/ad/create/`,
+        adPayload,
+        {
+          headers: {
+            'Access-Token': accessToken,
+            'Content-Type': 'application/json',
+          },
+        },
+      );
+      const adId = createAdResponse.data.data.ad_ids?.[0];
+      console.log('adId', adId);
+      console.log('createAdResponse', createAdResponse);
+
+      if (!adId) {
+        console.log('!adId', adId);
+        throw new Error(
+          `Ad creation failed: ${createAdResponse?.data?.message || 'Unknown error'}`,
+        );
+      }
+      return {
+        campaign,
+        adGroup,
+        identity: existingIdentity || { data: { identity_id: identityId } },
+        ad: createAdResponse.data,
+      };
+    } catch (error) {
+      console.log('!adId', error.message);
+      const errorDetails = error.response?.data || error.message;
+      this.logger.error(
+        `Failed to set up ad campaign: ${JSON.stringify(errorDetails)}`,
+      );
+      throw new Error(errorDetails?.message || 'Failed to set up ad campaign.');
     }
   }
 }
