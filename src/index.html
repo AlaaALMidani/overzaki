@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/ar_AR/sdk.js"></script>
+  
+  <div id="fb-root"></div>
+  <script>
+    window.fbAsyncInit = function() {
+      FB.init({
+        appId      : '1339742127198789',
+        cookie     : true,
+        xfbml      : true,
+        version    : 'v21.0'
+      });
+    };
+  
+    function login() {
+      FB.login(function(response) {
+        if (response.authResponse) {
+          const accessToken = response.authResponse.accessToken;
+          console.log('Access Token:', accessToken);
+          // Send the access token to your backend
+        } else {
+          console.log('User cancelled login or did not fully authorize.');
+        }
+      }, {scope: 'ads_management,ads_read,pages_manage_posts,pages_read_engagement,pages_show_list'});
+    }
+  </script>
+  
+  <button onclick="login()">Login with Facebook</button>
+  
+</body>
+
+</html>

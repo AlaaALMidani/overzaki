@@ -438,28 +438,32 @@ export class TiktokCampaignController {
   }
   @Post('create-feed')
   async createFeed(
-    @Body() body: {
-      accessToken: string;
-      businessType: string;
-      timezone: string;
-      regionCode: string;
-      currency: string;
-      feedName: string;
-      updateMode: string;
-    },
+    @Body()
+    body: any,
   ) {
+    this.logger.log('Received request to create feed...');
+    const {
+      accessToken,
+      businessType,
+      timezone,
+      regionCode,
+      currency,
+      feedName,
+    } = body;
+    if (
+      !accessToken ||
+      !businessType ||
+      !timezone ||
+      !regionCode ||
+      !currency ||
+      !feedName
+    ) {
+      throw new HttpException(
+        'Missing required fields for create-feed.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     try {
-      this.logger.log('Received request to create feed...');
-      const {
-        accessToken,
-        businessType,
-        timezone,
-        regionCode,
-        currency,
-        feedName,
-        updateMode,
-      } = body;
-
       const result = await this.campaignService.createFeed(
         accessToken,
         businessType,
@@ -475,12 +479,11 @@ export class TiktokCampaignController {
         data: result,
       };
     } catch (error) {
-      this.logger.error('Error creating feed:', error.message);
+      this.logger.error('Error creating Tiktok feed:', error.message);
       return {
         status: 'error',
         message: error.message || 'Failed to create feed',
       };
     }
   }
-
 }
