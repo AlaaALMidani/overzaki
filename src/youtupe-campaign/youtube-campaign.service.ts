@@ -1,7 +1,7 @@
+/* eslint-disable prettier/prettier */
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { GoogleAdsApi, Customer } from 'google-ads-api';
 import * as dotenv from 'dotenv';
-import { Logger } from 'winston';
 
 dotenv.config();
 
@@ -48,7 +48,7 @@ export class YouTubeCampaignService {
     videoId: string,
     startDate: string,
     endDate: string,
-    biddingStrategy: string,
+    biddingStrategy: string, // Use 'TARGET_CPA' or 'MANUAL_CPV'
   ): Promise<{
     message: string;
     campaign: string;
@@ -56,34 +56,13 @@ export class YouTubeCampaignService {
     ad: string;
   }> {
     try {
+
       console.log('=== Starting YouTube campaign creation process ===');
-
-      const validatedVideoId = this.validateVideoId(videoId);
-
-      const videoAssetResourceName = await this.createVideoAsset(
-        name,
-        validatedVideoId,
-      );
-      const budgetResourceName = await this.createCampaignBudget(
-        name,
-        budgetAmountMicros,
-      );
-      const campaignResourceName = await this.createCampaign(
-        name,
-        budgetResourceName,
-        startDate,
-        endDate,
-        biddingStrategy,
-      );
-      const adGroupResourceName = await this.createAdGroup(
-        name,
-        campaignResourceName,
-      );
-      const adResourceName = await this.createAdGroupAd(
-        adGroupResourceName,
-        videoAssetResourceName,
-      );
-
+      const videoAssetResourceName = await this.createVideoAsset(name, videoId);
+      const budgetResourceName = await this.createCampaignBudget(name, budgetAmountMicros);
+      const campaignResourceName = await this.createCampaign(name, budgetResourceName, startDate, endDate, biddingStrategy);
+      const adGroupResourceName = await this.createAdGroup(name, campaignResourceName);
+      const adResourceName = await this.createAdGroupAd(adGroupResourceName, videoAssetResourceName);
       console.log('=== YouTube campaign creation completed successfully ===');
 
       return {
@@ -92,8 +71,8 @@ export class YouTubeCampaignService {
         adGroup: adGroupResourceName,
         ad: adResourceName,
       };
+
     } catch (error) {
-      console.error('Error creating YouTube campaign:', error);
       this.handleGoogleAdsError(error);
     }
   }
@@ -141,6 +120,7 @@ export class YouTubeCampaignService {
         name: `${name}_Budget`,
         amount_micros: amountMicros,
         delivery_method: 'STANDARD',
+        explicitly_shared: false, // Ensure the budget is not shared
       },
     ]);
 
@@ -161,35 +141,47 @@ export class YouTubeCampaignService {
   ): Promise<string> {
     console.log('Creating campaign...');
 
-    // Construct the campaign creation payload
     const payload: any = {
+      start_date: startDate,
+      end_date: endDate,
       name,
       status: 'PAUSED',
       advertising_channel_type: 'VIDEO',
+      advertising_channel_sub_type: 'VIDEO_ACTION',
       campaign_budget: budgetResourceName,
-      start_date: startDate,
-      end_date: endDate,
-      campaign_bidding_strategy: {},
+      bidding_strategy_type: 'TARGET_CPA', // Or 'MAXIMIZE_CONVERSIONS'
+      target_cpa: { target_cpa_micros: 2000000 }, // Only if using TARGET_CPA
+      // Remove target_cpm
+      network_settings: {
+          target_youtube_watch: true, // Typically for Video Action
+      },
     };
-    console.log(payload);
-    // Map the bidding strategy to the appropriate field
-    if (biddingStrategy === 'MAXIMIZE_CONVERSIONS') {
-      payload.campaign_bidding_strategy.maximize_conversions = {};
-    } else if (biddingStrategy === 'TARGET_CPA') {
-      payload.campaign_bidding_strategy.target_cpa = {
-        target_cpa_micros: 1000000,
-      }; // Replace with actual CPA
-    } else {
-      throw new Error(`Unsupported bidding strategy: ${biddingStrategy}`);
-    }
 
-    // Create the campaign
+    // Handle bidding strategy
+    // switch (biddingStrategy) {
+    //   case 'MAXIMIZE_CONVERSIONS':
+    //     payload.bidding_strategy_type = 'MAXIMIZE_CONVERSIONS';
+    //     payload.maximize_conversions = {};
+    //     break;
+    //   case 'MANUAL_CPM':
+    //     payload.bidding_strategy_type = 'MANUAL_CPM';
+    //     payload.manual_cpm = {};
+    //     break;
+    //   case 'TARGET_CPA':
+    //     payload.bidding_strategy_type = 'TARGET_CPA';
+    //     payload.target_cpa = { target_cpa_micros: 2000000 }; // Example value - set appropriately
+    //     break;
+    //   default:
+    //     throw new Error(`Unsupported bidding strategy: ${biddingStrategy}`);
+    // }
+
     const response = await this.googleAdsClient.campaigns.create([payload]);
-
     const resourceName = response.results[0]?.resource_name;
+
     if (!resourceName) {
       throw new Error('Failed to create campaign.');
     }
+
     console.log('Campaign created:', resourceName);
     return resourceName;
   }
@@ -250,6 +242,8 @@ export class YouTubeCampaignService {
       field: err.location?.field_path_elements,
       reason: err.error_code,
     }));
+
+    console.error('Google Ads API Error:', errorDetails);
 
     throw new HttpException(
       {

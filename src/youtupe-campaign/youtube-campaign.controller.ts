@@ -19,12 +19,24 @@ export class YouTubeCampaignController {
     try {
       console.log('=== Received request to create YouTube campaign ===');
 
+      // Validate and format dates
+      const startDate = new Date(body.startDate).toISOString().split('T')[0];
+      const endDate = new Date(body.endDate).toISOString().split('T')[0];
+
+      // Validate request body fields
+      if (!body.name || !body.budgetAmountMicros || !body.videoId) {
+        throw new HttpException(
+          'Missing required fields: name, budgetAmountMicros, or videoId.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
       const result = await this.youtubeCampaignService.createYouTubeCampaign(
         body.name,
         body.budgetAmountMicros,
         body.videoId,
-        new Date(body.startDate).toISOString().split('T')[0], // Convert to YYYY-MM-DD
-        new Date(body.endDate).toISOString().split('T')[0],
+        startDate,
+        endDate,
         body.biddingStrategy,
       );
 
@@ -35,7 +47,7 @@ export class YouTubeCampaignController {
 
       const message =
         error.response?.message || 'Failed to create YouTube campaign';
-      const details = error.response?.details || error.message;
+      const details = error;
 
       throw new HttpException(
         {
