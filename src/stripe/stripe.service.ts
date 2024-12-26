@@ -5,13 +5,12 @@ import Stripe from 'stripe';
 @Injectable()
 export class StripeService {
   private stripe: Stripe;
-  private webhookSecret: string;
+  private webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
   static refunds: any;
   constructor() {
     this.stripe = new Stripe(process.env.STRIP_SECRET_KEY, {
       apiVersion: null,
-      maxNetworkRetries: 5,
     });
   }
   // استرداد معلومات PaymentIntent من Stripe
@@ -54,19 +53,17 @@ export class StripeService {
       endpointSecret,
     );
   }
-  verifyWebhookSignature(payload: string, sigHeader: string): boolean {
-    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  public verifyWebhookSignature(rawBody: Buffer, signature: string) {
     try {
       const event = this.stripe.webhooks.constructEvent(
-        payload,
-        sigHeader,
-        endpointSecret,
+        rawBody,
+        signature,
+        this.webhookSecret,
       );
-      console.log('event', event);
-      if (event) return true;
+      return event;
     } catch (err) {
       console.error('Webhook Signature verification failed:', err.message);
-      return false;
+      throw new Error('Webhook signature verification failed');
     }
   }
 }
