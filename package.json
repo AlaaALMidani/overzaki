@@ -8,7 +8,7 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "set NODE_OPTIONS=--max-old-space-size=8192 && nest start",
+    "start": "set NODE_OPTIONS=--max-old-space-size=12288   && nest start",
     "pm2-start": "pm2 start npm --name \"overzaki\" -- start --max-old-space-size=8192",
     "start:dev": "ts-node-dev --respawn --transpile-only src/main.ts",
     "start:debug": "nest start --debug --watch",
