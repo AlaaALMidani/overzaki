@@ -4,14 +4,19 @@ import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-facebook';
-
+import * as dotenv from 'dotenv';
+dotenv.config();
 @Injectable()
-export class FacebookCampaignService extends PassportStrategy(Strategy, 'facebook') {
+export class FacebookCampaignService extends PassportStrategy(
+  Strategy,
+  'facebook',
+) {
   private readonly BASE_URL = 'https://graph.facebook.com/v21.0';
 
   constructor(private readonly httpService: HttpService) {
     super({
-      
+      clientID: process.env.FACEBOOK_CLIENT_ID,
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
       callbackURL: 'http://localhost:3000/auth/facebook/callback', // Replace with production URL
       profileFields: ['id', 'emails', 'name'], // Fields to fetch
     });
@@ -22,7 +27,11 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
     return { profile, accessToken };
   }
 
-  async createCampaign(accessToken: string, adAccountId: string, campaignDetails: any) {
+  async createCampaign(
+    accessToken: string,
+    adAccountId: string,
+    campaignDetails: any,
+  ) {
     const url = `${this.BASE_URL}/act_${adAccountId}/campaigns`;
 
     const validObjectives = [
@@ -54,7 +63,8 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
       );
       return response.data;
     } catch (error) {
-      const errorMessage = error.response?.data?.error?.message || 'Unknown error occurred';
+      const errorMessage =
+        error.response?.data?.error?.message || 'Unknown error occurred';
       throw new Error(`Failed to create campaign: ${errorMessage}`);
     }
   }
@@ -70,7 +80,8 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
       );
       return response.data.data; // List of Ad Accounts
     } catch (error) {
-      const errorMessage = error.response?.data?.error?.message || 'Unknown error occurred';
+      const errorMessage =
+        error.response?.data?.error?.message || 'Unknown error occurred';
       throw new Error(`Failed to fetch ad accounts: ${errorMessage}`);
     }
   }
