@@ -1,3 +1,4 @@
+import Stripe from 'stripe';
 import { StripeService } from '../stripe/stripe.service';
 import { OrderGateway } from './order.gateway';
 import { OrderService } from './order.service';
@@ -26,74 +27,51 @@ export class WebhookController {
     @Req() req,
     @Headers('stripe-signature') signature: string,
   ) {
-    console.log('Webhook Received!');
-    console.log('stripeSignature:', signature);
-    console.log(
-      this.stripeService.verifyWebhookSignature(
-        JSON.stringify(req.body),
-        signature,
-      ),
-    );
-    // const rawBody =
-    //   req.body instanceof Buffer
-    //     ? req.body.toString('utf-8')
-    //     : JSON.stringify(req.body);
-    // console.log('Raw Body:', rawBody);
-    // const isValid = this.stripeService.verifyWebhookSignature(
-    //   rawBody,
-    //   signature,
-    // );
-    // if (!isValid) {
-    //   return { error: 'Webhook signature verification failed' };
-    // }
+    const rawBody = req['body'].toString();
     try {
-      // const event = JSON.parse(rawBody);
-      // console.log('Event Received:', event);
+      const event = this.stripeService.verifyWebhookSignature(
+        rawBody,
+        signature,
+      );
+      console.log('Webhook received:', event);
 
-      // const payload = req.rawBody;
-      // console.log('payload', payload);
-      // const event = this.stripeService.constructEvent(payload, stripeSignature);
-      // this.logger.log(`Received Stripe event: ${event.type}`);
-      // console.log('event', event.type);
+      this.logger.log(`Received Stripe event: ${event.type}`);
 
-      // this.logger.log(`Received Stripe event: ${event.type}`);
+      if (event.type === 'payment_intent.succeeded') {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        this.orderService.updateOrderStatus(
+          paymentIntent.metadata.orderId,
+          'approved',
+        );
 
-      // if (event.type === 'payment_intent.succeeded') {
-      //   const paymentIntent = event.data.object as Stripe.PaymentIntent;
-      //   this.orderService.updateOrderStatus(
-      //     paymentIntent.metadata.orderId,
-      //     'approved',
-      //   );
+        this.orderGateway.notifyOrderStatus(
+          paymentIntent.metadata.orderId,
+          'approved',
+        );
+        this.logger.log(
+          `Order ${paymentIntent.metadata.orderId} approved successfully.`,
+        );
+      }
 
-      //   this.orderGateway.notifyOrderStatus(
-      //     paymentIntent.metadata.orderId,
-      //     'approved',
-      //   );
-      //   this.logger.log(
-      //     `Order ${paymentIntent.metadata.orderId} approved successfully.`,
-      //   );
-      // }
+      if (event.type === 'payment_intent.payment_failed') {
+        const paymentIntent = event.data.object as Stripe.PaymentIntent;
+        const updatedOrder = this.orderService.updateOrderStatus(
+          paymentIntent.metadata.orderId,
+          'rejected',
+        );
 
-      // if (event.type === 'payment_intent.payment_failed') {
-      //   const paymentIntent = event.data.object as Stripe.PaymentIntent;
-      //   const updatedOrder = this.orderService.updateOrderStatus(
-      //     paymentIntent.metadata.orderId,
-      //     'rejected',
-      //   );
+        await this.orderService.refundOrder(updatedOrder.id);
 
-      //   await this.orderService.refundOrder(updatedOrder.id);
+        this.orderGateway.notifyOrderStatus(
+          paymentIntent.metadata.orderId,
+          'rejected',
+        );
+        this.stripeService.refundPayment(paymentIntent.id, updatedOrder.amount);
 
-      //   this.orderGateway.notifyOrderStatus(
-      //     paymentIntent.metadata.orderId,
-      //     'rejected',
-      //   );
-      //   // this.stripeService.refundPayment(paymentIntent.id, updatedOrder.amount);
-
-      //   this.logger.warn(
-      //     `Order ${paymentIntent.metadata.orderId} rejected and refunded.`,
-      //   );
-      // }
-
+        this.logger.warn(
+          `Order ${paymentIntent.metadata.orderId} rejected and refunded.`,
+        );
+      }
       return { received: true };
     } catch (err) {
       console.error('Error processing webhook event', err);

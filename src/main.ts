@@ -2,14 +2,13 @@
 
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { raw } from 'express';
 
 // import { join } from 'path';
-// import * as express from 'express';
+import * as express from 'express';
 // Bootstrap Function
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.use('/webhook', raw({ type: 'application/json' }));
+  app.use('/webhook', express.raw({ type: 'application/json' }));
   // app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
   const port = process.env.PORT || 3000;
   app.enableCors({
