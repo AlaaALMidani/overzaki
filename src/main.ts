@@ -12,9 +12,8 @@ async function bootstrap() {
   // app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
   const port = process.env.PORT || 3000;
   app.enableCors({
-    // origin: ['http://localhost:3001', 'https://over-zaki0.vercel.app/'],
-    origin: ['*'],
-    methods: '*',
+    origin: ['http://localhost:3001', 'https://over-zaki0.vercel.app'],
+    methods: 'GET,POST,PUT,DELETE,OPTIONS',
     credentials: true,
   });
   await app.listen(port);
