@@ -214,7 +214,7 @@ export class TiktokCampaignService {
         billing_event: adGroupDetails.billingEvent,
         pacing: adGroupDetails.pacing,
         operation_status: adGroupDetails.operationStatus,
-        identity_id: adGroupDetails.identityId,
+        identity_id: adGroupDetails?.identityId,
       };
       const response = await axios.post(
         `${this.getBaseUrl()}v1.3/adgroup/create/`,
@@ -256,8 +256,10 @@ export class TiktokCampaignService {
           },
         },
       );
-      return response.data?.data?.bc_id;
+
+      return response.data?.data?.bc_id || response.data?.data?.identity_id;
     } catch (error) {
+      console.log(' Error', error.response?.data?.message);
       throw new Error(
         error.response?.data?.message || 'identity creation failed',
       );
