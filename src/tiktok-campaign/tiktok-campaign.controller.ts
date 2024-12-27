@@ -111,7 +111,7 @@ export class TiktokCampaignController {
       advertiserId,
       campaignName,
       budgetMode,
-      locationIds,
+      locationIds: rawLocationIds,
       scheduleEndTime,
       scheduleStartTime,
       budget,
@@ -119,7 +119,9 @@ export class TiktokCampaignController {
       displayName,
       adText,
     } = body;
-    
+    const locationIds =Array.isArray(rawLocationIds) ? rawLocationIds :
+    rawLocationIds.split(',')
+      .map((item) => item.replace(/"/g, ''));
     if (
       !accessToken ||
       !advertiserId ||
@@ -181,6 +183,9 @@ export class TiktokCampaignController {
       );
     }
   }
+
+
+
 
 
   
