@@ -111,6 +111,8 @@ export class TiktokCampaignController {
       advertiserId,
       campaignName,
       budgetMode,
+      // locationIds,
+      // ***************************
       locationIds: rawLocationIds,
       scheduleEndTime,
       scheduleStartTime,
@@ -119,9 +121,11 @@ export class TiktokCampaignController {
       displayName,
       adText,
     } = body;
-    const locationIds = rawLocationIds
-      .split(',')
-      .map((item) => item.replace(/"/g, ''));
+    // ***************************
+    const locationIds = Array.isArray(rawLocationIds)
+      ? rawLocationIds
+      : rawLocationIds.split(',').map((item) => item.replace(/"/g, ''));
+
     // Validate required fields
     if (
       !accessToken ||
@@ -141,7 +145,7 @@ export class TiktokCampaignController {
         HttpStatus.BAD_REQUEST,
       );
     }
-
+    console.log(body);
     if (
       !files.videoFile ||
       files.videoFile.length === 0 ||
@@ -171,7 +175,6 @@ export class TiktokCampaignController {
         videoFile,
         imageFile,
       );
-
       return {
         message: 'Ad campaign setup successfully.',
         data: result,

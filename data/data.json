@@ -3,7 +3,7 @@
     {
       "id": "1",
       "name": "User",
-      "walletBalance": 1500,
+      "walletBalance": 2000,
       "role": "user"
     },
     {
@@ -27,6 +27,13 @@
       "type": "deposit",
       "paymentIntent": "pi_3QYwqxFfxkp1DJee1Gu1Iz47",
       "timestamp": "2024-12-22T21:38:26.479Z"
+    },
+    {
+      "userId": "1",
+      "amount": 500,
+      "type": "deposit",
+      "paymentIntent": "pi_3QamIWFfxkp1DJee0IluSPKc",
+      "timestamp": "2024-12-27T22:46:27.375Z"
     }
   ],
   "orders": [
@@ -35,7 +42,7 @@
       "userId": "1",
       "serviceName": "100",
       "amount": 20,
-      "status": "rejected",
+      "status": "pending",
       "createdAt": "2024-12-22T16:31:35.012Z",
       "updatedAt": "2024-12-22T16:32:01.536Z"
     }
