@@ -1,15 +1,16 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable } from '@nestjs/common';
 import Stripe from 'stripe';
 
 @Injectable()
 export class StripeService {
   private stripe: Stripe;
+  private webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
   static refunds: any;
-  constructEvent: any;
   constructor() {
     this.stripe = new Stripe(process.env.STRIP_SECRET_KEY, {
       apiVersion: null,
-      maxNetworkRetries: 5,
     });
   }
   // استرداد معلومات PaymentIntent من Stripe
@@ -43,5 +44,26 @@ export class StripeService {
       payment_intent: paymentIntentId,
       amount: amount ? amount * 100 : undefined,
     });
+  }
+  public constructEvent(payload: any, signature: string) {
+    const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    return this.stripe.webhooks.constructEvent(
+      payload,
+      signature,
+      endpointSecret,
+    );
+  }
+  public verifyWebhookSignature(rawBody: Buffer, signature: string) {
+    try {
+      const event = this.stripe.webhooks.constructEvent(
+        rawBody,
+        signature,
+        this.webhookSecret,
+      );
+      return event;
+    } catch (err) {
+      console.error('Webhook Signature verification failed:', err.message);
+      throw new Error('Webhook signature verification failed');
+    }
   }
 }
