@@ -120,11 +120,13 @@ export class TiktokCampaignController {
       adText,
     } = body;
     const locationIds = Array.isArray(rawLocationIds)
-    ? rawLocationIds
-    : rawLocationIds
-        .replace(/[\[\]]/g, '')
-        .split(',')
-        .map((item) => item.trim().replace(/"/g, ''));
+    ? [...new Set(rawLocationIds)]
+    : [...new Set(
+        rawLocationIds
+          .replace(/[\[\]]/g, '')
+          .split(',')
+          .map((item) => item.trim().replace(/"/g, ''))
+      )];
   
     if (
       !accessToken ||
