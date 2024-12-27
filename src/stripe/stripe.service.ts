@@ -45,3 +45,15 @@ export class StripeService {
     });
   }
 }
+
+// async function createCustomer(userEmail) {
+//   const customer = await stripe.customers.create({
+//     email: userEmail, 
+//   });
+
+//   console.log('Customer Created:', customer.id);
+//   return customer.id; 
+// }
+
+
+// createCustomer('user@example.com');

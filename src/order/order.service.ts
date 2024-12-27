@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
-import { Order } from '../user/order.interface';
+import { Order } from './order.interface';
 @Injectable()
 export class OrderService {
   private readonly filePath = path.join(process.cwd(), 'data', 'data.json');

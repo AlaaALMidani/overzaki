@@ -4,14 +4,16 @@ import { HttpService } from '@nestjs/axios';
 import { lastValueFrom } from 'rxjs';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-facebook';
-
+import * as dotenv from 'dotenv';
+dotenv.config();
 @Injectable()
 export class FacebookCampaignService extends PassportStrategy(Strategy, 'facebook') {
   private readonly BASE_URL = 'https://graph.facebook.com/v21.0';
 
   constructor(private readonly httpService: HttpService) {
     super({
-      
+      clientID: process.env.FACEBOOK_CLIENT_ID,
+      clientSecret: process.env.FACEBOOK_CLIENT_SECRET,
       callbackURL: 'http://localhost:3000/auth/facebook/callback', // Replace with production URL
       profileFields: ['id', 'emails', 'name'], // Fields to fetch
     });

@@ -1,71 +1,35 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import * as fs from 'fs';
-import * as path from 'path';
+import { ConflictException, Injectable } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+
+export interface User {
+  id?: string;
+  email: string;
+  passwordHash: string;
+  roles?: string[];
+}
+
 @Injectable()
 export class UserService {
-  private readonly filePath = path.join(process.cwd(), 'data', 'data.json');
-  private readData() {
-    const rawData = fs.readFileSync(this.filePath, 'utf8');
-    return JSON.parse(rawData);
-  }
-  private writeData(data: any) {
-    fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2));
+  constructor(@InjectModel('User') private readonly userModel: Model<User>) {}
+
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userModel.findOne({ email }).exec();
   }
 
-  getUserById(userId: string) {
-    const data = this.readData();
-    return data.users.find((user: any) => user.id === userId);
-  }
-  getBalance(userId: string): number | null {
-    const data = this.readData();
-    const user = data.users.find((user: any) => user.id === userId);
-
-    if (!user) {
-      throw new BadRequestException('User not found');
+  async createUser(user: {
+    email: string;
+    passwordHash: string;
+  }): Promise<any> {
+    try {
+      const newUser = new this.userModel(user);
+      return await newUser.save();
+    } catch (error) {
+      if (error.code === 11000) {
+        // MongoDB duplicate key error
+        throw new ConflictException('Email is already in use');
+      }
+      throw error;
     }
-    return user.walletBalance || 0;
-  }
-  updateUserBalance(
-    userId: string,
-    amount: number,
-    type: string,
-    paymentIntent?: any,
-  ) {
-    const data = this.readData();
-    const user = data.users.find((user: any) => user.id === userId);
-
-    if (!user) {
-      throw new BadRequestException('User not found');
-    }
-
-    if (type === 'refund') {
-      user.walletBalance += amount;
-    } else {
-      user.walletBalance += type === 'deposit' ? amount : -amount;
-    }
-    if (!data.transactions) {
-      data.transactions = [];
-    }
-    data.transactions.push({
-      userId,
-      amount,
-      type,
-      paymentIntent,
-      timestamp: new Date().toISOString(),
-    });
-
-    this.writeData(data);
-
-    return user.walletBalance;
-  }
-  isAdmin(userId: string): boolean {
-    const data = this.readData();
-    const user = data.users.find((user: any) => user.id === userId);
-
-    if (!user) {
-      throw new Error('User not found');
-    }
-
-    return user.role === 'admin';
   }
 }
