@@ -111,7 +111,7 @@ export class TiktokCampaignController {
       advertiserId,
       campaignName,
       budgetMode,
-      locationIds: rawLocationIds,
+      locationIds,
       scheduleEndTime,
       scheduleStartTime,
       budget,
@@ -119,10 +119,7 @@ export class TiktokCampaignController {
       displayName,
       adText,
     } = body;
-    const locationIds = rawLocationIds
-      .split(',')
-      .map((item) => item.replace(/"/g, ''));
-    // Validate required fields
+    
     if (
       !accessToken ||
       !advertiserId ||
@@ -184,6 +181,9 @@ export class TiktokCampaignController {
       );
     }
   }
+
+
+  
   @Get('uploaded-videos')
   async fetchUploadedVideos(
     @Query() query: { accessToken: string; advertiserId: string },
@@ -457,7 +457,6 @@ export class TiktokCampaignController {
         regionCode,
         currency,
         feedName,
-        updateMode,
       } = body;
 
       const result = await this.campaignService.createFeed(
