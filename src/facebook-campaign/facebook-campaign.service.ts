@@ -78,7 +78,7 @@ export class FacebookCampaignService extends PassportStrategy(
           params: { access_token: accessToken },
         }),
       );
-      return response.data.data; // List of Ad Accounts
+      return response.data.data;
     } catch (error) {
       const errorMessage =
         error.response?.data?.error?.message || 'Unknown error occurred';

@@ -121,12 +121,15 @@ export class TiktokCampaignController {
       displayName,
       adText,
     } = body;
-    // ***************************
     const locationIds = Array.isArray(rawLocationIds)
-      ? rawLocationIds
-      : rawLocationIds.split(',').map((item) => item.replace(/"/g, ''));
-
-    // Validate required fields
+    ? [...new Set(rawLocationIds)]
+    : [...new Set(
+        rawLocationIds
+          .replace(/[\[\]]/g, '')
+          .split(',')
+          .map((item) => item.trim().replace(/"/g, ''))
+      )];
+  
     if (
       !accessToken ||
       !advertiserId ||
@@ -187,6 +190,8 @@ export class TiktokCampaignController {
       );
     }
   }
+
+  
   @Get('uploaded-videos')
   async fetchUploadedVideos(
     @Query() query: { accessToken: string; advertiserId: string },
@@ -467,6 +472,16 @@ export class TiktokCampaignController {
       );
     }
     try {
+      this.logger.log('Received request to create feed...');
+      const {
+        accessToken,
+        businessType,
+        timezone,
+        regionCode,
+        currency,
+        feedName,
+      } = body;
+
       const result = await this.campaignService.createFeed(
         accessToken,
         businessType,
