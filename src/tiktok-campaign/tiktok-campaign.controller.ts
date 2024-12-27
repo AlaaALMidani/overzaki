@@ -111,6 +111,8 @@ export class TiktokCampaignController {
       advertiserId,
       campaignName,
       budgetMode,
+      // locationIds,
+      // ***************************
       locationIds: rawLocationIds,
       scheduleEndTime,
       scheduleStartTime,
@@ -146,7 +148,7 @@ export class TiktokCampaignController {
         HttpStatus.BAD_REQUEST,
       );
     }
-
+    console.log(body);
     if (
       !files.videoFile ||
       files.videoFile.length === 0 ||
@@ -176,7 +178,6 @@ export class TiktokCampaignController {
         videoFile,
         imageFile,
       );
-
       return {
         message: 'Ad campaign setup successfully.',
         data: result,

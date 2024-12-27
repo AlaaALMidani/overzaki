@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 @Injectable()
 @WebSocketGateway({
   cors: {
-    origin: ['http://localhost:3001'],
+    origin: ['http://localhost:3001', 'https://over-zaki0.vercel.app'],
     methods: ['GET', 'POST'],
     credentials: true,
   },
