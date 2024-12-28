@@ -18,6 +18,7 @@ import {
   FileFieldsInterceptor,
 } from '@nestjs/platform-express';
 import { TiktokCampaignService } from './tiktok-campaign.service';
+import { query } from 'express';
 @Controller('tiktok-campaign')
 export class TiktokCampaignController {
   private readonly logger = new Logger(TiktokCampaignController.name);
@@ -466,66 +467,33 @@ export class TiktokCampaignController {
       };
     }
   }
-
+  
   @Get('report')
-  async getCampaignReport(
-    @Query('accessToken') accessToken: string,
-    @Query('advertiserId') advertiserId: string,
-    @Query('campaignIds') campaignIds: string,
-    @Query('startDate') startDate: string,
-    @Query('endDate') endDate: string,
-  ) {
-    // Validate required query parameters
-    if (!accessToken || !advertiserId || !campaignIds || !startDate || !endDate) {
+  async fetchReport(
+    @Query() query: { accessToken: string; advertiserId: string },
+  ){
+    const { accessToken, advertiserId } = query;
+    if (!accessToken || !advertiserId) {
       throw new HttpException(
-        'Missing required query parameters: accessToken, advertiserId, campaignIds, startDate, endDate',
+        'Access token and advertiser ID are required',
         HttpStatus.BAD_REQUEST,
       );
     }
-  
-    let parsedCampaignIds: string[];
     try {
-      // Parse `campaignIds` from JSON or split comma-separated values
-      parsedCampaignIds = JSON.parse(campaignIds);
-    } catch {
-      parsedCampaignIds = campaignIds.split(',').map((id) => id.trim());
-    }
-  
-    // Ensure no duplicate campaign IDs
-    parsedCampaignIds = [...new Set(parsedCampaignIds)];
-  
-    this.logger.log('Fetching campaign report with params', {
-      accessToken,
-      advertiserId,
-      campaignIds: parsedCampaignIds,
-      startDate,
-      endDate,
-    });
-  
-    try {
-      const report = await this.campaignService.fetchCampaignReport(
+      const videos = await this.campaignService.getReport(
         accessToken,
         advertiserId,
-        parsedCampaignIds,
-        startDate,
-        endDate,
       );
-  
       return {
-        message: 'Campaign report fetched successfully',
-        data: report,
+        message: 'report  fetched successfully',
+        data: videos,
       };
     } catch (error) {
-      this.logger.error('Error fetching campaign report', error.message, error.stack);
-  
-      // Include meaningful error message in response
       throw new HttpException(
-        error.message || 'Failed to fetch campaign report',
+        error.message || 'Failed to fetch report',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
-  
-  
 }
 

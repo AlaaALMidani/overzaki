@@ -10,13 +10,13 @@ import { HttpService } from '@nestjs/axios';
 export class TiktokCampaignService {
   private readonly logger = new Logger(TiktokCampaignService.name);
 
-  constructor(private readonly httpService: HttpService) {}
+  constructor(private readonly httpService: HttpService) { }
 
   private getBaseUrl(): string {
     return process.env.NODE_ENV === 'production'
       ? 'https://business-api.tiktok.com/open_api/'
       : process.env.TIKTOK_BASE_URL ||
-          'https://sandbox-ads.tiktok.com/open_api/';
+      'https://sandbox-ads.tiktok.com/open_api/';
   }
 
   // Generate TikTok OAuth URL
@@ -406,12 +406,12 @@ export class TiktokCampaignService {
         scheduleStartTime: Number(scheduleStartTime),
       };
       this.logger.log(`Campaign details: ${JSON.stringify(campaignDetails)}`);
-  
+
       const campaign = await this.createCampaign(accessToken, advertiserId, campaignDetails);
       const campaignId = campaign?.data?.campaign_id;
       if (!campaignId) throw new Error('Campaign creation failed: Missing campaign ID.');
       this.logger.log(`Campaign created successfully with ID: ${campaignId}`);
-  
+
       // Step 2: Upload Media Files
       this.logger.log('Step 2: Uploading media files...');
       this.logger.log('Uploading video...');
@@ -419,19 +419,19 @@ export class TiktokCampaignService {
       const videoId = videoUpload?.video_id;
       if (!videoId) throw new Error('Video upload failed: Missing video ID.');
       this.logger.log(`Video uploaded successfully with ID: ${videoId}`);
-  
+
       this.logger.log('Uploading image...');
       const imageUpload = await this.uploadImageByFile(imageFile, accessToken, advertiserId);
       const imageId = imageUpload?.image_id;
       if (!imageId) throw new Error('Image upload failed: Missing image ID.');
       this.logger.log(`Image uploaded successfully with ID: ${imageId}`);
-  
+
       // Step 3: Create Identity
       this.logger.log('Step 3: Checking or creating identity...');
       const existingIdentity = await this.fetchIdentity(accessToken, advertiserId);
       let identityId = existingIdentity.data.identity_list[0].identity_id
       this.logger.log(`Existing identity found: ${identityId || 'None'}`);
-  
+
       if (!identityId) {
         this.logger.log('Creating new identity...');
         const identity = await this.createIdentity(accessToken, advertiserId, displayName);
@@ -439,7 +439,7 @@ export class TiktokCampaignService {
       }
       if (!identityId) throw new Error('Identity creation failed: Missing identity ID.');
       this.logger.log(`Identity created successfully with ID: ${identityId}`);
-  
+
       // Step 4: Create Ad Group
       this.logger.log('Step 4: Creating ad group...');
       const adGroupDetails = {
@@ -462,12 +462,12 @@ export class TiktokCampaignService {
         identityId,
       };
       this.logger.log(`Ad Group details: ${JSON.stringify(adGroupDetails)}`);
-  
+
       const adGroup = await this.createAdGroup(accessToken, advertiserId, adGroupDetails);
       const adGroupId = adGroup?.data?.adgroup_id;
       if (!adGroupId) throw new Error('Ad group creation failed: Missing ad group ID.');
       this.logger.log(`Ad group created successfully with ID: ${adGroupId}`);
-  
+
       // Step 5: Create Ad
       this.logger.log('Step 5: Creating ad...');
       const adPayload = {
@@ -490,7 +490,7 @@ export class TiktokCampaignService {
         ],
       };
       this.logger.log(`Ad details: ${JSON.stringify(adPayload)}`);
-  
+
       const createAdResponse = await axios.post(
         `${this.getBaseUrl()}v1.3/ad/create/`,
         adPayload,
@@ -508,7 +508,7 @@ export class TiktokCampaignService {
         );
       }
       this.logger.log(`Ad created successfully with ID: ${adId}`);
-  
+
       return {
         campaign,
         adGroup,
@@ -521,7 +521,7 @@ export class TiktokCampaignService {
       throw new Error(errorDetails?.message || 'Failed to set up ad campaign.');
     }
   }
-  
+
   async getBCDetails(accessToken: string) {
     try {
       const response = await axios.get(
@@ -626,49 +626,30 @@ export class TiktokCampaignService {
   }
 
   // Fetch Campaign Report
-  async fetchCampaignReport(
-    accessToken: string,
-    advertiserId: string,
-    campaignIds: string[],
-    startDate: string,
-    endDate: string,
-  ): Promise<any> {
-    const endpoint = `https://business-api.tiktok.com/open_api/v1.3/report/integrated/get`;
-  
-    const payload = {
-      advertiser_id: advertiserId,
-      report_type: 'BASIC',
-      data_level: 'AUCTION_AD',
-      dimensions: ['ad_id'],
-      metrics: ['spend', 'impressions', 'clicks'],
-      filters: { campaign_ids: campaignIds },
-      start_date: startDate,
-      end_date: endDate,
-    };
-  
-    try {
-      const response = await axios.post(endpoint, payload, {
+
+  async getReport(access_token:string,advertiser_id:string):Promise<any>{
+    const endpoint=`https://sandbox-ads.tiktok.com/open_api/v1.3/report/integrated/get`;
+    try{
+      const response=await axios.get(endpoint,{
         headers: {
-          'Access-Token': accessToken,
+          'Access-Token': access_token,
           'Content-Type': 'application/json',
         },
+        params:{
+          advertiser_id:advertiser_id,
+          report_type:"BASIC",
+          start_date:"2024-01-02",
+          end_date:"2025-01-01",
+          dimensions:JSON.stringify(["campaign_id"]),
+          service_type:"AUCTION",
+          data_level:"AUCTION_CAMPAIGN",
+          metrics:JSON.stringify(["spend", "impressions", "ctr", "cpm","clicks"])
+        },
       });
-  
-      if (response.data?.code === 0) {
-        return response.data?.data || {};
-      } else {
-        throw new Error(response.data?.message || 'TikTok API error');
-      }
-    } catch (error) {
-      const errorMessage =
-        error.response?.data?.message ||
-        error.response?.data ||
-        error.message ||
-        'Unknown error occurred while fetching campaign report';
-  
-      throw new Error(errorMessage);
+      return response.data
+    }catch (error) {
+      const errorDetails = error.response?.data || error.message;
+      throw new Error(errorDetails?.message || 'Failed to fetch');
     }
   }
-  
-
 }
