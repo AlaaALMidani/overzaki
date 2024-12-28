@@ -60,7 +60,7 @@ export class OrderController {
     return {
       success: true,
       clientSecret: paymentIntent.client_secret,
-      balance: await this.userService.updateUserBalance(
+      balance: await this.orderService.updateUserBalance(
         userId,
         +amount,
         'deposit',

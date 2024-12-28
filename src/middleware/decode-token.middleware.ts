@@ -1,4 +1,8 @@
-import { Injectable, NestMiddleware, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NestMiddleware,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()

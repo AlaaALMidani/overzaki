@@ -9,15 +9,15 @@ import * as path from 'path';
 import { Order } from './order.interface';
 @Injectable()
 export class OrderService {
-  private readonly filePath = path.join(process.cwd(), 'data', 'data.json');
-  private data = this.readData();
-  private readData() {
-    const rawData = fs.readFileSync(this.filePath, 'utf8');
-    return JSON.parse(rawData);
-  }
-  private writeData(data: any) {
-    fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2));
-  }
+  // private readonly filePath = path.join(process.cwd(), 'data', 'data.json');
+  // private data = this.readData();
+  // private readData() {
+  //   const rawData = fs.readFileSync(this.filePath, 'utf8');
+  //   return JSON.parse(rawData);
+  // }
+  // private writeData(data: any) {
+  //   fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2));
+  // }
 
   createOrder(userId: string, serviceName: string, amount: number): Order {
     const user = this.data.users.find((user: any) => user.id === userId);
@@ -64,7 +64,12 @@ export class OrderService {
 
     return order;
   }
-  updateUserBalance(userId: string, amount: number, type: string) {
+  updateUserBalance(
+    userId: string,
+    amount: number,
+    type: string,
+    paymentId: string,
+  ) {
     const user = this.data.users.find((user: any) => user.id === userId);
     console.log('user', user);
     if (!user) {
