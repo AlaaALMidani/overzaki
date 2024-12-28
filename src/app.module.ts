@@ -1,4 +1,4 @@
-import { Module, OnModuleInit } from '@nestjs/common';
+import { MiddlewareConsumer, Module, OnModuleInit, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { GoogleCampaignModule } from './google-campaign/google-campaign.module';
@@ -11,6 +11,8 @@ import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import { AuthModule } from './auth/auth.module';
+import { DecodeTokenMiddleware } from './middleware/decode-token.middleware';
+import { JwtModule } from '@nestjs/jwt'; // Import JwtModule
 
 @Module({
   imports: [
@@ -25,11 +27,25 @@ import { AuthModule } from './auth/auth.module';
     StripeModule,
     AuthModule,
     // OrderModule,
+    JwtModule.register({
+      secret: process.env.JWT_SECRET || 'your-secret-key', // Configure the JWT secret
+      signOptions: { expiresIn: '1h' }, // Optional: token expiration settings
+    }),
   ],
   controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule implements OnModuleInit {
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(DecodeTokenMiddleware) // Apply middleware
+      .forRoutes(
+        { path: 'user/wallet', method: RequestMethod.GET },
+        { path: 'user/orders', method: RequestMethod.GET },
+        { path: 'user/orders', method: RequestMethod.POST }, // Ensure you have different methods for the same path if needed
+      );
+  }
+
   async onModuleInit() {
     mongoose.connection.on('connected', () => {
       console.log('✅ Successfully connected to MongoDB');

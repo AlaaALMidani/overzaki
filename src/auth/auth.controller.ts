@@ -1,27 +1,56 @@
-import { Controller, Post, Body } from '@nestjs/common';
-import { AuthService } from '../auth/auth.service';
+/* eslint-disable prettier/prettier */
 import { RegisterDto } from './dto/register.dto';
+import {
+    Controller,
+    Post,
+    Body,
+} from '@nestjs/common';
+import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+    constructor(private readonly authService: AuthService) { }
 
-  @Post('login')
-  async login(@Body() body: LoginDto) {
-    const user = await this.authService.validateUser(body.email, body.password);
-    if (!user) {
-      throw new Error('Invalid email or password'); // Add proper error handling
+    @Post('register')
+    async register(@Body() createUserDto: RegisterDto) {
+        try {
+            const response = await this.authService.register(createUserDto);
+            return {
+                status: 201,
+                ok: true,
+                response,
+            };
+        } catch (error) {
+            if (error.status === 400) {
+                return {
+                    status: 400,
+                    ok: false,
+                    validation: error.response.validation,
+                };
+            }
+            throw error;
+        }
     }
-    return this.authService.login(user);
-  }
 
-  @Post('register')
-  async register(@Body() body: RegisterDto) {
-    const hashedPassword = await this.authService.hashPassword(body.password);
-    return this.authService.userService.createUser({
-      email: body.email,
-      passwordHash: hashedPassword,
-    });
-  }
+    @Post('login')
+    async login(@Body() loginDto: LoginDto) {
+        try {
+            const response = await this.authService.login(loginDto);
+            return {
+                status: 200,
+                ok: true,
+                response,
+            };
+        } catch (error) {
+            if (error.status === 400) {
+                return {
+                    status: 400,
+                    ok: false,
+                    validation: error.response.validation,
+                };
+            }
+            throw error;
+        }
+    }
 }
