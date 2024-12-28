@@ -122,14 +122,16 @@ export class TiktokCampaignController {
       adText,
     } = body;
     const locationIds = Array.isArray(rawLocationIds)
-    ? [...new Set(rawLocationIds)]
-    : [...new Set(
-        rawLocationIds
-          .replace(/[\[\]]/g, '')
-          .split(',')
-          .map((item) => item.trim().replace(/"/g, ''))
-      )];
-  
+      ? [...new Set(rawLocationIds)]
+      : [
+          ...new Set(
+            rawLocationIds
+              .replace(/[\[\]]/g, '')
+              .split(',')
+              .map((item) => item.trim().replace(/"/g, '')),
+          ),
+        ];
+
     if (
       !accessToken ||
       !advertiserId ||
@@ -191,7 +193,6 @@ export class TiktokCampaignController {
     }
   }
 
-  
   @Get('uploaded-videos')
   async fetchUploadedVideos(
     @Query() query: { accessToken: string; advertiserId: string },
