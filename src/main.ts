@@ -14,7 +14,7 @@ async function bootstrap() {
   const port = process.env.PORT || 3000;
   app.enableCors({
     origin: ['http://localhost:3001', 'https://over-zaki0.vercel.app'],
-    methods: 'GET,POST,PUT,DELETE,OPTIONS',
+    methods: 'GET, POST, PUT, DELETE',
     credentials: true,
   });
   app.useGlobalFilters(new HttpExceptionFilter());
