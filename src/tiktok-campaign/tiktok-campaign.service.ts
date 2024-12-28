@@ -378,54 +378,6 @@ export class TiktokCampaignService {
     }
   }
 
-  async getCampaignReport(
-    accessToken: string,
-    advertiserId: string,
-    campaignId: string,
-    startDate: string,
-    endDate: string,
-  ): Promise<any> {
-    try {
-      const payload = {
-        advertiser_id: advertiserId,
-        dimensions: ['campaign_id'],
-        metrics: ['spend', 'impressions', 'clicks', 'ctr', 'cpc', 'cpm'],
-        filters: [
-          {
-            field: 'campaign_id',
-            operator: 'EQUALS',
-            value: campaignId,
-          },
-        ],
-        start_date: startDate,
-        end_date: endDate,
-        page: 1,
-        page_size: 20,
-      };
-
-      const response = await axios.post(
-        `${this.getBaseUrl()}v1.2/report/integrated/get/`,
-        payload,
-        {
-          headers: {
-            'Access-Token': accessToken,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-
-      return response.data;
-    } catch (error) {
-      console.error(
-        'Error fetching campaign report:',
-        error.response?.data || error.message,
-      );
-      throw new Error(
-        error.response?.data?.message || 'Failed to fetch campaign report.',
-      );
-    }
-  }
-
   async setupAdCampaign(
     accessToken: string,
     advertiserId: string,
@@ -695,6 +647,40 @@ export class TiktokCampaignService {
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
       throw new Error(errorDetails?.message || 'Feed creation failed');
+    }
+  }
+
+  // Fetch Campaign Report
+
+  async getReport(access_token: string, advertiser_id: string): Promise<any> {
+    const endpoint = `https://sandbox-ads.tiktok.com/open_api/v1.3/report/integrated/get`;
+    try {
+      const response = await axios.get(endpoint, {
+        headers: {
+          'Access-Token': access_token,
+          'Content-Type': 'application/json',
+        },
+        params: {
+          advertiser_id: advertiser_id,
+          report_type: 'BASIC',
+          start_date: '2024-01-02',
+          end_date: '2025-01-01',
+          dimensions: JSON.stringify(['campaign_id']),
+          service_type: 'AUCTION',
+          data_level: 'AUCTION_CAMPAIGN',
+          metrics: JSON.stringify([
+            'spend',
+            'impressions',
+            'ctr',
+            'cpm',
+            'clicks',
+          ]),
+        },
+      });
+      return response.data;
+    } catch (error) {
+      const errorDetails = error.response?.data || error.message;
+      throw new Error(errorDetails?.message || 'Failed to fetch');
     }
   }
 }
