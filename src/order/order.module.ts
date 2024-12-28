@@ -4,10 +4,9 @@ import { Module } from '@nestjs/common';
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
 import { WebhookController } from './webhook.controller';
-import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [StripeModule, ConfigModule.forRoot()],
+  imports: [StripeModule],
   controllers: [OrderController, WebhookController],
   providers: [OrderService, OrderGateway],
 })
