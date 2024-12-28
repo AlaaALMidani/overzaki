@@ -18,6 +18,7 @@ import {
   FileFieldsInterceptor,
 } from '@nestjs/platform-express';
 import { TiktokCampaignService } from './tiktok-campaign.service';
+import { query } from 'express';
 @Controller('tiktok-campaign')
 export class TiktokCampaignController {
   private readonly logger = new Logger(TiktokCampaignController.name);
@@ -48,44 +49,6 @@ export class TiktokCampaignController {
     } catch (error) {
       throw new HttpException(
         error.message || 'Authentication failed',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
-  @Post('campaign-report')
-  async getCampaignReport(@Body() body: any) {
-    const { accessToken, advertiser_id, campaign_id, start_date, end_date } =
-      body;
-
-    if (
-      !accessToken ||
-      !advertiser_id ||
-      !campaign_id ||
-      !start_date ||
-      !end_date
-    ) {
-      throw new HttpException(
-        'Missing required fields',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    try {
-      const report = await this.campaignService.getCampaignReport(
-        accessToken,
-        advertiser_id,
-        campaign_id,
-        start_date,
-        end_date,
-      );
-
-      return {
-        message: 'Campaign report fetched successfully',
-        data: report,
-      };
-    } catch (error) {
-      throw new HttpException(
-        error.message || 'Failed to fetch campaign report',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -504,4 +467,33 @@ export class TiktokCampaignController {
       };
     }
   }
+  
+  @Get('report')
+  async fetchReport(
+    @Query() query: { accessToken: string; advertiserId: string },
+  ){
+    const { accessToken, advertiserId } = query;
+    if (!accessToken || !advertiserId) {
+      throw new HttpException(
+        'Access token and advertiser ID are required',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    try {
+      const videos = await this.campaignService.getReport(
+        accessToken,
+        advertiserId,
+      );
+      return {
+        message: 'report  fetched successfully',
+        data: videos,
+      };
+    } catch (error) {
+      throw new HttpException(
+        error.message || 'Failed to fetch report',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }
+
