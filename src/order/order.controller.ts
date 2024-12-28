@@ -61,7 +61,6 @@ export class OrderController {
         userId,
         +amount,
         'deposit',
-        paymentIntent.id,
       ),
     };
   }
