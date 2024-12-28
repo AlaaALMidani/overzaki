@@ -53,44 +53,6 @@ export class TiktokCampaignController {
     }
   }
 
-  @Post('campaign-report')
-  async getCampaignReport(@Body() body: any) {
-    const { accessToken, advertiser_id, campaign_id, start_date, end_date } =
-      body;
-
-    if (
-      !accessToken ||
-      !advertiser_id ||
-      !campaign_id ||
-      !start_date ||
-      !end_date
-    ) {
-      throw new HttpException(
-        'Missing required fields',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    try {
-      const report = await this.campaignService.getCampaignReport(
-        accessToken,
-        advertiser_id,
-        campaign_id,
-        start_date,
-        end_date,
-      );
-
-      return {
-        message: 'Campaign report fetched successfully',
-        data: report,
-      };
-    } catch (error) {
-      throw new HttpException(
-        error.message || 'Failed to fetch campaign report',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
   @Post('setup')
   @UseInterceptors(
     FileFieldsInterceptor([
@@ -504,4 +466,66 @@ export class TiktokCampaignController {
       };
     }
   }
+
+  @Get('report')
+  async getCampaignReport(
+    @Query('accessToken') accessToken: string,
+    @Query('advertiserId') advertiserId: string,
+    @Query('campaignIds') campaignIds: string,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ) {
+    // Validate required query parameters
+    if (!accessToken || !advertiserId || !campaignIds || !startDate || !endDate) {
+      throw new HttpException(
+        'Missing required query parameters: accessToken, advertiserId, campaignIds, startDate, endDate',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  
+    let parsedCampaignIds: string[];
+    try {
+      // Parse `campaignIds` from JSON or split comma-separated values
+      parsedCampaignIds = JSON.parse(campaignIds);
+    } catch {
+      parsedCampaignIds = campaignIds.split(',').map((id) => id.trim());
+    }
+  
+    // Ensure no duplicate campaign IDs
+    parsedCampaignIds = [...new Set(parsedCampaignIds)];
+  
+    this.logger.log('Fetching campaign report with params', {
+      accessToken,
+      advertiserId,
+      campaignIds: parsedCampaignIds,
+      startDate,
+      endDate,
+    });
+  
+    try {
+      const report = await this.campaignService.fetchCampaignReport(
+        accessToken,
+        advertiserId,
+        parsedCampaignIds,
+        startDate,
+        endDate,
+      );
+  
+      return {
+        message: 'Campaign report fetched successfully',
+        data: report,
+      };
+    } catch (error) {
+      this.logger.error('Error fetching campaign report', error.message, error.stack);
+  
+      // Include meaningful error message in response
+      throw new HttpException(
+        error.message || 'Failed to fetch campaign report',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+  
+  
 }
+

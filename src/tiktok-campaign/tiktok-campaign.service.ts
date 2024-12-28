@@ -379,54 +379,6 @@ export class TiktokCampaignService {
     }
   }
 
-  async getCampaignReport(
-    accessToken: string,
-    advertiserId: string,
-    campaignId: string,
-    startDate: string,
-    endDate: string,
-  ): Promise<any> {
-    try {
-      const payload = {
-        advertiser_id: advertiserId,
-        dimensions: ['campaign_id'],
-        metrics: ['spend', 'impressions', 'clicks', 'ctr', 'cpc', 'cpm'],
-        filters: [
-          {
-            field: 'campaign_id',
-            operator: 'EQUALS',
-            value: campaignId,
-          },
-        ],
-        start_date: startDate,
-        end_date: endDate,
-        page: 1,
-        page_size: 20,
-      };
-
-      const response = await axios.post(
-        `${this.getBaseUrl()}v1.2/report/integrated/get/`,
-        payload,
-        {
-          headers: {
-            'Access-Token': accessToken,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-
-      return response.data;
-    } catch (error) {
-      console.error(
-        'Error fetching campaign report:',
-        error.response?.data || error.message,
-      );
-      throw new Error(
-        error.response?.data?.message || 'Failed to fetch campaign report.',
-      );
-    }
-  }
-
   async setupAdCampaign(
     accessToken: string,
     advertiserId: string,
@@ -672,4 +624,51 @@ export class TiktokCampaignService {
       throw new Error(errorDetails?.message || 'Feed creation failed');
     }
   }
+
+  // Fetch Campaign Report
+  async fetchCampaignReport(
+    accessToken: string,
+    advertiserId: string,
+    campaignIds: string[],
+    startDate: string,
+    endDate: string,
+  ): Promise<any> {
+    const endpoint = `https://business-api.tiktok.com/open_api/v1.3/report/integrated/get`;
+  
+    const payload = {
+      advertiser_id: advertiserId,
+      report_type: 'BASIC',
+      data_level: 'AUCTION_AD',
+      dimensions: ['ad_id'],
+      metrics: ['spend', 'impressions', 'clicks'],
+      filters: { campaign_ids: campaignIds },
+      start_date: startDate,
+      end_date: endDate,
+    };
+  
+    try {
+      const response = await axios.post(endpoint, payload, {
+        headers: {
+          'Access-Token': accessToken,
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      if (response.data?.code === 0) {
+        return response.data?.data || {};
+      } else {
+        throw new Error(response.data?.message || 'TikTok API error');
+      }
+    } catch (error) {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data ||
+        error.message ||
+        'Unknown error occurred while fetching campaign report';
+  
+      throw new Error(errorMessage);
+    }
+  }
+  
+
 }
