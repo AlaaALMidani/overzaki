@@ -18,7 +18,6 @@ import {
   FileFieldsInterceptor,
 } from '@nestjs/platform-express';
 import { TiktokCampaignService } from './tiktok-campaign.service';
-import { query } from 'express';
 @Controller('tiktok-campaign')
 export class TiktokCampaignController {
   private readonly logger = new Logger(TiktokCampaignController.name);
@@ -468,11 +467,11 @@ export class TiktokCampaignController {
       };
     }
   }
-  
+
   @Get('report')
   async fetchReport(
     @Query() query: { accessToken: string; advertiserId: string },
-  ){
+  ) {
     const { accessToken, advertiserId } = query;
     if (!accessToken || !advertiserId) {
       throw new HttpException(
@@ -497,4 +496,3 @@ export class TiktokCampaignController {
     }
   }
 }
-
