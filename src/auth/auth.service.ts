@@ -11,12 +11,14 @@ import { validate } from 'class-validator';
 import { plainToInstance } from 'class-transformer';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { WalletService } from '../wallet/wallet.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     public readonly userService: UserService,
     private readonly jwtService: JwtService,
+    private readonly walletService: WalletService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -72,6 +74,8 @@ export class AuthService {
       passwordHash: hashedPassword,
     });
 
+    // Create a wallet for the new user
+    await this.walletService.createWallet(user._doc._id);
     const { passwordHash, ...result } = user._doc;
     return result;
   }

@@ -6,6 +6,7 @@ import {
   Body,
   HttpException,
   HttpStatus,
+  Request,
 } from '@nestjs/common';
 import { GoogleCampaignService } from './google-campaign.service';
 @Controller('google-campaign')
@@ -14,9 +15,9 @@ export class GoogleCampaignController {
 
   // Route to create a campaign
   @Post('create')
-  async createCampaign(@Body() body: any) {
+  async createCampaign(@Request() req, @Body() body: any) {
     const { name, budgetAmountMicros, startDate, endDate } = body;
-
+    console.log(req.user)
     if (!name || !budgetAmountMicros || !startDate || !endDate) {
       throw new HttpException(
         'Missing required fields',
@@ -26,7 +27,7 @@ export class GoogleCampaignController {
     try {
       const formatedStrtDate = new Date(startDate).toISOString().split('T')[0];
       const formatedEndDate = new Date(endDate).toISOString().split('T')[0];
-      const budgetAmount = budgetAmountMicros * 10000000;
+      const budgetAmount = budgetAmountMicros ;
       const result = await this.campaignService.createCampaign(
         name,
         budgetAmount,
@@ -68,32 +69,7 @@ export class GoogleCampaignController {
     }
   }
 
-  // Route to fetch accessible accounts using the user's refresh token
-  // @Post('accounts')
-  // async getAccessibleAccounts(@Body() body: any) {
-  //   const { refreshToken } = body;
-
-  //   if (!refreshToken) {
-  //     throw new HttpException(
-  //       'Refresh token is required',
-  //       HttpStatus.BAD_REQUEST,
-  //     );
-  //   }
-
-  //   try {
-  //     const accounts =
-  //       await this.campaignService.getAccessibleAccounts(refreshToken);
-  //     return {
-  //       message: 'Accessible accounts retrieved successfully',
-  //       data: accounts,
-  //     };
-  //   } catch (error) {
-  //     throw new HttpException(
-  //       error.message || 'Failed to fetch accessible accounts',
-  //       HttpStatus.INTERNAL_SERVER_ERROR,
-  //     );
-  //   }
-  // }
+  
 
   // Route to get a campaign report
   @Post('report')
@@ -125,3 +101,8 @@ export class GoogleCampaignController {
     }
   }
 }
+
+
+
+//cbAewMdJOXHk2czr
+

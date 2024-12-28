@@ -69,7 +69,7 @@ export class OrderService {
     userId: string,
     amount: number,
     type: string,
-    paymentIntentId?: any,
+    paymentId: string,
   ) {
     const user = this.data.users.find((user: any) => user.id === userId);
     console.log('user', user);
@@ -89,7 +89,6 @@ export class OrderService {
       userId,
       amount,
       type,
-      paymentIntentId,
       timestamp: new Date().toISOString(),
     });
 

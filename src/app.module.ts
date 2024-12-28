@@ -1,9 +1,5 @@
-import {
-  MiddlewareConsumer,
-  Module,
-  OnModuleInit,
-  RequestMethod,
-} from '@nestjs/common';
+// eslint-disable-next-line prettier/prettier
+import { MiddlewareConsumer, Module, OnModuleInit, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { GoogleCampaignModule } from './google-campaign/google-campaign.module';
@@ -33,8 +29,8 @@ import { JwtModule } from '@nestjs/jwt'; // Import JwtModule
     AuthModule,
     OrderModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-secret-key', // Configure the JWT secret
-      signOptions: { expiresIn: '1h' }, // Optional: token expiration settings
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '1d' },
     }),
   ],
   controllers: [AppController],
@@ -47,7 +43,7 @@ export class AppModule implements OnModuleInit {
       .forRoutes(
         { path: 'user/wallet', method: RequestMethod.GET },
         { path: 'user/orders', method: RequestMethod.GET },
-        { path: 'user/orders', method: RequestMethod.POST }, // Ensure you have different methods for the same path if needed
+        { path: 'google-campaign/create', method: RequestMethod.POST },
       );
   }
 

@@ -21,7 +21,9 @@ export class UserService {
   async findByEmail(email: string): Promise<User | null> {
     return this.userModel.findOne({ email }).exec();
   }
-
+  async findById(id: string): Promise<User | null> {
+    return this.userModel.findById(id).exec();
+  }
   /**
    * Creates a new user.
    * @param user The user object containing email and passwordHash.
