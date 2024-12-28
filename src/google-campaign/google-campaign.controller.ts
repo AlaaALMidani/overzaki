@@ -27,7 +27,7 @@ export class GoogleCampaignController {
     try {
       const formatedStrtDate = new Date(startDate).toISOString().split('T')[0];
       const formatedEndDate = new Date(endDate).toISOString().split('T')[0];
-      const budgetAmount = budgetAmountMicros;
+      const budgetAmount = budgetAmountMicros * 1_000_000;
       const result = await this.campaignService.createCampaign(
         name,
         budgetAmount,
