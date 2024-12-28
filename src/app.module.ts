@@ -1,9 +1,5 @@
-import {
-  MiddlewareConsumer,
-  Module,
-  OnModuleInit,
-  RequestMethod,
-} from '@nestjs/common';
+// eslint-disable-next-line prettier/prettier
+import { MiddlewareConsumer, Module, OnModuleInit, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { GoogleCampaignModule } from './google-campaign/google-campaign.module';
@@ -11,7 +7,7 @@ import { TiktokCampaignModule } from './tiktok-campaign/tiktok-campaign.module';
 import { FacebookCampaignModule } from './facebook-campaign/facebook-campaign.module';
 import { YouTubeCampaignModule } from './youtupe-campaign/youtube-campaing.module';
 import { StripeModule } from './stripe/stripe.module';
-// import { OrderModule } from './order/order.module';
+import { OrderModule } from './order/order.module';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
@@ -31,10 +27,10 @@ import { JwtModule } from '@nestjs/jwt'; // Import JwtModule
     FacebookCampaignModule,
     StripeModule,
     AuthModule,
-    // OrderModule,
+    OrderModule,
     JwtModule.register({
-      secret: process.env.JWT_SECRET || 'your-secret-key', // Configure the JWT secret
-      signOptions: { expiresIn: '1h' }, // Optional: token expiration settings
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '1d' },
     }),
   ],
   controllers: [AppController],
@@ -47,7 +43,7 @@ export class AppModule implements OnModuleInit {
       .forRoutes(
         { path: 'user/wallet', method: RequestMethod.GET },
         { path: 'user/orders', method: RequestMethod.GET },
-        { path: 'user/orders', method: RequestMethod.POST }, // Ensure you have different methods for the same path if needed
+        { path: 'google-campaign/create', method: RequestMethod.POST },
       );
   }
 
