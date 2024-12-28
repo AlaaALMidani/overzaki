@@ -22,7 +22,7 @@ export class DecodeTokenMiddleware implements NestMiddleware {
     }
 
     try {
-      const decoded = this.jwtService.decode(token); // Decode the token
+      const decoded = this.jwtService.decode(token);
       req.user = decoded; // Attach the decoded payload to the request
       next();
     } catch (error) {
