@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { StripeService } from './../stripe/stripe.service';
-import { UserService } from '../user/user.service';
 import { OrderService } from './order.service';
 
 import {
@@ -18,7 +17,6 @@ import {
 export class OrderController {
   constructor(
     private readonly orderService: OrderService,
-    private readonly userService: UserService,
     private readonly stripeService: StripeService,
   ) {}
 
