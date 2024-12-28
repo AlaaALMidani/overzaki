@@ -6,7 +6,6 @@ import { OrderService } from './order.service';
 import {
   Body,
   Controller,
-  Get,
   HttpException,
   HttpStatus,
   NotFoundException,
@@ -60,7 +59,7 @@ export class OrderController {
     return {
       success: true,
       clientSecret: paymentIntent.client_secret,
-      balance: await this.userService.updateUserBalance(
+      balance: await this.orderService.updateUserBalance(
         userId,
         +amount,
         'deposit',

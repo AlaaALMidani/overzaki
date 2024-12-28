@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   BadRequestException,
   HttpException,
@@ -64,7 +65,12 @@ export class OrderService {
 
     return order;
   }
-  updateUserBalance(userId: string, amount: number, type: string) {
+  updateUserBalance(
+    userId: string,
+    amount: number,
+    type: string,
+    paymentIntentId?: any,
+  ) {
     const user = this.data.users.find((user: any) => user.id === userId);
     console.log('user', user);
     if (!user) {
@@ -83,6 +89,7 @@ export class OrderService {
       userId,
       amount,
       type,
+      paymentIntentId,
       timestamp: new Date().toISOString(),
     });
 
