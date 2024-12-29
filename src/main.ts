@@ -10,6 +10,7 @@ import { HttpExceptionFilter } from './http-exception.filter';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.use('/webhook', express.raw({ type: 'application/json' }));
+
   // app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));
   const port = process.env.PORT || 3000;
   app.enableCors({
