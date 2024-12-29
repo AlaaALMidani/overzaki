@@ -130,8 +130,8 @@ export class GoogleCampaignService {
     }
   }
   async getCampaignReport(
-    customerId: string,
-    refreshToken: string,
+    // customerId: string,
+    // refreshToken: string,
     campaignResourceName: string,
   ) {
     // const customer = this.googleAdsApi.Customer({
