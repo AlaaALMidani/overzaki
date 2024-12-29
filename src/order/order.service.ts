@@ -65,12 +65,7 @@ export class OrderService {
 
     return order;
   }
-  updateUserBalance(
-    userId: string,
-    amount: number,
-    type: string,
-    paymentId: string,
-  ) {
+  updateUserBalance(userId: string, amount: number, type: string) {
     const user = this.data.users.find((user: any) => user.id === userId);
     console.log('user', user);
     if (!user) {

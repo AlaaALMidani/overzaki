@@ -20,10 +20,9 @@ export class AuthController {
             };
         } catch (error) {
 
-            throw error; 
+            throw error;
         }
     }
-
     @Post('login')
     @HttpCode(HttpStatus.OK) // Ensures the status code is 200 for successful responses
     async login(@Body() loginDto: LoginDto) {
@@ -39,6 +38,10 @@ export class AuthController {
 
         }
     }
+
 }
+
+
+
 
 
