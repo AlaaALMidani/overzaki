@@ -56,7 +56,7 @@ export class OrderController {
 
     return {
       success: true,
-      clientSecret: paymentIntent.client_secret,
+      paymentIntentId: paymentIntent.id,
       balance: await this.orderService.updateUserBalance(
         userId,
         +amount,
