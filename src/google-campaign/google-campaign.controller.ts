@@ -17,7 +17,7 @@ export class GoogleCampaignController {
   @Post('create')
   async createCampaign(@Request() req, @Body() body: any) {
     const { name, budgetAmountMicros, startDate, endDate } = body;
-    console.log(req.user)
+    console.log(req.user);
     if (!name || !budgetAmountMicros || !startDate || !endDate) {
       throw new HttpException(
         'Missing required fields',
@@ -27,7 +27,7 @@ export class GoogleCampaignController {
     try {
       const formatedStrtDate = new Date(startDate).toISOString().split('T')[0];
       const formatedEndDate = new Date(endDate).toISOString().split('T')[0];
-      const budgetAmount = budgetAmountMicros ;
+      const budgetAmount = budgetAmountMicros * 1_000_000;
       const result = await this.campaignService.createCampaign(
         name,
         budgetAmount,
@@ -69,14 +69,21 @@ export class GoogleCampaignController {
     }
   }
 
-  
-
   // Route to get a campaign report
   @Post('report')
   async getCampaignReport(@Body() body: any) {
-    const { customerId, refreshToken, campaignResourceName } = body;
+    // const { customerId, refreshToken, campaignResourceName } = body;
+    const { campaignResourceName } = body;
 
-    if (!customerId || !refreshToken || !campaignResourceName) {
+    // if (!customerId || !refreshToken || !campaignResourceName) {
+    //   throw new HttpException(
+    //     'Missing required fields in the body',
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
+    console.log(body);
+    console.log(campaignResourceName);
+    if (!campaignResourceName) {
       throw new HttpException(
         'Missing required fields in the body',
         HttpStatus.BAD_REQUEST,
@@ -85,8 +92,8 @@ export class GoogleCampaignController {
 
     try {
       const report = await this.campaignService.getCampaignReport(
-        customerId,
-        refreshToken,
+        // customerId,
+        // refreshToken,
         campaignResourceName,
       );
       return {
@@ -102,7 +109,4 @@ export class GoogleCampaignController {
   }
 }
 
-
-
 //cbAewMdJOXHk2czr
-

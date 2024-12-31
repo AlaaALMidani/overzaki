@@ -49,9 +49,10 @@ export class OrderController {
     const { userId, amount } = body;
     console.log('body', body);
     const paymentIntent = await this.stripeService.createPaymentIntent(
-      amount,
+      amount * 100,
       'usd',
       { userId: userId.toString() },
+      // customer: customerId,
     );
 
     return {
