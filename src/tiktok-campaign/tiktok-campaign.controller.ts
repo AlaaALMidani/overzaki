@@ -135,7 +135,7 @@ export class TiktokCampaignController {
     }
     const videoFile = files.videoFile[0];
     const imageFile = files.imageFile[0];
-    try {
+   
       const result = await this.campaignService.CreateFeed(
         req.user.userId,
         req.user.walletId,
@@ -166,14 +166,7 @@ export class TiktokCampaignController {
       return {
         message: 'Ad campaign setup successfully.',
         data: result,
-      };
-    } catch (error) {
-      this.logger.error('Error setting up ad campaign', error.message);
-      throw new HttpException(
-        error.message || 'Failed to set up ad campaign.',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+      }
   }
   @Get('uploaded-videos')
   async fetchUploadedVideos(
