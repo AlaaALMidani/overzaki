@@ -183,7 +183,7 @@ async createCampaign(
       gender:string;
       scheduleType: string;
       scheduleStartTime: string;
-      scheduleEndTime?: string;
+      dayparting:string;
       languages:Array<string>;
       ageGroups:Array<string>;
       interestCategoryIds:Array<string>;
@@ -198,6 +198,7 @@ async createCampaign(
       identityId: string;
       deviceModelIds:Array<string>
       shoppingAdsType?:string;
+      scheduleEndTime?: string;
     },
   ) {
     try {
@@ -214,6 +215,7 @@ async createCampaign(
         schedule_type: adGroupDetails.scheduleType,
         schedule_end_time: adGroupDetails?.scheduleEndTime,
         schedule_start_time: adGroupDetails.scheduleStartTime,
+        dayparting:adGroupDetails.dayparting,
         optimization_goal: adGroupDetails.optimizationGoal,
         bid_type: adGroupDetails.bidType,
         billing_event: adGroupDetails.billingEvent,
@@ -394,7 +396,7 @@ async createCampaign(
     }
   }
 
-  async CreateSpark(
+  async CreateFeed(
     accessToken: string,
     advertiserId: string,
     campaignName: string,
@@ -403,6 +405,7 @@ async createCampaign(
     spendingPower:string,
     scheduleType:string,
     scheduleStartTime: string,
+    dayparting:string,
     budget: number,
     optimizationGoal: string,
     displayName: string,
@@ -587,77 +590,7 @@ async createCampaign(
       );
     }
   }
-  async createFeed(
-    accessToken: string,
-    businessType: string,
-    timezone: string,
-    regionCode: string,
-    currency: string,
-    feedName: string,
-  ) {
-    try {
-      // Step 1: Fetch or Create Business Center
-
-      const bcResponse = await this.getBCDetails(accessToken);
-      let bcId: string;
-      if (bcResponse?.data?.list?.length > 0) {
-        // Use the first available BC
-        bcId = bcResponse.data.list[0].bc_info.bc_id;
-      } else {
-        // Create a new BC if none exists
-        const newBcResponse = await this.createBC(
-          accessToken,
-          feedName,
-          businessType,
-          timezone,
-        );
-        bcId = newBcResponse?.data?.bc_id;
-        if (!bcId) throw new Error('BC creation failed: Missing BC ID.');
-      }
-
-      // Step 2: Create Catalog
-
-      const catalogId = await this.createCatalog(
-        accessToken,
-        bcId,
-        feedName,
-        'ECOM',
-        regionCode,
-        currency,
-      );
-
-      if (!catalogId)
-        throw new Error('Catalog creation failed: Missing catalog ID.');
-      // Step 3: Create Feed
-      const feedPayload = {
-        bc_id: bcId,
-        catalog_id: catalogId,
-        feed_name: feedName,
-        update_mode: 'INCREMENTAL',
-      };
-
-      const feedResponse = await axios.post(
-        'https://business-api.tiktok.com/open_api/v1.3/catalog/feed/create/',
-        feedPayload,
-        {
-          headers: {
-            'Access-Token': accessToken,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-      const feedId = feedResponse.data?.data?.feed_id;
-      if (!feedId) {
-        throw new Error(
-          `Feed creation failed: Missing feed ID. Response: ${JSON.stringify(feedResponse.data)}`,
-        );
-      }
-      return feedId;
-    } catch (error) {
-      const errorDetails = error.response?.data || error.message;
-      throw new Error(errorDetails?.message || 'Feed creation failed');
-    }
-  }
+  
 
   // Fetch Campaign Report
 
