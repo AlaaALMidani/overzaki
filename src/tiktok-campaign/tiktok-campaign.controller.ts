@@ -53,14 +53,14 @@ export class TiktokCampaignController {
     }
   }
 
-  @Post('setup')
+  @Post('FeedAd')
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'videoFile', maxCount: 1 },
       { name: 'imageFile', maxCount: 1 },
     ]),
   )
-  async setupAdCampaign(
+  async FeedAd(
     @Body() body: any,
     @UploadedFiles()
     files: {
@@ -72,16 +72,24 @@ export class TiktokCampaignController {
       accessToken,
       advertiserId,
       campaignName,
-      budgetMode,
-      // locationIds,
-      // ***************************
-      locationIds: rawLocationIds,
-      scheduleEndTime,
+      objectiveType,
+      gender,
+      spendingPower,
+      scheduleType,
       scheduleStartTime,
+      dayparting,
       budget,
       optimizationGoal,
       displayName,
       adText,
+      ageGroups,
+      languages,
+      scheduleEndTime,
+      locationIds: rawLocationIds,
+      interestCategoryIds,
+      operatingSystems,
+      devicePriceRanges,
+      deviceModelIds,
     } = body;
     const locationIds = Array.isArray(rawLocationIds)
       ? [...new Set(rawLocationIds)]
@@ -98,7 +106,6 @@ export class TiktokCampaignController {
       !accessToken ||
       !advertiserId ||
       !campaignName ||
-      !budgetMode ||
       !locationIds ||
       !scheduleEndTime ||
       !scheduleStartTime ||
@@ -127,20 +134,30 @@ export class TiktokCampaignController {
     const videoFile = files.videoFile[0];
     const imageFile = files.imageFile[0];
     try {
-      const result = await this.campaignService.setupAdCampaign(
+      const result = await this.campaignService.CreateFeed(
         accessToken,
         advertiserId,
         campaignName,
-        budgetMode,
-        locationIds,
-        scheduleEndTime,
+        objectiveType,
+        gender,
+        spendingPower,
+        scheduleType,
         scheduleStartTime,
-        Number(budget),
+        dayparting,
+        budget,
         optimizationGoal,
         displayName,
         adText,
+        ageGroups,
+        languages,
+        locationIds,
+        interestCategoryIds,
+        operatingSystems,
+        devicePriceRanges,
+        deviceModelIds,
         videoFile,
         imageFile,
+        scheduleEndTime
       );
       return {
         message: 'Ad campaign setup successfully.',
@@ -154,7 +171,6 @@ export class TiktokCampaignController {
       );
     }
   }
-
   @Get('uploaded-videos')
   async fetchUploadedVideos(
     @Query() query: { accessToken: string; advertiserId: string },
@@ -407,67 +423,8 @@ export class TiktokCampaignController {
       );
     }
   }
-  @Post('create-feed')
-  async createFeed(
-    @Body()
-    body: any,
-  ) {
-    this.logger.log('Received request to create feed...');
-    const {
-      accessToken,
-      businessType,
-      timezone,
-      regionCode,
-      currency,
-      feedName,
-    } = body;
-    if (
-      !accessToken ||
-      !businessType ||
-      !timezone ||
-      !regionCode ||
-      !currency ||
-      !feedName
-    ) {
-      throw new HttpException(
-        'Missing required fields for create-feed.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    try {
-      this.logger.log('Received request to create feed...');
-      const {
-        accessToken,
-        businessType,
-        timezone,
-        regionCode,
-        currency,
-        feedName,
-      } = body;
-
-      const result = await this.campaignService.createFeed(
-        accessToken,
-        businessType,
-        timezone,
-        regionCode,
-        currency,
-        feedName,
-      );
-
-      return {
-        status: 'success',
-        message: 'Feed created successfully',
-        data: result,
-      };
-    } catch (error) {
-      this.logger.error('Error creating Tiktok feed:', error.message);
-      return {
-        status: 'error',
-        message: error.message || 'Failed to create feed',
-      };
-    }
-  }
-
+ 
+  
   @Get('report')
   async fetchReport(
     @Query() query: { accessToken: string; advertiserId: string },

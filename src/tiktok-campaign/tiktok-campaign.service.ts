@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import * as FormData from 'form-data';
@@ -9,16 +7,14 @@ import { HttpService } from '@nestjs/axios';
 @Injectable()
 export class TiktokCampaignService {
   private readonly logger = new Logger(TiktokCampaignService.name);
-
-  constructor(private readonly httpService: HttpService) {}
-
+  constructor(private readonly httpService: HttpService) { }
   private getBaseUrl(): string {
     return process.env.NODE_ENV === 'production'
       ? 'https://business-api.tiktok.com/open_api/'
       : process.env.TIKTOK_BASE_URL ||
           'https://sandbox-ads.tiktok.com/open_api/';
   }
-
+  
   // Generate TikTok OAuth URL
   getAuthUrl() {
     const state = Math.random().toString(36).substring(2, 15);
@@ -84,7 +80,6 @@ export class TiktokCampaignService {
       return videoData;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
-
       throw new Error(errorDetails?.message || 'Video upload failed');
     }
   }
@@ -95,7 +90,6 @@ export class TiktokCampaignService {
     advertiserId: string,
   ): Promise<any> {
     const endpoint = `${this.getBaseUrl()}v1.3/file/image/ad/upload/`;
-
     const formData = new FormData();
     formData.append('advertiser_id', advertiserId);
     formData.append('file_name', file.originalname, {
@@ -131,68 +125,80 @@ export class TiktokCampaignService {
   }
 
   // Create Campaign
-  async createCampaign(
-    accessToken: string,
-    advertiserId: string,
-    campaignDetails: {
-      campaign_name: string;
-      objectiveType: string;
-      budgetMode: string;
-      budget: number;
-      landingPageUrl: string;
-      scheduleStartTime: number;
-    },
-  ) {
-    try {
-      const payload = {
-        advertiser_id: advertiserId,
-        campaign_name: campaignDetails.campaign_name,
-        objective_type: campaignDetails.objectiveType,
-        budget_mode: campaignDetails.budgetMode,
-        budget: campaignDetails.budget,
-        landing_page_url: campaignDetails.landingPageUrl,
-        schedule_type: 'SCHEDULE_FROM_NOW',
-        schedule_start_time: campaignDetails.scheduleStartTime,
-      };
-      const response = await axios.post(
-        `${this.getBaseUrl()}v1.3/campaign/create/`,
-        payload,
-        {
-          headers: {
-            'Access-Token': accessToken,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-      return response.data;
-    } catch (error) {
-      throw new Error(
-        error.response?.data?.message || 'Campaign creation failed',
-      );
+async createCampaign(
+  accessToken: string,
+  advertiserId: string,
+  campaignDetails: {
+    campaignName: string;
+    appPromotionType?: string;
+    objectiveType: string;
+    budget: number;
+    landingPageUrl: string;
+  },
+) {
+  try {
+    const payload: any = {
+      advertiser_id: advertiserId,
+      campaign_name: campaignDetails.campaignName,
+      objective_type: campaignDetails.objectiveType,
+      budget_mode:"BUDGET_MODE_DYNAMIC_DAILY_BUDGET",
+      budget: campaignDetails.budget,
+      landing_page_url: campaignDetails.landingPageUrl,
+    };
+    if (campaignDetails.objectiveType === 'APP_PROMOTION') {
+      payload.app_promotion_type = campaignDetails.appPromotionType;
     }
+    const response = await axios.post(
+      `${this.getBaseUrl()}v1.3/campaign/create/`,
+      payload,
+      {
+        headers: {
+          'Access-Token': accessToken,
+          'Content-Type': 'application/json',
+        },
+      },
+    );
+
+    return response.data;
+  } catch (error) {
+    throw new Error(
+      error.response?.data?.message || 'Campaign creation failed',
+    );
   }
+}
+
 
   async createAdGroup(
     accessToken: string,
     advertiserId: string,
     adGroupDetails: {
-      campaignId: string;
       adgroupName: string;
+      campaignId: string;
       promotionType: string;
       placementType: string;
       placements: Array<string>;
       locationIds: Array<string>;
       budgetMode: string;
       budget: number;
+      gender:string;
       scheduleType: string;
-      scheduleEndTime: string;
       scheduleStartTime: string;
+      dayparting:string;
+      languages:Array<string>;
+      ageGroups:Array<string>;
+      interestCategoryIds:Array<string>;
+      operatingSystems:Array<string>;
+      devicePriceRanges:Array<number>;
+      spendingPower:string;
       optimizationGoal: string;
       bidType: string;
       billingEvent: string;
       pacing: string;
       operationStatus: string;
       identityId: string;
+      deviceModelIds:Array<string>
+      shoppingAdsType?:string;
+      scheduleEndTime?: string;
     },
   ) {
     try {
@@ -207,14 +213,23 @@ export class TiktokCampaignService {
         budget_mode: adGroupDetails.budgetMode,
         budget: adGroupDetails.budget,
         schedule_type: adGroupDetails.scheduleType,
-        schedule_end_time: adGroupDetails.scheduleEndTime,
+        schedule_end_time: adGroupDetails?.scheduleEndTime,
         schedule_start_time: adGroupDetails.scheduleStartTime,
+        dayparting:adGroupDetails.dayparting,
         optimization_goal: adGroupDetails.optimizationGoal,
         bid_type: adGroupDetails.bidType,
         billing_event: adGroupDetails.billingEvent,
         pacing: adGroupDetails.pacing,
         operation_status: adGroupDetails.operationStatus,
+        languages:adGroupDetails.languages,
+        gender:adGroupDetails.gender,
+        age_groups:adGroupDetails.ageGroups,
+        spending_power:adGroupDetails.spendingPower,
+        interest_category_ids:adGroupDetails.interestCategoryIds,
+        operating_systems:adGroupDetails.operatingSystems,
+        device_price_ranges:adGroupDetails.devicePriceRanges,
         identity_id: adGroupDetails?.identityId,
+        shopping_ads_type:adGroupDetails?.shoppingAdsType
       };
       const response = await axios.post(
         `${this.getBaseUrl()}v1.3/adgroup/create/`,
@@ -264,6 +279,7 @@ export class TiktokCampaignService {
       );
     }
   }
+
   async createBC(
     accessToken: string,
     bc_name: string,
@@ -291,6 +307,7 @@ export class TiktokCampaignService {
       throw new Error(error.response?.data?.message || 'BC creation failed');
     }
   }
+
   async createCatalog(
     accessToken: string,
     bcId: string,
@@ -378,39 +395,44 @@ export class TiktokCampaignService {
     }
   }
 
-  async setupAdCampaign(
+  async CreateFeed(
     accessToken: string,
     advertiserId: string,
     campaignName: string,
-    budgetMode: string,
-    locationIds: Array<string>,
-    scheduleEndTime: string,
+    objectiveType:string,
+    gender:string,
+    spendingPower:string,
+    scheduleType:string,
     scheduleStartTime: string,
+    dayparting:string,
     budget: number,
     optimizationGoal: string,
     displayName: string,
     adText: string,
+    ageGroups:Array<string>,
+    languages:Array<string>,
+    locationIds: Array<string>,
+    interestCategoryIds:Array<string>,
+    operatingSystems:Array<string>,
+    devicePriceRanges:Array<number>,
+    deviceModelIds:Array<string>,
     videoFile: Express.Multer.File,
     imageFile: Express.Multer.File,
+    scheduleEndTime?: string,
   ) {
     try {
+      const budgetMode="BUDGET_MODE_DYNAMIC_DAILY_BUDGET"
       // Step 1: Create Campaign
       this.logger.log('Step 1: Creating campaign...');
       const campaignDetails = {
-        campaign_name: campaignName,
-        objectiveType: 'TRAFFIC',
+        campaignName,
+        objectiveType,
         budgetMode,
         budget,
         landingPageUrl: 'https://www.example.com/',
-        scheduleStartTime: Number(scheduleStartTime),
       };
       this.logger.log(`Campaign details: ${JSON.stringify(campaignDetails)}`);
-
-      const campaign = await this.createCampaign(
-        accessToken,
-        advertiserId,
-        campaignDetails,
-      );
+      const campaign = await this.createCampaign(accessToken, advertiserId, campaignDetails);
       const campaignId = campaign?.data?.campaign_id;
       if (!campaignId)
         throw new Error('Campaign creation failed: Missing campaign ID.');
@@ -462,7 +484,7 @@ export class TiktokCampaignService {
 
       // Step 4: Create Ad Group
       this.logger.log('Step 4: Creating ad group...');
-      const adGroupDetails = {
+      let adGroupDetails:any = {
         adgroupName: campaignName,
         campaignId,
         promotionType: 'WEBSITE',
@@ -471,8 +493,8 @@ export class TiktokCampaignService {
         locationIds,
         budgetMode,
         budget,
-        scheduleType: 'SCHEDULE_START_END',
-        scheduleEndTime,
+        gender,
+        scheduleType,
         scheduleStartTime,
         optimizationGoal,
         bidType: 'BID_TYPE_NO_BID',
@@ -480,7 +502,20 @@ export class TiktokCampaignService {
         pacing: 'PACING_MODE_SMOOTH',
         operationStatus: 'ENABLE',
         identityId,
+        languages,
+        ageGroups,
+        spendingPower,
+        interestCategoryIds,
+        operatingSystems,
+        devicePriceRanges,
+        deviceModelIds,
       };
+      if (objectiveType === 'PRODUCT_SALES') {
+        adGroupDetails.shoppingAdsType = "LIVE";
+      }
+      if(scheduleType=='SCHEDULE_START_END '){
+        adGroupDetails.scheduleEndTime=scheduleEndTime
+      }
       this.logger.log(`Ad Group details: ${JSON.stringify(adGroupDetails)}`);
 
       const adGroup = await this.createAdGroup(
@@ -576,79 +611,7 @@ export class TiktokCampaignService {
       );
     }
   }
-  async createFeed(
-    accessToken: string,
-    businessType: string,
-    timezone: string,
-    regionCode: string,
-    currency: string,
-    feedName: string,
-  ) {
-    try {
-      // Step 1: Fetch or Create Business Center
-
-      const bcResponse = await this.getBCDetails(accessToken);
-      let bcId: string;
-
-      if (bcResponse?.data?.list?.length > 0) {
-        // Use the first available BC
-        bcId = bcResponse.data.list[0].bc_info.bc_id;
-      } else {
-        // Create a new BC if none exists
-
-        const newBcResponse = await this.createBC(
-          accessToken,
-          feedName,
-          businessType,
-          timezone,
-        );
-        bcId = newBcResponse?.data?.bc_id;
-        if (!bcId) throw new Error('BC creation failed: Missing BC ID.');
-      }
-
-      // Step 2: Create Catalog
-
-      const catalogId = await this.createCatalog(
-        accessToken,
-        bcId,
-        feedName,
-        'ECOM',
-        regionCode,
-        currency,
-      );
-
-      if (!catalogId)
-        throw new Error('Catalog creation failed: Missing catalog ID.');
-      // Step 3: Create Feed
-      const feedPayload = {
-        bc_id: bcId,
-        catalog_id: catalogId,
-        feed_name: feedName,
-        update_mode: 'INCREMENTAL',
-      };
-
-      const feedResponse = await axios.post(
-        'https://business-api.tiktok.com/open_api/v1.3/catalog/feed/create/',
-        feedPayload,
-        {
-          headers: {
-            'Access-Token': accessToken,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-      const feedId = feedResponse.data?.data?.feed_id;
-      if (!feedId) {
-        throw new Error(
-          `Feed creation failed: Missing feed ID. Response: ${JSON.stringify(feedResponse.data)}`,
-        );
-      }
-      return feedId;
-    } catch (error) {
-      const errorDetails = error.response?.data || error.message;
-      throw new Error(errorDetails?.message || 'Feed creation failed');
-    }
-  }
+  
 
   // Fetch Campaign Report
 
