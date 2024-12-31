@@ -9,7 +9,7 @@ import { HttpExceptionFilter } from './http-exception.filter';
 // Bootstrap Function
 async function bootstrap() {
   const app = await NestFactory.create(AppModule,{
-    logger: ['error'], 
+    
   });
   app.use('/webhook', express.raw({ type: 'application/json' }));
 

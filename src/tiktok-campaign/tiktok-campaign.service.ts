@@ -4,6 +4,7 @@ import * as FormData from 'form-data';
 import * as crypto from 'crypto';
 import { HttpService } from '@nestjs/axios';
 import { OrderService } from '../order/order.service';
+import { ad } from 'google-ads-api/build/src/protos/autogen/resourceNames';
 @Injectable()
 export class TiktokCampaignService {
   private readonly logger = new Logger(TiktokCampaignService.name);
@@ -145,7 +146,7 @@ export class TiktokCampaignService {
         advertiser_id: advertiserId,
         campaign_name: campaignDetails.campaignName,
         objective_type: campaignDetails.objectiveType,
-        budget_mode: 'BUDGET_MODE_DYNAMIC_DAILY_BUDGET',
+        budget_mode: 'BUDGET_MODE_INFINITE',
         budget: campaignDetails.budget,
         landing_page_url: campaignDetails.landingPageUrl,
       };
@@ -183,25 +184,25 @@ export class TiktokCampaignService {
       locationIds: Array<string>;
       budgetMode: string;
       budget: number;
-      gender: string;
+      // gender: string;
       scheduleType: string;
       scheduleStartTime: string;
-      dayparting: string;
-      languages: Array<string>;
-      ageGroups: Array<string>;
-      interestCategoryIds: Array<string>;
-      operatingSystems: Array<string>;
-      devicePriceRanges: Array<number>;
-      spendingPower: string;
+      // dayparting: string;
+      // languages: Array<string>;
+      // ageGroups: Array<string>;
+      // interestCategoryIds: Array<string>;
+      // operatingSystems: Array<string>;
+      // devicePriceRanges: Array<number>;
+      // spendingPower: string;
       optimizationGoal: string;
       bidType: string;
       billingEvent: string;
       pacing: string;
       operationStatus: string;
       identityId: string;
-      deviceModelIds: Array<string>;
-      shoppingAdsType?: string;
-      scheduleEndTime?: string;
+      // deviceModelIds: Array<string>;
+      // shoppingAdsType?: string;
+      // scheduleEndTime?: string;
     },
   ) {
     try {
@@ -215,24 +216,24 @@ export class TiktokCampaignService {
         location_ids: adGroupDetails.locationIds,
         budget_mode: adGroupDetails.budgetMode,
         budget: adGroupDetails.budget,
-        schedule_type: adGroupDetails.scheduleType,
-        schedule_end_time: adGroupDetails?.scheduleEndTime,
+        schedule_type:"SCHEDULE_FROM_NOW",
+        // schedule_end_time: adGroupDetails?.scheduleEndTime,
         schedule_start_time: adGroupDetails.scheduleStartTime,
-        dayparting: adGroupDetails.dayparting,
+        // dayparting: adGroupDetails.dayparting,
         optimization_goal: adGroupDetails.optimizationGoal,
         bid_type: adGroupDetails.bidType,
         billing_event: adGroupDetails.billingEvent,
         pacing: adGroupDetails.pacing,
         operation_status: adGroupDetails.operationStatus,
-        languages: adGroupDetails.languages,
-        gender: adGroupDetails.gender,
-        age_groups: adGroupDetails.ageGroups,
-        spending_power: adGroupDetails.spendingPower,
-        interest_category_ids: adGroupDetails.interestCategoryIds,
-        operating_systems: adGroupDetails.operatingSystems,
-        device_price_ranges: adGroupDetails.devicePriceRanges,
-        identity_id: adGroupDetails?.identityId,
-        shopping_ads_type: adGroupDetails?.shoppingAdsType,
+        // languages: adGroupDetails.languages,
+        // gender: adGroupDetails.gender,
+        // age_groups: adGroupDetails.ageGroups,
+        // spending_power: adGroupDetails.spendingPower,
+        // interest_category_ids: adGroupDetails.interestCategoryIds,
+        // operating_systems: adGroupDetails.operatingSystems,
+        // device_price_ranges: adGroupDetails.devicePriceRanges,
+        // identity_id: adGroupDetails?.identityId,
+        // shopping_ads_type: adGroupDetails?.shoppingAdsType,
       };
       const response = await axios.post(
         `${this.getBaseUrl()}v1.3/adgroup/create/`,
@@ -401,34 +402,32 @@ export class TiktokCampaignService {
   async CreateFeed(
     userId: string,
     walletId: string,
-
     accessToken: string,
     advertiserId: string,
     campaignName: string,
     objectiveType: string,
-    gender: string,
-    spendingPower: string,
+    // gender: string,
+    // spendingPower: string,
     scheduleType: string,
     scheduleStartTime: string,
-    dayparting: string,
+    // dayparting: string,
     budget: number,
     optimizationGoal: string,
     displayName: string,
     adText: string,
-    ageGroups: Array<string>,
-    languages: Array<string>,
+    // ageGroups: Array<string>,
+    // languages: Array<string>,
     locationIds: Array<string>,
-    interestCategoryIds: Array<string>,
-    operatingSystems: Array<string>,
-    devicePriceRanges: Array<number>,
-    deviceModelIds: Array<string>,
+    // interestCategoryIds: Array<string>,
+    // operatingSystems: Array<string>,
+    // devicePriceRanges: Array<number>,
+    // deviceModelIds: Array<string>,
     videoFile: Express.Multer.File,
     imageFile: Express.Multer.File,
     scheduleEndTime?: string,
   ) {
     try {
       await this.orderService.checkPayAbility(userId, budget, 25);
-
       const budgetMode = 'BUDGET_MODE_DYNAMIC_DAILY_BUDGET';
       // Step 1: Create Campaign
       this.logger.log('Step 1: Creating campaign...');
@@ -505,7 +504,7 @@ export class TiktokCampaignService {
         locationIds,
         budgetMode,
         budget,
-        gender,
+        // gender,
         scheduleType,
         scheduleStartTime,
         optimizationGoal,
@@ -514,13 +513,13 @@ export class TiktokCampaignService {
         pacing: 'PACING_MODE_SMOOTH',
         operationStatus: 'ENABLE',
         identityId,
-        languages,
-        ageGroups,
-        spendingPower,
-        interestCategoryIds,
-        operatingSystems,
-        devicePriceRanges,
-        deviceModelIds,
+        // languages,
+        // ageGroups,
+        // spendingPower,
+        // interestCategoryIds,
+        // operatingSystems,
+        // devicePriceRanges,
+        // deviceModelIds,
       };
       if (objectiveType === 'PRODUCT_SALES') {
         adGroupDetails.shoppingAdsType = 'LIVE';
@@ -593,6 +592,7 @@ export class TiktokCampaignService {
         },
       );
       return order;
+    
     } catch (error) {
       this.logger.error('Error during setupAdCampaign:', error.message);
       const errorDetails = error.response?.data || error.message;
