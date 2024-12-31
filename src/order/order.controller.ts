@@ -138,14 +138,12 @@ export class OrderController {
    */
   @Post('')
   async createOrder(@Body() body: any): Promise<Order> {
-    const { userId, serviceName, walletId, type, amount, details, minAmount } = body
+    const { userId, serviceName, walletId, amount, details } = body
     return this.orderService.createOrderWithTransaction(
       userId,
       walletId,
       serviceName,
-      type,
       amount,
-      minAmount,
       details,
     );
   }

@@ -7,10 +7,11 @@ export class TransactionController {
   constructor(private readonly transactionService: TransactionService) {}
 
   @Post()
-  async createTransaction(@Body() body: { userId: string; walletId: string; type: string; amount: number }) {
+  async createTransaction(@Body() body: { userId: string; walletId: string; orderId:any; type: string; amount: number }) {
     return this.transactionService.createTransaction(
       body.userId,
       body.walletId,
+      body.orderId,
       body.type,
       body.amount,
     );

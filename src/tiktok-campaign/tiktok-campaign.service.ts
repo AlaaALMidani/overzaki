@@ -3,18 +3,22 @@ import axios from 'axios';
 import * as FormData from 'form-data';
 import * as crypto from 'crypto';
 import { HttpService } from '@nestjs/axios';
-
+import { OrderService } from '../order/order.service';
 @Injectable()
 export class TiktokCampaignService {
   private readonly logger = new Logger(TiktokCampaignService.name);
-  constructor(private readonly httpService: HttpService) { }
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly orderService: OrderService,
+  ) {}
+
   private getBaseUrl(): string {
     return process.env.NODE_ENV === 'production'
       ? 'https://business-api.tiktok.com/open_api/'
       : process.env.TIKTOK_BASE_URL ||
           'https://sandbox-ads.tiktok.com/open_api/';
   }
-  
+
   // Generate TikTok OAuth URL
   getAuthUrl() {
     const state = Math.random().toString(36).substring(2, 15);
@@ -117,7 +121,7 @@ export class TiktokCampaignService {
   }
 
   async computeFileHash(fileBuffer: Buffer): Promise<string> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       const hash = crypto.createHash('md5');
       hash.update(fileBuffer);
       resolve(hash.digest('hex'));
@@ -125,48 +129,47 @@ export class TiktokCampaignService {
   }
 
   // Create Campaign
-async createCampaign(
-  accessToken: string,
-  advertiserId: string,
-  campaignDetails: {
-    campaignName: string;
-    appPromotionType?: string;
-    objectiveType: string;
-    budget: number;
-    landingPageUrl: string;
-  },
-) {
-  try {
-    const payload: any = {
-      advertiser_id: advertiserId,
-      campaign_name: campaignDetails.campaignName,
-      objective_type: campaignDetails.objectiveType,
-      budget_mode:"BUDGET_MODE_DYNAMIC_DAILY_BUDGET",
-      budget: campaignDetails.budget,
-      landing_page_url: campaignDetails.landingPageUrl,
-    };
-    if (campaignDetails.objectiveType === 'APP_PROMOTION') {
-      payload.app_promotion_type = campaignDetails.appPromotionType;
-    }
-    const response = await axios.post(
-      `${this.getBaseUrl()}v1.3/campaign/create/`,
-      payload,
-      {
-        headers: {
-          'Access-Token': accessToken,
-          'Content-Type': 'application/json',
+  async createCampaign(
+    accessToken: string,
+    advertiserId: string,
+    campaignDetails: {
+      campaignName: string;
+      appPromotionType?: string;
+      objectiveType: string;
+      budget: number;
+      landingPageUrl: string;
+    },
+  ) {
+    try {
+      const payload: any = {
+        advertiser_id: advertiserId,
+        campaign_name: campaignDetails.campaignName,
+        objective_type: campaignDetails.objectiveType,
+        budget_mode: 'BUDGET_MODE_DYNAMIC_DAILY_BUDGET',
+        budget: campaignDetails.budget,
+        landing_page_url: campaignDetails.landingPageUrl,
+      };
+      if (campaignDetails.objectiveType === 'APP_PROMOTION') {
+        payload.app_promotion_type = campaignDetails.appPromotionType;
+      }
+      const response = await axios.post(
+        `${this.getBaseUrl()}v1.3/campaign/create/`,
+        payload,
+        {
+          headers: {
+            'Access-Token': accessToken,
+            'Content-Type': 'application/json',
+          },
         },
-      },
-    );
+      );
 
-    return response.data;
-  } catch (error) {
-    throw new Error(
-      error.response?.data?.message || 'Campaign creation failed',
-    );
+      return response.data;
+    } catch (error) {
+      throw new Error(
+        error.response?.data?.message || 'Campaign creation failed',
+      );
+    }
   }
-}
-
 
   async createAdGroup(
     accessToken: string,
@@ -180,24 +183,24 @@ async createCampaign(
       locationIds: Array<string>;
       budgetMode: string;
       budget: number;
-      gender:string;
+      gender: string;
       scheduleType: string;
       scheduleStartTime: string;
-      dayparting:string;
-      languages:Array<string>;
-      ageGroups:Array<string>;
-      interestCategoryIds:Array<string>;
-      operatingSystems:Array<string>;
-      devicePriceRanges:Array<number>;
-      spendingPower:string;
+      dayparting: string;
+      languages: Array<string>;
+      ageGroups: Array<string>;
+      interestCategoryIds: Array<string>;
+      operatingSystems: Array<string>;
+      devicePriceRanges: Array<number>;
+      spendingPower: string;
       optimizationGoal: string;
       bidType: string;
       billingEvent: string;
       pacing: string;
       operationStatus: string;
       identityId: string;
-      deviceModelIds:Array<string>
-      shoppingAdsType?:string;
+      deviceModelIds: Array<string>;
+      shoppingAdsType?: string;
       scheduleEndTime?: string;
     },
   ) {
@@ -215,21 +218,21 @@ async createCampaign(
         schedule_type: adGroupDetails.scheduleType,
         schedule_end_time: adGroupDetails?.scheduleEndTime,
         schedule_start_time: adGroupDetails.scheduleStartTime,
-        dayparting:adGroupDetails.dayparting,
+        dayparting: adGroupDetails.dayparting,
         optimization_goal: adGroupDetails.optimizationGoal,
         bid_type: adGroupDetails.bidType,
         billing_event: adGroupDetails.billingEvent,
         pacing: adGroupDetails.pacing,
         operation_status: adGroupDetails.operationStatus,
-        languages:adGroupDetails.languages,
-        gender:adGroupDetails.gender,
-        age_groups:adGroupDetails.ageGroups,
-        spending_power:adGroupDetails.spendingPower,
-        interest_category_ids:adGroupDetails.interestCategoryIds,
-        operating_systems:adGroupDetails.operatingSystems,
-        device_price_ranges:adGroupDetails.devicePriceRanges,
+        languages: adGroupDetails.languages,
+        gender: adGroupDetails.gender,
+        age_groups: adGroupDetails.ageGroups,
+        spending_power: adGroupDetails.spendingPower,
+        interest_category_ids: adGroupDetails.interestCategoryIds,
+        operating_systems: adGroupDetails.operatingSystems,
+        device_price_ranges: adGroupDetails.devicePriceRanges,
         identity_id: adGroupDetails?.identityId,
-        shopping_ads_type:adGroupDetails?.shoppingAdsType
+        shopping_ads_type: adGroupDetails?.shoppingAdsType,
       };
       const response = await axios.post(
         `${this.getBaseUrl()}v1.3/adgroup/create/`,
@@ -396,32 +399,37 @@ async createCampaign(
   }
 
   async CreateFeed(
+    userId: string,
+    walletId: string,
+
     accessToken: string,
     advertiserId: string,
     campaignName: string,
-    objectiveType:string,
-    gender:string,
-    spendingPower:string,
-    scheduleType:string,
+    objectiveType: string,
+    gender: string,
+    spendingPower: string,
+    scheduleType: string,
     scheduleStartTime: string,
-    dayparting:string,
+    dayparting: string,
     budget: number,
     optimizationGoal: string,
     displayName: string,
     adText: string,
-    ageGroups:Array<string>,
-    languages:Array<string>,
+    ageGroups: Array<string>,
+    languages: Array<string>,
     locationIds: Array<string>,
-    interestCategoryIds:Array<string>,
-    operatingSystems:Array<string>,
-    devicePriceRanges:Array<number>,
-    deviceModelIds:Array<string>,
+    interestCategoryIds: Array<string>,
+    operatingSystems: Array<string>,
+    devicePriceRanges: Array<number>,
+    deviceModelIds: Array<string>,
     videoFile: Express.Multer.File,
     imageFile: Express.Multer.File,
     scheduleEndTime?: string,
   ) {
     try {
-      const budgetMode="BUDGET_MODE_DYNAMIC_DAILY_BUDGET"
+      await this.orderService.checkPayAbility(userId, budget, 25);
+
+      const budgetMode = 'BUDGET_MODE_DYNAMIC_DAILY_BUDGET';
       // Step 1: Create Campaign
       this.logger.log('Step 1: Creating campaign...');
       const campaignDetails = {
@@ -432,7 +440,11 @@ async createCampaign(
         landingPageUrl: 'https://www.example.com/',
       };
       this.logger.log(`Campaign details: ${JSON.stringify(campaignDetails)}`);
-      const campaign = await this.createCampaign(accessToken, advertiserId, campaignDetails);
+      const campaign = await this.createCampaign(
+        accessToken,
+        advertiserId,
+        campaignDetails,
+      );
       const campaignId = campaign?.data?.campaign_id;
       if (!campaignId)
         throw new Error('Campaign creation failed: Missing campaign ID.');
@@ -484,7 +496,7 @@ async createCampaign(
 
       // Step 4: Create Ad Group
       this.logger.log('Step 4: Creating ad group...');
-      let adGroupDetails:any = {
+      const adGroupDetails: any = {
         adgroupName: campaignName,
         campaignId,
         promotionType: 'WEBSITE',
@@ -511,10 +523,10 @@ async createCampaign(
         deviceModelIds,
       };
       if (objectiveType === 'PRODUCT_SALES') {
-        adGroupDetails.shoppingAdsType = "LIVE";
+        adGroupDetails.shoppingAdsType = 'LIVE';
       }
-      if(scheduleType=='SCHEDULE_START_END '){
-        adGroupDetails.scheduleEndTime=scheduleEndTime
+      if (scheduleType == 'SCHEDULE_START_END ') {
+        adGroupDetails.scheduleEndTime = scheduleEndTime;
       }
       this.logger.log(`Ad Group details: ${JSON.stringify(adGroupDetails)}`);
 
@@ -568,13 +580,19 @@ async createCampaign(
         );
       }
       this.logger.log(`Ad created successfully with ID: ${adId}`);
-
-      return {
-        campaign,
-        adGroup,
-        identity: existingIdentity || { data: { identity_id: identityId } },
-        ad: createAdResponse.data,
-      };
+      const order = await this.orderService.createOrderWithTransaction(
+        userId,
+        walletId,
+        'Tiktok feed',
+        budget,
+        {
+          campaign,
+          adGroup,
+          identity: existingIdentity || { data: { identity_id: identityId } },
+          ad: createAdResponse.data,
+        },
+      );
+      return order;
     } catch (error) {
       this.logger.error('Error during setupAdCampaign:', error.message);
       const errorDetails = error.response?.data || error.message;
@@ -611,10 +629,7 @@ async createCampaign(
       );
     }
   }
-  
-
   // Fetch Campaign Report
-
   async getReport(access_token: string, advertiser_id: string): Promise<any> {
     const endpoint = `https://sandbox-ads.tiktok.com/open_api/v1.3/report/integrated/get`;
     try {

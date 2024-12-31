@@ -12,6 +12,7 @@ import {
   UploadedFile,
   UseInterceptors,
   UploadedFiles,
+  Req,
 } from '@nestjs/common';
 import {
   FileInterceptor,
@@ -62,6 +63,7 @@ export class TiktokCampaignController {
   )
   async FeedAd(
     @Body() body: any,
+    @Req() req: any,
     @UploadedFiles()
     files: {
       videoFile?: Express.Multer.File[];
@@ -135,6 +137,8 @@ export class TiktokCampaignController {
     const imageFile = files.imageFile[0];
     try {
       const result = await this.campaignService.CreateFeed(
+        req.user.userId,
+        req.user.walletId,
         accessToken,
         advertiserId,
         campaignName,
@@ -157,7 +161,7 @@ export class TiktokCampaignController {
         deviceModelIds,
         videoFile,
         imageFile,
-        scheduleEndTime
+        scheduleEndTime,
       );
       return {
         message: 'Ad campaign setup successfully.',
@@ -423,8 +427,7 @@ export class TiktokCampaignController {
       );
     }
   }
- 
-  
+
   @Get('report')
   async fetchReport(
     @Query() query: { accessToken: string; advertiserId: string },

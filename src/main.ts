@@ -8,7 +8,9 @@ import * as express from 'express';
 import { HttpExceptionFilter } from './http-exception.filter';
 // Bootstrap Function
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule,{
+    logger: ['error'], 
+  });
   app.use('/webhook', express.raw({ type: 'application/json' }));
 
   // app.use('/uploads', express.static(join(__dirname, '..', 'uploads')));

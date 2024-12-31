@@ -30,5 +30,4 @@ export class TransactionService {
   async getTransactionsByWalletId(walletId: string): Promise<Transaction[]> {
     return this.transactionModel.find({ walletId }).exec();
   }
-
 }

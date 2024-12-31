@@ -28,5 +28,6 @@ import { OrderController } from './order.controller';
   ],
   controllers: [WebhookController, OrderController],
   providers: [OrderService, OrderGateway],
+  exports: [OrderService],
 })
 export class OrderModule {}
