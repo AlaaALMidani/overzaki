@@ -54,14 +54,14 @@ export class TiktokCampaignController {
     }
   }
 
-  @Post('setup')
+  @Post('SparkAd')
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'videoFile', maxCount: 1 },
       { name: 'imageFile', maxCount: 1 },
     ]),
   )
-  async setupAdCampaign(
+  async SparkAd(
     @Body() body: any,
     @UploadedFiles()
     files: {
@@ -73,16 +73,22 @@ export class TiktokCampaignController {
       accessToken,
       advertiserId,
       campaignName,
-      budgetMode,
-      // locationIds,
-      // ***************************
-      locationIds: rawLocationIds,
-      scheduleEndTime,
+      objectiveType,
+      gender,
+      spendingPower,
+      scheduleType,
       scheduleStartTime,
       budget,
       optimizationGoal,
       displayName,
       adText,
+      ageGroups,
+      languages,
+      scheduleEndTime,
+      locationIds: rawLocationIds,
+      interestCategoryIds,
+      operatingSystems,
+      devicePriceRanges,
     } = body;
     const locationIds = Array.isArray(rawLocationIds)
     ? [...new Set(rawLocationIds)]
@@ -97,7 +103,6 @@ export class TiktokCampaignController {
       !accessToken ||
       !advertiserId ||
       !campaignName ||
-      !budgetMode ||
       !locationIds ||
       !scheduleEndTime ||
       !scheduleStartTime ||
@@ -126,20 +131,28 @@ export class TiktokCampaignController {
     const videoFile = files.videoFile[0];
     const imageFile = files.imageFile[0];
     try {
-      const result = await this.campaignService.setupAdCampaign(
+      const result = await this.campaignService.CreateSpark(
         accessToken,
         advertiserId,
         campaignName,
-        budgetMode,
-        locationIds,
-        scheduleEndTime,
+        objectiveType,
+        gender,
+        spendingPower,
+        scheduleType,
         scheduleStartTime,
-        Number(budget),
+        budget,
         optimizationGoal,
         displayName,
         adText,
+        ageGroups,
+        languages,
+        locationIds,
+        interestCategoryIds,
+        operatingSystems,
+        devicePriceRanges,
         videoFile,
         imageFile,
+        scheduleEndTime
       );
       return {
         message: 'Ad campaign setup successfully.',
