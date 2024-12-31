@@ -20,4 +20,8 @@ export class TransactionController {
   async getTransactions(@Param('walletId') walletId: string) {
     return this.transactionService.getTransactionsByWalletId(walletId);
   }
+  @Get(':orderId')
+  async getTransactionsByOrderId(@Param('orderId') orderId: string) {
+    return this.transactionService.getTransactionsByWalletId(orderId);
+  }
 }

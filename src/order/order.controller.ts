@@ -124,20 +124,21 @@ import {
   HttpStatus,
   UsePipes,
   ValidationPipe,
+  Req,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { Order } from './order.schema';
 
-@Controller('orders')
+@Controller('user/orders')
 export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(private readonly orderService: OrderService) { }
 
   /**
    * Create a new order along with a transaction.
    */
   @Post('')
-  async createOrder(@Body() body:any): Promise<Order> {
-    const { userId, serviceName, walletId, type, amount, details ,minAmount} =body
+  async createOrder(@Body() body: any): Promise<Order> {
+    const { userId, serviceName, walletId, type, amount, details, minAmount } = body
     return this.orderService.createOrderWithTransaction(
       userId,
       walletId,
@@ -166,6 +167,15 @@ export class OrderController {
   }
 
   /**
+   * Get all orders for the authenticated user.
+   */
+  @Get()
+  async getAllOrdersForUser(@Req() req: any): Promise<any> {
+    const userId = req.user['id']; 
+    return this.orderService.getOrdersByUserId(userId);
+  }
+
+  /**
    * Update the status of an existing order.
    */
   @Patch(':orderId/status')
@@ -173,7 +183,7 @@ export class OrderController {
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   async updateOrderStatus(
     @Param('orderId') orderId: string,
-    @Body() body:any,
+    @Body() body: any,
   ): Promise<Order> {
     const { status } = body;
     return this.orderService.updateOrderStatus(orderId, status);
