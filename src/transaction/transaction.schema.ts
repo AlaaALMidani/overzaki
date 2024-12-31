@@ -10,7 +10,10 @@ export class Transaction extends Document {
   walletId: string;
 
   @Prop({ required: true })
-  type: string; // e.g., 'credit' or 'debit'
+  orderId: string;
+
+  @Prop({ required: true })
+  type: string; // e.g., 'pull' or 'pay'
 
   @Prop({ required: true })
   amount: number;

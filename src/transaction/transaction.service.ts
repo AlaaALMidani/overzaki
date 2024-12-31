@@ -13,12 +13,14 @@ export class TransactionService {
   async createTransaction(
     userId: string,
     walletId: string,
+    orderId: any,
     type: string,
     amount: number,
   ): Promise<Transaction> {
     const transaction = new this.transactionModel({
       userId,
       walletId,
+      orderId,
       type,
       amount,
     });
@@ -28,4 +30,5 @@ export class TransactionService {
   async getTransactionsByWalletId(walletId: string): Promise<Transaction[]> {
     return this.transactionModel.find({ walletId }).exec();
   }
+
 }

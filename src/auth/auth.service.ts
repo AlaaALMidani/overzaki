@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Injectable,
@@ -12,6 +13,7 @@ import { plainToInstance } from 'class-transformer';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { WalletService } from '../wallet/wallet.service';
+import { StripeService } from '../stripe/stripe.service';
 
 @Injectable()
 export class AuthService {
@@ -19,6 +21,7 @@ export class AuthService {
     public readonly userService: UserService,
     private readonly jwtService: JwtService,
     private readonly walletService: WalletService,
+    private readonly stripeService: StripeService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
@@ -34,23 +37,6 @@ export class AuthService {
         password: 'Invalid credentials',
       },
     });
-  }
-
-  async login(
-    data: LoginDto,
-  ): Promise<{ fullname: string; accessToken: string }> {
-    // Validate the login data
-    const loginData = data;
-    await this.validateInput(loginData, LoginDto);
-
-    // Authenticate the user
-    const user = await this.validateUser(data.email, data.password);
-
-    const payload = { email: user._doc.email, id: user._doc._id };
-    return {
-      fullname: user._doc.fullname,
-      accessToken: this.jwtService.sign(payload),
-    };
   }
 
   async register(data: any): Promise<any> {
@@ -71,6 +57,7 @@ export class AuthService {
     const hashedPassword = await this.hashPassword(data.password);
     const user = await this.userService.createUser({
       ...data,
+      stripeUserId: await this.stripeService.createCustomer(data.email),
       passwordHash: hashedPassword,
     });
 
@@ -79,6 +66,26 @@ export class AuthService {
     const { passwordHash, ...result } = user._doc;
     return result;
   }
+
+
+
+  async login(
+    data: LoginDto,
+  ): Promise<{ fullname: string; accessToken: string }> {
+    // Validate the login data
+    const loginData = data;
+    await this.validateInput(loginData, LoginDto);
+
+    // Authenticate the user
+    const user = await this.validateUser(data.email, data.password);
+
+    const payload = { email: user._doc.email, id: user._doc._id, stripeId: user.stripeUserId};
+    return {
+      fullname: user._doc.fullname,
+      accessToken: this.jwtService.sign(payload),
+    };
+  }
+
 
   async hashPassword(password: string): Promise<string> {
     const salt = await bcrypt.genSalt(10);
