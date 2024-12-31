@@ -413,6 +413,7 @@ async createCampaign(
     interestCategoryIds:Array<string>,
     operatingSystems:Array<string>,
     devicePriceRanges:Array<number>,
+    deviceModelIds:Array<string>,
     videoFile: Express.Multer.File,
     imageFile: Express.Multer.File,
     scheduleEndTime?: string,
@@ -488,6 +489,7 @@ async createCampaign(
         interestCategoryIds,
         operatingSystems,
         devicePriceRanges,
+        deviceModelIds,
       };
       if (objectiveType === 'PRODUCT_SALES') {
         adGroupDetails.shoppingAdsType = "LIVE";
@@ -598,13 +600,11 @@ async createCampaign(
 
       const bcResponse = await this.getBCDetails(accessToken);
       let bcId: string;
-
       if (bcResponse?.data?.list?.length > 0) {
         // Use the first available BC
         bcId = bcResponse.data.list[0].bc_info.bc_id;
       } else {
         // Create a new BC if none exists
-
         const newBcResponse = await this.createBC(
           accessToken,
           feedName,

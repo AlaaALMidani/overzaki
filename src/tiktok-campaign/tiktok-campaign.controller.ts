@@ -89,6 +89,7 @@ export class TiktokCampaignController {
       interestCategoryIds,
       operatingSystems,
       devicePriceRanges,
+      deviceModelIds,
     } = body;
     const locationIds = Array.isArray(rawLocationIds)
     ? [...new Set(rawLocationIds)]
@@ -150,6 +151,7 @@ export class TiktokCampaignController {
         interestCategoryIds,
         operatingSystems,
         devicePriceRanges,
+        deviceModelIds,
         videoFile,
         imageFile,
         scheduleEndTime
@@ -166,8 +168,6 @@ export class TiktokCampaignController {
       );
     }
   }
-
-  
   @Get('uploaded-videos')
   async fetchUploadedVideos(
     @Query() query: { accessToken: string; advertiserId: string },
