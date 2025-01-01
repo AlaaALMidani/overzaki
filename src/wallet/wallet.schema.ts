@@ -5,7 +5,8 @@ import { Document } from 'mongoose';
 export class Wallet extends Document {
   @Prop({ required: true, unique: true })
   userId: string;
-
+  @Prop({ required: false, default: '' })
+  stripeUserId: string;
   @Prop({ required: true, default: 0 })
   amount: number;
 }

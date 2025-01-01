@@ -588,7 +588,7 @@ export class TiktokCampaignService {
           // campaign,
           // adGroup,
           // identity: existingIdentity || { data: { identity_id: identityId } },
-          ...createAdResponse.data.data.creatives[0]
+          ...createAdResponse.data.data.creatives[0],
         },
       );
       return order;
