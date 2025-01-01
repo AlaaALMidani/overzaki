@@ -1,17 +1,22 @@
-import { Controller, Get, Param, Post } from '@nestjs/common';
+import { Controller, Get, Req } from '@nestjs/common';
 import { WalletService } from './wallet.service';
+import { TransactionService } from '../transaction/transaction.service';
 
-@Controller('wallet')
+@Controller('user/wallet')
 export class WalletController {
-  constructor(private readonly walletService: WalletService) {}
+  constructor(
+    private readonly walletService: WalletService,
+    private readonly transactionService: TransactionService,
+  ) {}
 
-  @Post(':userId')
-  async createWallet(@Param('userId') userId: string) {
-    return this.walletService.createWallet(userId);
-  }
-
-  @Get(':userId')
-  async getWallet(@Param('userId') userId: string) {
-    return this.walletService.getWalletByUserId(userId);
+  @Get()
+  async getWallet(@Req() req: any) {
+    const wallet = await this.walletService.getWalletByUserId(req.user.id);
+    const transactions =
+      await this.transactionService.getTransactionsByWalletId(wallet._id);
+    return {
+      ...wallet._doc,
+      transactions,
+    };
   }
 }

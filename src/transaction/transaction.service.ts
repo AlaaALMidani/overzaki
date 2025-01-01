@@ -27,7 +27,7 @@ export class TransactionService {
     return transaction.save();
   }
 
-  async getTransactionsByWalletId(walletId: string): Promise<Transaction[]> {
+  async getTransactionsByWalletId(walletId: any): Promise<Transaction[]> {
     return this.transactionModel.find({ walletId }).exec();
   }
 }
