@@ -5,6 +5,8 @@ import { Document } from 'mongoose';
 export class User extends Document {
   @Prop({ required: true, unique: true })
   email: string;
+  @Prop({ type: String, required: true })
+  stripeUserId: string;
 
   @Prop({ required: true })
   passwordHash: string;

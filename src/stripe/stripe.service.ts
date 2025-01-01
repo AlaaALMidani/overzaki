@@ -66,16 +66,12 @@ export class StripeService {
       throw new Error('Webhook signature verification failed');
     }
   }
+  public async createCustomer(userEmail: string) {
+    const customer = await this.stripe.customers.create({
+      email: userEmail,
+    });
+
+    console.log('Customer Created:', customer.id);
+    return customer.id;
+  }
 }
-
-// async function createCustomer(userEmail) {
-//   const customer = await stripe.customers.create({
-//     email: userEmail, 
-//   });
-
-//   console.log('Customer Created:', customer.id);
-//   return customer.id; 
-// }
-
-
-// createCustomer('user@example.com');
