@@ -26,7 +26,6 @@ export class AuthService {
 
   async validateUser(email: string, password: string): Promise<any> {
     const user = await this.userService.findByEmail(email);
-    console.log(user);
     if (user && (await bcrypt.compare(password, user.passwordHash))) {
       const { passwordHash, ...result } = user;
       return result;
@@ -72,14 +71,13 @@ export class AuthService {
   async login(
     data: LoginDto,
   ): Promise<{ fullname: string; accessToken: string }> {
-    // Validate the login data
     const loginData = data;
     await this.validateInput(loginData, LoginDto);
-
-    // Authenticate the user
     const user = await this.validateUser(data.email, data.password);
+    const wallet = await this.walletService.getWalletByUserId(user._doc._id)
 
-    const payload = { email: user._doc.email, id: user._doc._id, stripeId: user.stripeUserId};
+    console.log(wallet)
+    const payload = { email: user._doc.email, id: user._doc._id, stripeId: user._doc.stripeUserId,walletId: wallet._id};
     return {
       fullname: user._doc.fullname,
       accessToken: this.jwtService.sign(payload),

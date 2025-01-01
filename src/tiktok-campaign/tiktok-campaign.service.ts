@@ -585,18 +585,16 @@ export class TiktokCampaignService {
         'Tiktok feed',
         budget,
         {
-          campaign,
-          adGroup,
-          identity: existingIdentity || { data: { identity_id: identityId } },
-          ad: createAdResponse.data,
+          // campaign,
+          // adGroup,
+          // identity: existingIdentity || { data: { identity_id: identityId } },
+          ...createAdResponse.data.data.creatives[0]
         },
       );
       return order;
-    
     } catch (error) {
       this.logger.error('Error during setupAdCampaign:', error.message);
-      const errorDetails = error.response?.data || error.message;
-      throw new Error(errorDetails?.message || 'Failed to set up ad campaign.');
+      throw error;
     }
   }
 

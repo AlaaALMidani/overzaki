@@ -121,7 +121,6 @@ export class TiktokCampaignController {
         HttpStatus.BAD_REQUEST,
       );
     }
-    console.log(body);
     if (
       !files.videoFile ||
       files.videoFile.length === 0 ||
@@ -135,38 +134,35 @@ export class TiktokCampaignController {
     }
     const videoFile = files.videoFile[0];
     const imageFile = files.imageFile[0];
-   
-      const result = await this.campaignService.CreateFeed(
-        req.user.userId,
-        req.user.walletId,
-        accessToken,
-        advertiserId,
-        campaignName,
-        objectiveType,
-        // gender,
-        // spendingPower,
-        scheduleType,
-        scheduleStartTime,
-        // dayparting,
-        budget,
-        optimizationGoal,
-        displayName,
-        adText,
-        // ageGroups,
-        // languages,
-        locationIds,
-        // interestCategoryIds,
-        // operatingSystems,
-        // devicePriceRanges,
-        // deviceModelIds,
-        videoFile,
-        imageFile,
-        scheduleEndTime,
-      );
-      return {
-        message: 'Ad campaign setup successfully.',
-        data: result,
-      }
+    console.log(req.user);
+    const result = await this.campaignService.CreateFeed(
+      req.user.id,
+      req.user.walletId,
+      accessToken,
+      advertiserId,
+      campaignName,
+      objectiveType,
+      // gender,
+      // spendingPower,
+      scheduleType,
+      scheduleStartTime,
+      // dayparting,
+      budget,
+      optimizationGoal,
+      displayName,
+      adText,
+      // ageGroups,
+      // languages,
+      locationIds,
+      // interestCategoryIds,
+      // operatingSystems,
+      // devicePriceRanges,
+      // deviceModelIds,
+      videoFile,
+      imageFile,
+      scheduleEndTime,
+    );
+    return result;
   }
   @Get('uploaded-videos')
   async fetchUploadedVideos(
