@@ -356,7 +356,7 @@ export class TiktokCampaignService {
     scheduleEndTime?: string,
   ) {
     try {
-      //  await this.orderService.checkPayAbility(userId, budget, 25);
+        await this.orderService.checkPayAbility(userId, budget, 25);
        const budgetMode = 'BUDGET_MODE_DYNAMIC_DAILY_BUDGET';
       // Step 1: Create Campaign
       this.logger.log('Step 1: Creating campaign...');
@@ -512,19 +512,19 @@ export class TiktokCampaignService {
         );
       }
       this.logger.log(`Ad created successfully with ID: ${adId}`);
-      // const order = await this.orderService.createOrderWithTransaction(
-      //   userId,
-      //   walletId,
-      //   'Tiktok feed',
-      //   budget,
-      //   {
-      //     // campaign,
-      //     // adGroup,
-      //     // identity: existingIdentity || { data: { identity_id: identityId } },
-      //     ...createAdResponse.data.data.creatives[0]
-      //   },
-      // );
-      return adId
+      const order = await this.orderService.createOrderWithTransaction(
+        userId,
+        walletId,
+        'Tiktok feed',
+        budget,
+        {
+          // campaign,
+          // adGroup,
+          // identity: existingIdentity || { data: { identity_id: identityId } },
+          ...createAdResponse.data.data.creatives[0]
+        },
+      );
+      return order
     } catch (error) {
       this.logger.error('Error during setupAdCampaign:', error.message);
       throw error;
@@ -534,7 +534,7 @@ export class TiktokCampaignService {
  
   // Fetch Campaign Report
   async getReport(access_token: string, advertiser_id: string): Promise<any> {
-    const endpoint = `https://sandbox-ads.tiktok.com/open_api/v1.3/report/integrated/get`;
+    const endpoint = `${this.getBaseUrl()}v1.3/report/integrated/get`;
     try {
       const response = await axios.get(endpoint, {
         headers: {
