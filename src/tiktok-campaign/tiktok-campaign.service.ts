@@ -4,7 +4,6 @@ import * as FormData from 'form-data';
 import * as crypto from 'crypto';
 import { HttpService } from '@nestjs/axios';
 import { OrderService } from '../order/order.service';
-import { ad } from 'google-ads-api/build/src/protos/autogen/resourceNames';
 @Injectable()
 export class TiktokCampaignService {
   private readonly logger = new Logger(TiktokCampaignService.name);

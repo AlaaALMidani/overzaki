@@ -78,35 +78,35 @@ export class WebhookController {
       return { error: 'Webhook error' };
     }
   }
-  @Post('ad-status')
-  async handleAdStatusUpdate(
-    @Body()
-    body: {
-      platform: string;
-      orderId: string;
-      status: 'approved' | 'rejected';
-    },
-  ) {
-    const { platform, orderId, status } = body;
+  // @Post('ad-status')
+  // async handleAdStatusUpdate(
+  //   @Body()
+  //   body: {
+  //     platform: string;
+  //     orderId: string;
+  //     status: 'approved' | 'rejected';
+  //   },
+  // ) {
+  //   const { platform, orderId, status } = body;
 
-    const order = this.orderService.updateOrderStatus(orderId, status);
+  //   const order = this.orderService.updateOrderStatus(orderId, status);
 
-    if (status === 'rejected') {
-      const userId = order.userId;
-      const amount = order.amount;
-      this.orderService.updateUserBalance(userId, amount, 'refund');
-      // this.stripeService.refundPayment(paymentIntentId, amount);
-      // this.orderService.refundOrder(orderId);
-      // this.orderService.refundUser(order.paymentIntent, amount);
-    }
+  //   if (status === 'rejected') {
+  //     const userId = order.userId;
+  //     const amount = order.amount;
+  //     this.orderService.updateUserBalance(userId, amount, 'refund');
+  //     // this.stripeService.refundPayment(paymentIntentId, amount);
+  //     // this.orderService.refundOrder(orderId);
+  //     // this.orderService.refundUser(order.paymentIntent, amount);
+  //   }
 
-    this.orderGateway.notifyOrderStatus(orderId, status);
+  //   this.orderGateway.notifyOrderStatus(orderId, status);
 
-    return {
-      success: true,
-      message: `Order for platform ${platform} updated to ${status}`,
-    };
-  }
+  //   return {
+  //     success: true,
+  //     message: `Order for platform ${platform} updated to ${status}`,
+  //   };
+  // }
   @Post('strip')
   async handleStripeWebhook(@Req() req, @Res() res) {
     const sig = req.headers['stripe-signature'];
