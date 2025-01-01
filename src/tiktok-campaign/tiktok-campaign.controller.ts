@@ -58,7 +58,7 @@ export class TiktokCampaignController {
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'videoFile', maxCount: 1 },
-      { name: 'imageFile', maxCount: 1 },
+      { name: 'imageFiles', maxCount: 2 },
     ]),
   )
   async FeedAd(
@@ -67,7 +67,7 @@ export class TiktokCampaignController {
     @UploadedFiles()
     files: {
       videoFile?: Express.Multer.File[];
-      imageFile?: Express.Multer.File[];
+      imageFiles?: Express.Multer.File[];
     },
   ) {
     const {
@@ -75,23 +75,24 @@ export class TiktokCampaignController {
       advertiserId,
       campaignName,
       objectiveType,
-      // gender,
-      // spendingPower,
+      callToAction,
+      gender,
+      spendingPower,
       scheduleType,
       scheduleStartTime,
-      // dayparting,
+      dayparting,
       budget,
-      optimizationGoal,
-      displayName,
+      appName,
       adText,
-      // ageGroups,
-      // languages,
-      scheduleEndTime,
+      url,
+      ageGroups,
+      languages,
       locationIds: rawLocationIds,
-      // interestCategoryIds,
-      // operatingSystems,
-      // devicePriceRanges,
-      // deviceModelIds,
+      interestCategoryIds,
+      operatingSystems,
+      devicePriceRanges,
+      deviceModelIds,
+      scheduleEndTime,
     } = body;
     const locationIds = Array.isArray(rawLocationIds)
       ? [...new Set(rawLocationIds)]
@@ -112,8 +113,6 @@ export class TiktokCampaignController {
       !scheduleEndTime ||
       !scheduleStartTime ||
       !budget ||
-      !optimizationGoal ||
-      !displayName ||
       !adText
     ) {
       throw new HttpException(
@@ -124,8 +123,8 @@ export class TiktokCampaignController {
     if (
       !files.videoFile ||
       files.videoFile.length === 0 ||
-      !files.imageFile ||
-      files.imageFile.length === 0
+      !files.imageFiles ||
+      files.imageFiles.length === 0
     ) {
       throw new HttpException(
         'Both video and image files are required.',
@@ -133,7 +132,8 @@ export class TiktokCampaignController {
       );
     }
     const videoFile = files.videoFile[0];
-    const imageFile = files.imageFile[0];
+    const coverFile = files.imageFiles[1];
+    const logoFile=files.imageFiles[0]
     console.log(req.user);
     const result = await this.campaignService.CreateFeed(
       req.user.id,
@@ -142,176 +142,29 @@ export class TiktokCampaignController {
       advertiserId,
       campaignName,
       objectiveType,
-      // gender,
-      // spendingPower,
+      callToAction,
+      gender,
+      spendingPower,
       scheduleType,
       scheduleStartTime,
-      // dayparting,
+      dayparting,
       budget,
-      optimizationGoal,
-      displayName,
+      appName,
       adText,
-      // ageGroups,
-      // languages,
+      url,
+      ageGroups,
+      languages,
       locationIds,
-      // interestCategoryIds,
-      // operatingSystems,
-      // devicePriceRanges,
-      // deviceModelIds,
+      interestCategoryIds,
+      operatingSystems,
+      devicePriceRanges,
+      deviceModelIds,
       videoFile,
-      imageFile,
+      coverFile,
+      logoFile,
       scheduleEndTime,
     );
     return result;
-  }
-  @Get('uploaded-videos')
-  async fetchUploadedVideos(
-    @Query() query: { accessToken: string; advertiserId: string },
-  ) {
-    const { accessToken, advertiserId } = query;
-
-    if (!accessToken || !advertiserId) {
-      throw new HttpException(
-        'Access token and advertiser ID are required',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    try {
-      const videos = await this.campaignService.fetchUploadedVideos(
-        accessToken,
-        advertiserId,
-      );
-      return {
-        message: 'Uploaded videos fetched successfully',
-        data: videos,
-      };
-    } catch (error) {
-      throw new HttpException(
-        error.message || 'Failed to fetch uploaded videos',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
-  @Get('identity')
-  async fetchIdentity(
-    @Query() query: { accessToken: string; advertiserId: string },
-  ) {
-    const { accessToken, advertiserId } = query;
-
-    if (!accessToken || !advertiserId) {
-      throw new HttpException(
-        'Access token and advertiser ID are required',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    try {
-      const identity = await this.campaignService.fetchIdentity(
-        accessToken,
-        advertiserId,
-      );
-      return {
-        message: 'fetch identity successfully',
-        data: identity,
-      };
-    } catch (error) {
-      throw new HttpException(
-        error.message || 'Failed to fetch uploaded videos',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
-  @Post('upload-video')
-  @UseInterceptors(FileInterceptor('videoFile'))
-  async uploadVideo(
-    @UploadedFile() file: Express.Multer.File,
-    @Body()
-    body: {
-      accessToken: string;
-      advertiserId: string;
-      flawDetect?: boolean;
-      autoFixEnabled?: boolean;
-      autoBindEnabled?: boolean;
-    },
-  ) {
-    const {
-      accessToken,
-      advertiserId,
-      flawDetect,
-      autoFixEnabled,
-      autoBindEnabled,
-    } = body;
-
-    if (!accessToken || !advertiserId) {
-      throw new HttpException(
-        'Access token and advertiser ID are required',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    if (!file) {
-      throw new HttpException('Video file is required', HttpStatus.BAD_REQUEST);
-    }
-
-    try {
-      const uploadResult = await this.campaignService.uploadVideoByFile(
-        file,
-        accessToken,
-        advertiserId,
-        flawDetect,
-        autoFixEnabled,
-        autoBindEnabled,
-      );
-      return {
-        message: 'Video uploaded successfully',
-        data: uploadResult,
-      };
-    } catch (error) {
-      throw new HttpException(
-        error.message || 'Video upload failed',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
-  @Post('upload-image')
-  @UseInterceptors(FileInterceptor('imageFile'))
-  async imageVideo(
-    @UploadedFile() file: Express.Multer.File,
-    @Body() body: { accessToken: string; advertiserId: string },
-  ) {
-    const { accessToken, advertiserId } = body;
-
-    if (!accessToken || !advertiserId) {
-      throw new HttpException(
-        'Access token and advertiser ID are required',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    if (!file) {
-      throw new HttpException('Image file is required', HttpStatus.BAD_REQUEST);
-    }
-
-    try {
-      const uploadResult = await this.campaignService.uploadImageByFile(
-        file,
-        accessToken,
-        advertiserId,
-      );
-      return {
-        message: 'Image uploaded successfully',
-        data: uploadResult,
-      };
-    } catch (error) {
-      throw new HttpException(
-        error.message || 'Image upload failed',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
   }
 
   private parseJson(json: any, field: string) {
@@ -325,97 +178,6 @@ export class TiktokCampaignController {
     }
   }
 
-  @Post('create-identity')
-  async createIdentity(@Body() body: any) {
-    const { accessToken, advertiserId, displayName } = body;
-    if (!accessToken || !advertiserId || !displayName) {
-      throw new HttpException(
-        'Access token, advertiserId, and displayName are required',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    try {
-      const identityResult = await this.campaignService.createIdentity(
-        accessToken,
-        advertiserId,
-        displayName,
-      );
-      return {
-        message: 'Identity created successfully',
-        data: identityResult,
-      };
-    } catch (error) {
-      throw new HttpException(
-        error.message || 'Identity creation failed',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
-  @Post('create-campaign')
-  async createCampaign(@Body() body: any) {
-    const { accessToken, advertiser_id, campaignDetails } = body;
-    if (!accessToken || !advertiser_id || !campaignDetails) {
-      throw new HttpException(
-        'Access token, advertiser_id, and campaignDetails are required',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    try {
-      const parsedCampaignDetails = this.parseJson(
-        campaignDetails,
-        'campaignDetails',
-      );
-      const campaignResult = await this.campaignService.createCampaign(
-        accessToken,
-        advertiser_id,
-        parsedCampaignDetails,
-      );
-      return {
-        message: 'Campaign created successfully',
-        data: campaignResult,
-      };
-    } catch (error) {
-      throw new HttpException(
-        error.message || 'Campaign creation failed',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
-  @Post('create-AdGroup')
-  async createAdGroup(@Body() body: any) {
-    const { accessToken, advertiser_id, adGroupDetails } = body;
-
-    if (!accessToken || !advertiser_id || !adGroupDetails) {
-      throw new HttpException(
-        'Access token, advertiser_id, and AdGroupDetails are required',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    try {
-      const parsedAdGroupDetails = this.parseJson(
-        adGroupDetails,
-        'adGroupDetails',
-      );
-      const adGroupResult = await this.campaignService.createAdGroup(
-        accessToken,
-        advertiser_id,
-        parsedAdGroupDetails,
-      );
-
-      return {
-        message: 'AdGroup created successfully',
-        data: adGroupResult,
-      };
-    } catch (error) {
-      throw new HttpException(
-        error.message || 'AdGroup creation failed',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
 
   @Get('report')
   async fetchReport(
@@ -444,4 +206,34 @@ export class TiktokCampaignController {
       );
     }
   }
+
+
+  @Get('campaignReport')
+  async campaignReport(
+    @Query() query: { accessToken: string; advertiserId: string; campaignId: string },
+  ) {
+    const { accessToken, advertiserId, campaignId } = query;
+    if (!accessToken || !advertiserId || !campaignId) {
+      throw new HttpException(
+        'Access token, advertiser ID, and campaign ID are required',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    try {
+      const report = await this.campaignService.getReport(accessToken, advertiserId);
+      const reportCampaign = report.data.list.filter(
+        (a) => a.dimensions.campaign_id == campaignId,
+      );
+      return {
+        message: 'Report fetched successfully',
+        data: reportCampaign, 
+      };
+    } catch (error) {
+      throw new HttpException(
+        error.message || 'Failed to fetch report',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }
+  
