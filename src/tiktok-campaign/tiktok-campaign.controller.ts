@@ -80,7 +80,7 @@ export class TiktokCampaignController {
       spendingPower,
       scheduleType,
       scheduleStartTime,
-      dayparting,
+      dayparting: rawDayparting,
       budget,
       appName,
       adText,
@@ -131,10 +131,17 @@ export class TiktokCampaignController {
         HttpStatus.BAD_REQUEST,
       );
     }
-    let processedDayparting
-    if (dayparting) {
-      processedDayparting = this.convertDaypartingToString(dayparting);
+    let parsedDayparting: Record<string, { start: string; end: string }>;
+    try {
+      parsedDayparting = JSON.parse(rawDayparting);
+    } catch (error) {
+      throw new HttpException(
+        'Invalid JSON format for dayparting.',
+        HttpStatus.BAD_REQUEST,
+      );
     }
+    const processedDayparting = this.convertDaypartingToString(parsedDayparting);
+  
     const videoFile = files.videoFile[0];
     const coverFile = files.imageFiles[1];
     const logoFile=files.imageFiles[0]
@@ -244,7 +251,7 @@ export class TiktokCampaignController {
   private convertDaypartingToString(dayparting: Record<string, { start: string; end: string }>): string {
     const timeToSlot = (time: string): number => {
       const [hours, minutes] = time.split(':').map(Number);
-      let slot = hours * 2;
+      let slot = hours * 2; 
       if (minutes >= 30) {
         slot += 1;
       }
@@ -276,6 +283,7 @@ export class TiktokCampaignController {
   
     return fullSchedule;
   }
+  
   
 
 }
