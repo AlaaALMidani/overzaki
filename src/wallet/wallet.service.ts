@@ -9,8 +9,8 @@ export class WalletService {
     @InjectModel(Wallet.name) private readonly walletModel: Model<Wallet>,
   ) {}
 
-  async createWallet(userId: string): Promise<Wallet> {
-    const wallet = new this.walletModel({ userId, amount: 0 });
+  async createWallet(userId: string, stripeUserId: string): Promise<Wallet> {
+    const wallet = new this.walletModel({ userId, stripeUserId, amount: 0 });
     return wallet.save();
   }
 
@@ -25,6 +25,20 @@ export class WalletService {
   async updateWalletAmount(userId: string, amount: number): Promise<Wallet> {
     const wallet = await this.walletModel.findOneAndUpdate(
       { userId },
+      { $inc: { amount } },
+      { new: true },
+    );
+    if (!wallet) {
+      throw new NotFoundException('Wallet not found');
+    }
+    return wallet;
+  }
+  async updateWalletAmountByUserStripeId(
+    stripeUserId: string,
+    amount: number,
+  ): Promise<Wallet> {
+    const wallet = await this.walletModel.findOneAndUpdate(
+      { stripeUserId },
       { $inc: { amount } },
       { new: true },
     );

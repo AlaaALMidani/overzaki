@@ -45,26 +45,7 @@
 //       return { order: newOrder };
 //     }
 //   }
-//   @Post('deposit')
-//   async deposit(@Body() body: { userId: string; amount: number }) {
-//     const { userId, amount } = body;
-//     console.log('body', body);
-//     const paymentIntent = await this.stripeService.createPaymentIntent(
-//       amount,
-//       'usd',
-//       { userId: userId.toString() },
-//     );
 
-//     return {
-//       success: true,
-//       clientSecret: paymentIntent.client_secret,
-//       balance: await this.orderService.updateUserBalance(
-//         userId,
-//         +amount,
-//         'deposit',
-//       ),
-//     };
-//   }
 //   @Post('update-status')
 //   async updateOrderStatus(
 //     @Body() body: { orderId: string; status: 'approved' | 'rejected' },
@@ -128,10 +109,14 @@ import {
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { Order } from './order.schema';
+import { StripeService } from '../stripe/stripe.service';
 
 @Controller('user/orders')
 export class OrderController {
-  constructor(private readonly orderService: OrderService) { }
+
+  constructor(private readonly orderService: OrderService,
+    private readonly stripeService: StripeService
+  ) { }
 
   /**
    * Create a new order along with a transaction.
@@ -169,7 +154,7 @@ export class OrderController {
    */
   @Get()
   async getAllOrdersForUser(@Req() req: any): Promise<any> {
-    const userId = req.user['id']; 
+    const userId = req.user['id'];
     return this.orderService.getOrdersByUserId(userId);
   }
 
@@ -185,5 +170,23 @@ export class OrderController {
   ): Promise<Order> {
     const { status } = body;
     return this.orderService.updateOrderStatus(orderId, status);
+  }
+
+
+  @Post('deposit')
+  async deposit(@Body() body: { amount: number }, @Req() req: any,) {
+    const { amount } = body;
+    console.log('body', body);
+    const paymentIntent = await this.stripeService.createPaymentIntent(
+      amount,
+      'usd',
+      { customer: req.user.stripeId }
+
+    );
+
+    return {
+      success: true,
+      clientSecret: paymentIntent.client_secret,
+    };
   }
 }

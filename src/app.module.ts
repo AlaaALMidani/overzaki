@@ -45,6 +45,7 @@ export class AppModule implements OnModuleInit {
         { path: 'user/orders', method: RequestMethod.GET },
         { path: 'google-campaign/create', method: RequestMethod.POST },
         { path: 'tiktok-campaign/FeedAd', method: RequestMethod.POST },
+        { path: 'user/orders/deposit', method: RequestMethod.POST },
       );
   }
 
