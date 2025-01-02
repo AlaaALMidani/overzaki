@@ -58,7 +58,10 @@ export class OrderService {
     const orders = await this.orderModel.find({ userId }).exec();
     const newOrders = [];
     for (let i = 0; i < orders.length; i++) {
-      newOrders.push({ ...orders[i], details: orders[i].details.base });
+      newOrders.push({
+        ...orders[i]._doc,
+        details: orders[i]._doc.details.base,
+      });
     }
     return newOrders;
   }
