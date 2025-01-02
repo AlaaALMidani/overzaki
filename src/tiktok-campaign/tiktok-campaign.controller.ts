@@ -225,16 +225,16 @@ export class TiktokCampaignController {
     }
   }
 
-  @Get('campaignReport')
+  @Post('campaignReport')
   async campaignReport(
-    @Query()
-    query: {
+    @Body()
+    body: {
       accessToken: string;
       advertiserId: string;
       campaignId: string;
     },
   ) {
-    const { accessToken, advertiserId, campaignId } = query;
+    const { accessToken, advertiserId, campaignId } = body;
     if (!accessToken || !advertiserId || !campaignId) {
       throw new HttpException(
         'Access token, advertiser ID, and campaign ID are required',
