@@ -44,12 +44,12 @@ export class WebhookController {
         console.log(paymentIntent);
         console.log(paymentIntent.customer);
         this.walletService.updateWalletAmountByUserStripeId(
-          paymentIntent.metadata.customer,
+          paymentIntent.customer.toString(),
           paymentIntent.amount,
         );
 
         this.logger.log(
-          `Order ${paymentIntent.metadata.orderId} approved successfully.`,
+          `Order ${paymentIntent.customer} approved successfully.`,
         );
       }
 
