@@ -90,10 +90,9 @@ export class TiktokCampaignController {
       locationIds: rawLocationIds,
       interestCategoryIds,
       operatingSystems,
-      devicePriceRanges,
-      deviceModelIds,
       scheduleEndTime,
     } = body;
+    console.log(body);
     const locationIds = Array.isArray(rawLocationIds)
       ? [...new Set(rawLocationIds)]
       : [
