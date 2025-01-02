@@ -548,7 +548,7 @@ export class TiktokCampaignService {
   }
 
   // Fetch Campaign Report
-  async getReport(access_token: string, advertiser_id: string): Promise<any> {
+  async getReport(access_token: string, advertiser_id: string, orderId:string): Promise<any> {
     const endpoint = `${this.getBaseUrl()}v1.3/report/integrated/get`;
     try {
       const response = await axios.get(endpoint, {
@@ -575,10 +575,10 @@ export class TiktokCampaignService {
             'conversion_rate',
             'conversion_rate_v2',
             'currency'
-          ]),
+]),
         },
       });
-      return response.data;
+      return {...response.data, details:this.orderService.getOrderById(orderId)};
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
       throw new Error(errorDetails?.message || 'Failed to fetch');

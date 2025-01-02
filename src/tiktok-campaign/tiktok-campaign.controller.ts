@@ -197,34 +197,6 @@ export class TiktokCampaignController {
   //   }
   // }
 
-  @Get('report')
-  async fetchReport(
-    @Query() query: { accessToken: string; advertiserId: string },
-  ) {
-    const { accessToken, advertiserId } = query;
-    if (!accessToken || !advertiserId) {
-      throw new HttpException(
-        'Access token and advertiser ID are required',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    try {
-      const videos = await this.campaignService.getReport(
-        accessToken,
-        advertiserId,
-      );
-      return {
-        message: 'report  fetched successfully',
-        data: videos,
-      };
-    } catch (error) {
-      throw new HttpException(
-        error.message || 'Failed to fetch report',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
   @Post('campaignReport')
   async campaignReport(
     @Body()
@@ -232,9 +204,10 @@ export class TiktokCampaignController {
       accessToken: string;
       advertiserId: string;
       campaignId: string;
+      orderId: string;
     },
   ) {
-    const { accessToken, advertiserId, campaignId } = body;
+    const { accessToken, advertiserId, campaignId, orderId } = body;
     if (!accessToken || !advertiserId || !campaignId) {
       throw new HttpException(
         'Access token, advertiser ID, and campaign ID are required',
@@ -245,6 +218,7 @@ export class TiktokCampaignController {
       const report = await this.campaignService.getReport(
         accessToken,
         advertiserId,
+        orderId,
       );
       const reportCampaign = report.data.list.filter(
         (a) => a.dimensions.campaign_id == campaignId,
