@@ -169,8 +169,6 @@ export class TiktokCampaignController {
       locationIds,
       interestCategoryIds,
       operatingSystems,
-      devicePriceRanges,
-      deviceModelIds,
       videoFile,
       coverFile,
       logoFile,
