@@ -89,11 +89,11 @@ export class TiktokCampaignController {
       appName,
       adText,
       url,
-      ageGroups,
-      languages,
+      ageGroups:rawAgeGroups,
+      languages:rawLanguages,
       locationIds: rawLocationIds,
-      interestCategoryIds,
-      operatingSystems,
+      interestCategoryIds:rawInterestCategoryIds,
+      operatingSystems:rawOperatingSystems,
       // devicePriceRanges,
       // deviceModelIds,
       // devicePriceRanges,
@@ -101,16 +101,11 @@ export class TiktokCampaignController {
       scheduleEndTime,
     } = body;
     console.log(body);
-    const locationIds = Array.isArray(rawLocationIds)
-      ? [...new Set(rawLocationIds)]
-      : [
-          ...new Set(
-            rawLocationIds
-              .replace(/[\[\]]/g, '')
-              .split(',')
-              .map((item) => item.trim().replace(/"/g, '')),
-          ),
-        ];
+    const locationIds = this.normalizeArray(rawLocationIds);
+    const ageGroups =this.normalizeArray(rawAgeGroups);
+    const languages=this.normalizeArray(rawLanguages);
+    const interestCategoryIds=this.normalizeArray(rawInterestCategoryIds);
+    const operatingSystems=this.normalizeArray(rawOperatingSystems);
     if (
       !accessToken ||
       !advertiserId ||
@@ -179,8 +174,6 @@ export class TiktokCampaignController {
       locationIds,
       interestCategoryIds,
       operatingSystems,
-      // devicePriceRanges,
-      // deviceModelIds,
       // devicePriceRanges,
       // deviceModelIds,
       videoFile,
@@ -265,50 +258,66 @@ export class TiktokCampaignController {
       );
     }
   }
-
-  private convertDaypartingToString(
-    dayparting: Record<string, { start: string; end: string }>,
-  ): string {
-    const timeToSlot = (time: string): number => {
-      const [hours, minutes] = time.split(':').map(Number);
-      let slot = hours * 2;
-      if (minutes >= 30) {
-        slot += 1;
-      }
-      return slot;
-    };
-
-    const week = [
-      'monday',
-      'tuesday',
-      'wednesday',
-      'thursday',
-      'friday',
-      'saturday',
-      'sunday',
-    ];
-    let fullSchedule = '';
-
-    for (const day of week) {
-      const { start, end } = dayparting[day];
-      const startSlot = timeToSlot(start);
-      const endSlot = timeToSlot(end);
-
-      if (startSlot >= endSlot) {
-        throw new HttpException(
-          `Invalid schedule for ${day}: Start time (${start}) must be earlier than end time (${end})`,
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      const daySchedule = Array(48).fill('0');
-      for (let i = startSlot; i < endSlot; i++) {
-        daySchedule[i] = '1';
-      }
-
-      fullSchedule += daySchedule.join('');
+  private normalizeArray(input: any): string[] {
+    if (Array.isArray(input)) {
+      return [...new Set(input)];
     }
-
-    return fullSchedule;
+    if (typeof input === 'string') {
+      return [
+        ...new Set(
+          input
+            .replace(/[\[\]]/g, '')
+            .split(',')
+            .map((item) => item.trim().replace(/"/g, '')),
+        ),
+      ];
+    }
+    throw new Error('Invalid input type for array normalization');
   }
+  
+  // private convertDaypartingToString(
+  //   dayparting: Record<string, { start: string; end: string }>,
+  // ): string {
+  //   const timeToSlot = (time: string): number => {
+  //     const [hours, minutes] = time.split(':').map(Number);
+  //     let slot = hours * 2;
+  //     if (minutes >= 30) {
+  //       slot += 1;
+  //     }
+  //     return slot;
+  //   };
+
+  //   const week = [
+  //     'monday',
+  //     'tuesday',
+  //     'wednesday',
+  //     'thursday',
+  //     'friday',
+  //     'saturday',
+  //     'sunday',
+  //   ];
+  //   let fullSchedule = '';
+
+  //   for (const day of week) {
+  //     const { start, end } = dayparting[day];
+  //     const startSlot = timeToSlot(start);
+  //     const endSlot = timeToSlot(end);
+
+  //     if (startSlot >= endSlot) {
+  //       throw new HttpException(
+  //         `Invalid schedule for ${day}: Start time (${start}) must be earlier than end time (${end})`,
+  //         HttpStatus.BAD_REQUEST,
+  //       );
+  //     }
+
+  //     const daySchedule = Array(48).fill('0');
+  //     for (let i = startSlot; i < endSlot; i++) {
+  //       daySchedule[i] = '1';
+  //     }
+
+  //     fullSchedule += daySchedule.join('');
+  //   }
+
+  //   return fullSchedule;
+  // }
 }
