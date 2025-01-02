@@ -185,7 +185,7 @@ export class TiktokCampaignService {
       gender: string;
       scheduleType: string;
       scheduleStartTime: string;
-      dayparting: string;
+      // dayparting: string;
       languages: Array<string>;
       ageGroups: Array<string>;
       interestCategoryIds: Array<string>;
@@ -216,7 +216,7 @@ export class TiktokCampaignService {
         schedule_type: adGroupDetails.scheduleType,
         schedule_end_time: adGroupDetails?.scheduleEndTime,
         schedule_start_time: adGroupDetails.scheduleStartTime,
-        dayparting: adGroupDetails.dayparting,
+        // dayparting: adGroupDetails.dayparting,
         optimization_goal: adGroupDetails.optimizationGoal,
         bid_type: adGroupDetails.bidType,
         billing_event: adGroupDetails.billingEvent,
