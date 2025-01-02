@@ -84,7 +84,7 @@ export class TiktokCampaignController {
       spendingPower,
       scheduleType,
       scheduleStartTime,
-      dayparting: rawDayparting,
+      // dayparting: rawDayparting,
       budget,
       appName,
       adText,
@@ -134,23 +134,25 @@ export class TiktokCampaignController {
       !files.coverFile ||
       files.coverFile.length === 0
     ) {
+      console.log('Both video and image files are required.');
       throw new HttpException(
         'Both video and image files are required.',
         HttpStatus.BAD_REQUEST,
       );
     }
-    let parsedDayparting: Record<string, { start: string; end: string }>;
-    try {
-      parsedDayparting = JSON.parse(rawDayparting);
-    } catch (error) {
-      throw new HttpException(
-        'Invalid JSON format for dayparting.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    const processedDayparting =
-      this.convertDaypartingToString(parsedDayparting);
+    // let parsedDayparting: Record<string, { start: string; end: string }>;
+    // parsedDayparting = JSON.parse(rawDayparting);
+    // try {
+    // } catch (error) {
+    //   console.log('object');
+    //   throw new HttpException(
+    //     'Invalid JSON format for dayparting.',
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
 
+    // const processedDayparting =
+    // this.convertDaypartingToString(parsedDayparting);
     const videoFile = files.videoFile[0];
     const coverFile = files.coverFile[0];
     const logoFile = files.logoFile[0];
@@ -167,7 +169,7 @@ export class TiktokCampaignController {
       spendingPower,
       scheduleType,
       scheduleStartTime,
-      processedDayparting,
+      // processedDayparting,
       budget,
       appName,
       adText,
@@ -189,16 +191,16 @@ export class TiktokCampaignController {
     return result;
   }
 
-  private parseJson(json: any, field: string) {
-    try {
-      return typeof json === 'string' ? JSON.parse(json) : json;
-    } catch (error) {
-      throw new HttpException(
-        `Invalid JSON format for ${field}`,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-  }
+  // private parseJson(json: any, field: string) {
+  //   try {
+  //     return typeof json === 'string' ? JSON.parse(json) : json;
+  //   } catch (error) {
+  //     throw new HttpException(
+  //       `Invalid JSON format for ${field}`,
+  //       HttpStatus.BAD_REQUEST,
+  //     );
+  //   }
+  // }
 
   @Get('report')
   async fetchReport(
