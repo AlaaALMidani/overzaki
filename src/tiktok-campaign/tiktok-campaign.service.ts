@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import * as FormData from 'form-data';
@@ -18,7 +19,6 @@ export class TiktokCampaignService {
       : process.env.TIKTOK_BASE_URL ||
           'https://sandbox-ads.tiktok.com/open_api/';
   }
-
   // Generate TikTok OAuth URL
   getAuthUrl() {
     const state = Math.random().toString(36).substring(2, 15);
@@ -26,7 +26,6 @@ export class TiktokCampaignService {
       process.env.TIKTOK_REDIRECT_URI,
     )}&scope=advertiser_management`;
   }
-
   // Exchange Authorization Code for Access Token
   async getAccessToken(authCode: string, version: string = 'v1.3') {
     const endpoint = `https://business-api.tiktok.com/open_api/v1.3/oauth2/access_token/`;
@@ -170,7 +169,6 @@ export class TiktokCampaignService {
       );
     }
   }
-
   async createAdGroup(
     accessToken: string,
     advertiserId: string,
@@ -178,6 +176,7 @@ export class TiktokCampaignService {
       adgroupName: string;
       campaignId: string;
       promotionType: string;
+      tiktok_subplacements?: Array<string>;
       placementType: string;
       placements: Array<string>;
       locationIds: Array<string>;
@@ -191,14 +190,14 @@ export class TiktokCampaignService {
       ageGroups: Array<string>;
       interestCategoryIds: Array<string>;
       operatingSystems: Array<string>;
-      devicePriceRanges: Array<number>;
+      // devicePriceRanges: Array<number>;
       spendingPower: string;
       optimizationGoal: string;
       bidType: string;
       billingEvent: string;
       pacing: string;
       identityId: string;
-      deviceModelIds: Array<string>;
+      // deviceModelIds: Array<string>;
       shoppingAdsType?: string;
       scheduleEndTime?: string;
     },
@@ -228,7 +227,7 @@ export class TiktokCampaignService {
         spending_power: adGroupDetails.spendingPower,
         interest_category_ids: adGroupDetails.interestCategoryIds,
         operating_systems: adGroupDetails.operatingSystems,
-        device_price_ranges: adGroupDetails.devicePriceRanges,
+        // device_price_ranges: adGroupDetails.devicePriceRanges,
         identity_id: adGroupDetails?.identityId,
         shopping_ads_type: adGroupDetails?.shoppingAdsType,
       };
@@ -251,7 +250,6 @@ export class TiktokCampaignService {
       );
     }
   }
-
   async createIdentity(
     accessToken: string,
     advertiserId: string,
@@ -282,7 +280,6 @@ export class TiktokCampaignService {
       );
     }
   }
-
   // Get User's Videos
   async fetchUploadedVideos(
     accessToken: string,
@@ -336,7 +333,7 @@ export class TiktokCampaignService {
     spendingPower: string,
     scheduleType: string,
     scheduleStartTime: string,
-    dayparting: string,
+    // dayparting: string,
     budget: number,
     appName: string,
     adText: string,
@@ -346,8 +343,8 @@ export class TiktokCampaignService {
     locationIds: Array<string>,
     interestCategoryIds: Array<string>,
     operatingSystems: Array<string>,
-    devicePriceRanges: Array<number>,
-    deviceModelIds: Array<string>,
+    // devicePriceRanges: Array<number>,
+    // deviceModelIds: Array<string>,
     videoFile: Express.Multer.File,
     coverFile: Express.Multer.File,
     logoFile: Express.Multer.File,
@@ -425,19 +422,19 @@ export class TiktokCampaignService {
         gender,
         scheduleType,
         scheduleStartTime,
-        dayparting,
+        // dayparting,
         languages,
         ageGroups,
         interestCategoryIds,
         operatingSystems,
-        devicePriceRanges,
+        // devicePriceRanges,
         spendingPower,
         optimizationGoal: 'CLICK',
         bidType: 'BID_TYPE_NO_BID',
         billingEvent: 'CPC',
         pacing: 'PACING_MODE_SMOOTH',
         identityId,
-        deviceModelIds,
+        // deviceModelIds,
         scheduleEndTime,
       };
       if (objectiveType === 'PRODUCT_SALES') {
@@ -445,6 +442,13 @@ export class TiktokCampaignService {
       }
       if (scheduleType == 'SCHEDULE_START_END ') {
         adGroupDetails.scheduleEndTime = scheduleEndTime;
+      }
+      if (
+        objectiveType === 'REACH' ||
+        objectiveType === 'VIDEO_VIEWS' ||
+        objectiveType === 'ENGAGEMENT'
+      ) {
+        adGroupDetails.tiktok_subplacements = ['IN_FEED'];
       }
       this.logger.log(`Ad Group details: ${JSON.stringify(adGroupDetails)}`);
 

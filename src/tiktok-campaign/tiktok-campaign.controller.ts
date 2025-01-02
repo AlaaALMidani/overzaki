@@ -58,7 +58,10 @@ export class TiktokCampaignController {
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'videoFile', maxCount: 1 },
-      { name: 'imageFiles', maxCount: 2 },
+      { name: 'logoFile', maxCount: 1 },
+      { name: 'coverFile', maxCount: 1 },
+      { name: 'logoFile', maxCount: 1 },
+      { name: 'coverFile', maxCount: 1 },
     ]),
   )
   async FeedAd(
@@ -67,7 +70,8 @@ export class TiktokCampaignController {
     @UploadedFiles()
     files: {
       videoFile?: Express.Multer.File[];
-      imageFiles?: Express.Multer.File[];
+      logoFile?: Express.Multer.File[];
+      coverFile?: Express.Multer.File[];
     },
   ) {
     const {
@@ -80,7 +84,7 @@ export class TiktokCampaignController {
       spendingPower,
       scheduleType,
       scheduleStartTime,
-      dayparting: rawDayparting,
+      // dayparting: rawDayparting,
       budget,
       appName,
       adText,
@@ -90,10 +94,13 @@ export class TiktokCampaignController {
       locationIds: rawLocationIds,
       interestCategoryIds,
       operatingSystems,
-      devicePriceRanges,
-      deviceModelIds,
+      // devicePriceRanges,
+      // deviceModelIds,
+      // devicePriceRanges,
+      // deviceModelIds,
       scheduleEndTime,
     } = body;
+    console.log(body);
     const locationIds = Array.isArray(rawLocationIds)
       ? [...new Set(rawLocationIds)]
       : [
@@ -104,7 +111,6 @@ export class TiktokCampaignController {
               .map((item) => item.trim().replace(/"/g, '')),
           ),
         ];
-
     if (
       !accessToken ||
       !advertiserId ||
@@ -123,29 +129,33 @@ export class TiktokCampaignController {
     if (
       !files.videoFile ||
       files.videoFile.length === 0 ||
-      !files.imageFiles ||
-      files.imageFiles.length === 0
+      !files.logoFile ||
+      files.logoFile.length === 0 ||
+      !files.coverFile ||
+      files.coverFile.length === 0
     ) {
+      console.log('Both video and image files are required.');
       throw new HttpException(
         'Both video and image files are required.',
         HttpStatus.BAD_REQUEST,
       );
     }
-    let parsedDayparting: Record<string, { start: string; end: string }>;
-    try {
-      parsedDayparting = JSON.parse(rawDayparting);
-    } catch (error) {
-      throw new HttpException(
-        'Invalid JSON format for dayparting.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    const processedDayparting =
-      this.convertDaypartingToString(parsedDayparting);
+    // let parsedDayparting: Record<string, { start: string; end: string }>;
+    // parsedDayparting = JSON.parse(rawDayparting);
+    // try {
+    // } catch (error) {
+    //   console.log('object');
+    //   throw new HttpException(
+    //     'Invalid JSON format for dayparting.',
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
 
+    // const processedDayparting =
+    // this.convertDaypartingToString(parsedDayparting);
     const videoFile = files.videoFile[0];
-    const coverFile = files.imageFiles[1];
-    const logoFile = files.imageFiles[0];
+    const coverFile = files.coverFile[0];
+    const logoFile = files.logoFile[0];
     console.log(req.user);
     const result = await this.campaignService.CreateFeed(
       req.user.id,
@@ -159,7 +169,7 @@ export class TiktokCampaignController {
       spendingPower,
       scheduleType,
       scheduleStartTime,
-      processedDayparting,
+      // processedDayparting,
       budget,
       appName,
       adText,
@@ -169,8 +179,10 @@ export class TiktokCampaignController {
       locationIds,
       interestCategoryIds,
       operatingSystems,
-      devicePriceRanges,
-      deviceModelIds,
+      // devicePriceRanges,
+      // deviceModelIds,
+      // devicePriceRanges,
+      // deviceModelIds,
       videoFile,
       coverFile,
       logoFile,
@@ -179,16 +191,16 @@ export class TiktokCampaignController {
     return result;
   }
 
-  private parseJson(json: any, field: string) {
-    try {
-      return typeof json === 'string' ? JSON.parse(json) : json;
-    } catch (error) {
-      throw new HttpException(
-        `Invalid JSON format for ${field}`,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-  }
+  // private parseJson(json: any, field: string) {
+  //   try {
+  //     return typeof json === 'string' ? JSON.parse(json) : json;
+  //   } catch (error) {
+  //     throw new HttpException(
+  //       `Invalid JSON format for ${field}`,
+  //       HttpStatus.BAD_REQUEST,
+  //     );
+  //   }
+  // }
 
   @Get('report')
   async fetchReport(
