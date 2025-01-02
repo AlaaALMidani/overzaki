@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
@@ -11,13 +12,13 @@ export class TiktokCampaignService {
   constructor(
     private readonly httpService: HttpService,
     private readonly orderService: OrderService,
-  ) {}
+  ) { }
 
   private getBaseUrl(): string {
     return process.env.NODE_ENV === 'production'
       ? 'https://business-api.tiktok.com/open_api/'
       : process.env.TIKTOK_BASE_URL ||
-          'https://sandbox-ads.tiktok.com/open_api/';
+      'https://sandbox-ads.tiktok.com/open_api/';
   }
   // Generate TikTok OAuth URL
   getAuthUrl() {
@@ -519,16 +520,24 @@ export class TiktokCampaignService {
         'Tiktok feed',
         budget,
         {
-          campaign_id: campaign.data.campaign_id,
-          campaign_name: campaign.data.campaign_name,
-          create_time: campaign.data.create_time,
-          budget_mode: campaign.data.budget_mode,
-          schedule_start_time: adGroup.data.schedule_start_time,
-          schedule_end_time: adGroup.data.schedule_end_time,
-          budget: budget,
+          base:{
+            campaign_id: campaign.data.campaign_id,
+            campaign_name: campaign.data.campaign_name,
+            create_time: campaign.data.create_time,
+            budget_mode: campaign.data.budget_mode,
+            schedule_start_time: adGroup.data.schedule_start_time,
+            schedule_end_time: adGroup.data.schedule_end_time,
+            budget: budget,
+          },
+          campaign,
+          adGroup,
+          // identity: existingIdentity || { data: { identity_id: identityId } },
+          ...createAdResponse.data.data.creatives[0],
         },
       );
-      return order;
+      return {
+        ...order, details:order.details.base
+      };
     } catch (error) {
       this.logger.error('Error during setupAdCampaign:', error.message);
       if (error.message === 'Campaign creation failed: Missing campaign ID.') {
