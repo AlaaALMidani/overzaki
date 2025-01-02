@@ -525,7 +525,7 @@ export class TiktokCampaignService {
           budget_mode: campaign.data.budget_mode,
           schedule_start_time: adGroup.data.schedule_start_time,
           schedule_end_time: adGroup.data.schedule_end_time,
-          budget: adGroup.data.campaign_budget,
+          budget: budget,
         },
       );
       return order;
