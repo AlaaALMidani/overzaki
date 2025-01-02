@@ -164,7 +164,9 @@ export class OrderService {
       throw new BadRequestException('Ad budget should be greater than or equal to ' + minAmount)
     }
     const wallet = await this.walletService.getWalletByUserId(userId);
-
+    console.log('from checkPayAbility:',wallet)
+    console.log('from checkPayAbility:amount',amount)
+    console.log('from checkPayAbility:wallet.amount',wallet.amount)
     if (wallet.amount < amount) {
       throw new BadRequestException('There is no enough balance in your wallet, recharge it and try again.');
     }
