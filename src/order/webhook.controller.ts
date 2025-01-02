@@ -42,6 +42,7 @@ export class WebhookController {
       if (event.type === 'payment_intent.succeeded') {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         console.log(paymentIntent);
+        console.log(paymentIntent.metadata.customer);
         this.walletService.updateWalletAmountByUserStripeId(
           paymentIntent.metadata.customer,
           paymentIntent.amount,
