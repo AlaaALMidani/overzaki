@@ -27,7 +27,7 @@ export class StripeService {
     }
     try {
       const paymentIntent = await this.stripe.paymentIntents.create({
-        amount: amount,
+        amount: amount * 100,
         currency,
         customer,
         payment_method_types: ['card'],

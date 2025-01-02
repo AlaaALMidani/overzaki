@@ -43,7 +43,7 @@ export class WebhookController {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         this.walletService.updateWalletAmountByUserStripeId(
           paymentIntent.customer.toString(),
-          paymentIntent.amount,
+          paymentIntent.amount / 100,
         );
 
         this.logger.log(
