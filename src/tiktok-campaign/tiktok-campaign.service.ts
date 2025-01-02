@@ -519,10 +519,12 @@ export class TiktokCampaignService {
         'Tiktok feed',
         budget,
         {
-          campaign,
-          adGroup,
-          // identity: existingIdentity || { data: { identity_id: identityId } },
-          ...createAdResponse.data.data.creatives[0],
+          campaign_id: campaign.data.campaign_id,
+          campaign_name: campaign.data.campaign_name,
+          create_time: campaign.data.create_time,
+          budget_mode: campaign.data.budget_mode,
+          schedule_start_time: adGroup.data.schedule_start_time,
+          schedule_end_time: adGroup.data.schedule_end_time,
         },
       );
       return order;
