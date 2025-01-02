@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import * as FormData from 'form-data';
 import * as crypto from 'crypto';
@@ -528,7 +528,7 @@ export class TiktokCampaignService {
       return order;
     } catch (error) {
       this.logger.error('Error during setupAdCampaign:', error.message);
-      throw error;
+      throw new BadRequestException(error.message);
     }
   }
 
