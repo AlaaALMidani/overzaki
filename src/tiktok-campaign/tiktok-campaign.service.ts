@@ -530,9 +530,8 @@ export class TiktokCampaignService {
       this.logger.error('Error during setupAdCampaign:', error.message);
       if (error.message === 'Campaign creation failed: Missing campaign ID.') {
         throw new BadRequestException('Campaign name is already exist.');
-      } else {
-        throw new BadRequestException(error.message);
       }
+      throw error;
     }
   }
 
