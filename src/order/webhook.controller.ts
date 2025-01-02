@@ -42,13 +42,14 @@ export class WebhookController {
       if (event.type === 'payment_intent.succeeded') {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         console.log(paymentIntent);
+        console.log(paymentIntent.customer);
         this.walletService.updateWalletAmountByUserStripeId(
-          paymentIntent.metadata.customer,
+          paymentIntent.customer.toString(),
           paymentIntent.amount,
         );
 
         this.logger.log(
-          `Order ${paymentIntent.metadata.orderId} approved successfully.`,
+          `Order ${paymentIntent.customer} approved successfully.`,
         );
       }
 

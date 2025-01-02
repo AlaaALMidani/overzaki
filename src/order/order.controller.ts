@@ -113,17 +113,17 @@ import { StripeService } from '../stripe/stripe.service';
 
 @Controller('user/orders')
 export class OrderController {
-
-  constructor(private readonly orderService: OrderService,
-    private readonly stripeService: StripeService
-  ) { }
+  constructor(
+    private readonly orderService: OrderService,
+    private readonly stripeService: StripeService,
+  ) {}
 
   /**
    * Create a new order along with a transaction.
    */
   @Post('')
   async createOrder(@Body() body: any): Promise<Order> {
-    const { userId, serviceName, walletId, amount, details } = body
+    const { userId, serviceName, walletId, amount, details } = body;
     return this.orderService.createOrderWithTransaction(
       userId,
       walletId,
@@ -172,19 +172,17 @@ export class OrderController {
     return this.orderService.updateOrderStatus(orderId, status);
   }
 
-
   @Post('deposit')
-  async deposit(@Body() body: { amount: number }, @Req() req: any,) {
+  async deposit(@Body() body: { amount: number }, @Req() req: any) {
     const { amount } = body;
     console.log('body', body);
-    
+    console.log(req.user);
+
     const paymentIntent = await this.stripeService.createPaymentIntent(
       amount,
       'usd',
-      { customer: req.user.stripeId }
-
+      req.user.stripeId,
     );
-
     return {
       success: true,
       clientSecret: paymentIntent.client_secret,
