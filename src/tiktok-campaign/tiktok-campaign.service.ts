@@ -19,7 +19,6 @@ export class TiktokCampaignService {
       : process.env.TIKTOK_BASE_URL ||
           'https://sandbox-ads.tiktok.com/open_api/';
   }
-
   // Generate TikTok OAuth URL
   getAuthUrl() {
     const state = Math.random().toString(36).substring(2, 15);
@@ -27,7 +26,6 @@ export class TiktokCampaignService {
       process.env.TIKTOK_REDIRECT_URI,
     )}&scope=advertiser_management`;
   }
-
   // Exchange Authorization Code for Access Token
   async getAccessToken(authCode: string, version: string = 'v1.3') {
     const endpoint = `https://business-api.tiktok.com/open_api/v1.3/oauth2/access_token/`;
@@ -192,14 +190,14 @@ export class TiktokCampaignService {
       ageGroups: Array<string>;
       interestCategoryIds: Array<string>;
       operatingSystems: Array<string>;
-      devicePriceRanges: Array<number>;
+      // devicePriceRanges: Array<number>;
       spendingPower: string;
       optimizationGoal: string;
       bidType: string;
       billingEvent: string;
       pacing: string;
       identityId: string;
-      deviceModelIds: Array<string>;
+      // deviceModelIds: Array<string>;
       shoppingAdsType?: string;
       scheduleEndTime?: string;
     },
@@ -229,7 +227,7 @@ export class TiktokCampaignService {
          spending_power: adGroupDetails.spendingPower,
          interest_category_ids: adGroupDetails.interestCategoryIds,
         operating_systems: adGroupDetails.operatingSystems,
-        device_price_ranges: adGroupDetails.devicePriceRanges,
+        // device_price_ranges: adGroupDetails.devicePriceRanges,
         identity_id: adGroupDetails?.identityId,
         shopping_ads_type: adGroupDetails?.shoppingAdsType,
       };
@@ -348,8 +346,8 @@ export class TiktokCampaignService {
     locationIds: Array<string>,
     interestCategoryIds: Array<string>,
     operatingSystems: Array<string>,
-    devicePriceRanges: Array<number>,
-    deviceModelIds: Array<string>,
+    // devicePriceRanges: Array<number>,
+    // deviceModelIds: Array<string>,
     videoFile: Express.Multer.File,
     coverFile: Express.Multer.File,
     logoFile: Express.Multer.File,
@@ -432,14 +430,14 @@ export class TiktokCampaignService {
         ageGroups,
         interestCategoryIds,
         operatingSystems,
-        devicePriceRanges,
+        // devicePriceRanges,
         spendingPower,
         optimizationGoal:'CLICK',
         bidType: 'BID_TYPE_NO_BID',
         billingEvent: 'CPC',
         pacing: 'PACING_MODE_SMOOTH',
         identityId,
-        deviceModelIds,
+        // deviceModelIds,
         scheduleEndTime,
       };
       if (objectiveType === 'PRODUCT_SALES') {
