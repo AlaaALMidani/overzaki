@@ -544,8 +544,8 @@ export class TiktokCampaignService {
         params: {
           advertiser_id: advertiser_id,
           report_type: 'BASIC',
-          start_date: '2024-01-02',
-          end_date: '2025-01-01',
+          start_date: '2025-01-01',
+          end_date: '2025-01-10',
           dimensions: JSON.stringify(['campaign_id']),
           service_type: 'AUCTION',
           data_level: 'AUCTION_CAMPAIGN',
