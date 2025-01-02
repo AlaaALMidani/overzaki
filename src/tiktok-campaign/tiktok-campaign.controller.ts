@@ -225,16 +225,17 @@ export class TiktokCampaignController {
     }
   }
 
-  @Get('campaignReport')
+  @Post('campaignReport')
   async campaignReport(
-    @Query()
-    query: {
+    @Body()
+    body: {
       accessToken: string;
       advertiserId: string;
       campaignId: string;
     },
   ) {
-    const { accessToken, advertiserId, campaignId } = query;
+    const { accessToken, advertiserId, campaignId } = body;
+  
     if (!accessToken || !advertiserId || !campaignId) {
       throw new HttpException(
         'Access token, advertiser ID, and campaign ID are required',
@@ -249,6 +250,7 @@ export class TiktokCampaignController {
       const reportCampaign = report.data.list.filter(
         (a) => a.dimensions.campaign_id == campaignId,
       );
+  
       return {
         message: 'Report fetched successfully',
         data: reportCampaign,
@@ -260,6 +262,7 @@ export class TiktokCampaignController {
       );
     }
   }
+  
   private normalizeArray(input: any): string[] {
     console.log('input', input);
     if (Array.isArray(input)) {

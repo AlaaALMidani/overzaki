@@ -559,6 +559,11 @@ export class TiktokCampaignService {
             'ctr',
             'cpm',
             'clicks',
+            'conversion',
+            'cost_per_conversion',
+            'conversion_rate',
+            'conversion_rate_v2',
+            'currency'
           ]),
         },
       });
