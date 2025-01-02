@@ -9,7 +9,7 @@ export class Transaction extends Document {
   @Prop({ required: true })
   walletId: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   orderId: string;
 
   @Prop({ required: true })

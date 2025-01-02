@@ -13,6 +13,9 @@ export class OrderGateway {
   @WebSocketServer()
   server: Server;
 
+  notifyWalletStatus(walletId: string) {
+    this.server.emit('wallet-status-updated', { walletId });
+  }
   notifyOrderStatus(orderId: string, status: string) {
     this.server.emit('order-status-update', { orderId, status });
   }

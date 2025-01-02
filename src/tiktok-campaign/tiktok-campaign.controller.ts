@@ -96,6 +96,7 @@ export class TiktokCampaignController {
       // deviceModelIds,
       scheduleEndTime,
     } = body;
+    console.log(body);
     const locationIds = Array.isArray(rawLocationIds)
       ? [...new Set(rawLocationIds)]
       : [
@@ -141,8 +142,9 @@ export class TiktokCampaignController {
         HttpStatus.BAD_REQUEST,
       );
     }
-    const processedDayparting = this.convertDaypartingToString(parsedDayparting);
-  
+    const processedDayparting =
+      this.convertDaypartingToString(parsedDayparting);
+
     const videoFile = files.videoFile[0];
     const coverFile = files.coverFile[0];
     const logoFile=files.logoFile[0]
@@ -190,7 +192,6 @@ export class TiktokCampaignController {
     }
   }
 
-
   @Get('report')
   async fetchReport(
     @Query() query: { accessToken: string; advertiserId: string },
@@ -219,10 +220,14 @@ export class TiktokCampaignController {
     }
   }
 
-
   @Get('campaignReport')
   async campaignReport(
-    @Query() query: { accessToken: string; advertiserId: string; campaignId: string },
+    @Query()
+    query: {
+      accessToken: string;
+      advertiserId: string;
+      campaignId: string;
+    },
   ) {
     const { accessToken, advertiserId, campaignId } = query;
     if (!accessToken || !advertiserId || !campaignId) {
@@ -232,13 +237,16 @@ export class TiktokCampaignController {
       );
     }
     try {
-      const report = await this.campaignService.getReport(accessToken, advertiserId);
+      const report = await this.campaignService.getReport(
+        accessToken,
+        advertiserId,
+      );
       const reportCampaign = report.data.list.filter(
         (a) => a.dimensions.campaign_id == campaignId,
       );
       return {
         message: 'Report fetched successfully',
-        data: reportCampaign, 
+        data: reportCampaign,
       };
     } catch (error) {
       throw new HttpException(
@@ -248,44 +256,49 @@ export class TiktokCampaignController {
     }
   }
 
-
-  private convertDaypartingToString(dayparting: Record<string, { start: string; end: string }>): string {
+  private convertDaypartingToString(
+    dayparting: Record<string, { start: string; end: string }>,
+  ): string {
     const timeToSlot = (time: string): number => {
       const [hours, minutes] = time.split(':').map(Number);
-      let slot = hours * 2; 
+      let slot = hours * 2;
       if (minutes >= 30) {
         slot += 1;
       }
       return slot;
     };
-  
-    const week = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+
+    const week = [
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+      'sunday',
+    ];
     let fullSchedule = '';
-  
+
     for (const day of week) {
       const { start, end } = dayparting[day];
       const startSlot = timeToSlot(start);
       const endSlot = timeToSlot(end);
-  
+
       if (startSlot >= endSlot) {
         throw new HttpException(
           `Invalid schedule for ${day}: Start time (${start}) must be earlier than end time (${end})`,
           HttpStatus.BAD_REQUEST,
         );
       }
-  
+
       const daySchedule = Array(48).fill('0');
       for (let i = startSlot; i < endSlot; i++) {
         daySchedule[i] = '1';
       }
-  
+
       fullSchedule += daySchedule.join('');
     }
-  
+
     return fullSchedule;
   }
-  
-  
-
 }
-  

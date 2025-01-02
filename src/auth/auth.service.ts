@@ -54,14 +54,15 @@ export class AuthService {
 
     // Hash the password and create the user
     const hashedPassword = await this.hashPassword(data.password);
+    const stripeUserId=await this.stripeService.createCustomer(data.email);
     const user = await this.userService.createUser({
       ...data,
-      stripeUserId: await this.stripeService.createCustomer(data.email),
+      stripeUserId,
       passwordHash: hashedPassword,
     });
 
     // Create a wallet for the new user
-    await this.walletService.createWallet(user._doc._id);
+    await this.walletService.createWallet(user._doc._id,stripeUserId);
     const { passwordHash, ...result } = user._doc;
     return result;
   }
@@ -77,7 +78,8 @@ export class AuthService {
     const wallet = await this.walletService.getWalletByUserId(user._doc._id)
 
     console.log(wallet)
-    const payload = { email: user._doc.email, id: user._doc._id, stripeId: user._doc.stripeUserId,walletId: wallet._id};
+    const payload = { email: user._doc.email, id: user._doc._id, stripeId: user._doc.stripeUserId, walletId: wallet._id};
+   console.log(payload)
     return {
       fullname: user._doc.fullname,
       accessToken: this.jwtService.sign(payload),
