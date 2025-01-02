@@ -58,7 +58,8 @@ export class TiktokCampaignController {
   @UseInterceptors(
     FileFieldsInterceptor([
       { name: 'videoFile', maxCount: 1 },
-      { name: 'imageFiles', maxCount: 2 },
+      { name: 'logoFile', maxCount: 1 },
+      { name: 'coverFile', maxCount: 1 },
     ]),
   )
   async FeedAd(
@@ -67,7 +68,8 @@ export class TiktokCampaignController {
     @UploadedFiles()
     files: {
       videoFile?: Express.Multer.File[];
-      imageFiles?: Express.Multer.File[];
+      logoFile?: Express.Multer.File[];
+      coverFile?:Express.Multer.File[];
     },
   ) {
     const {
@@ -90,6 +92,8 @@ export class TiktokCampaignController {
       locationIds: rawLocationIds,
       interestCategoryIds,
       operatingSystems,
+      // devicePriceRanges,
+      // deviceModelIds,
       scheduleEndTime,
     } = body;
     console.log(body);
@@ -103,7 +107,6 @@ export class TiktokCampaignController {
               .map((item) => item.trim().replace(/"/g, '')),
           ),
         ];
-
     if (
       !accessToken ||
       !advertiserId ||
@@ -122,8 +125,8 @@ export class TiktokCampaignController {
     if (
       !files.videoFile ||
       files.videoFile.length === 0 ||
-      !files.imageFiles ||
-      files.imageFiles.length === 0
+      !files.logoFile ||
+      files.logoFile.length === 0
     ) {
       throw new HttpException(
         'Both video and image files are required.',
@@ -143,8 +146,8 @@ export class TiktokCampaignController {
       this.convertDaypartingToString(parsedDayparting);
 
     const videoFile = files.videoFile[0];
-    const coverFile = files.imageFiles[1];
-    const logoFile = files.imageFiles[0];
+    const coverFile = files.coverFile[0];
+    const logoFile=files.logoFile[0]
     console.log(req.user);
     const result = await this.campaignService.CreateFeed(
       req.user.id,
@@ -168,6 +171,8 @@ export class TiktokCampaignController {
       locationIds,
       interestCategoryIds,
       operatingSystems,
+      // devicePriceRanges,
+      // deviceModelIds,
       videoFile,
       coverFile,
       logoFile,
