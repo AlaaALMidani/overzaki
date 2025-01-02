@@ -169,7 +169,6 @@ export class TiktokCampaignService {
       );
     }
   }
-
   async createAdGroup(
     accessToken: string,
     advertiserId: string,
@@ -177,6 +176,7 @@ export class TiktokCampaignService {
       adgroupName: string;
       campaignId: string;
       promotionType: string;
+      tiktok_subplacements?:Array<string>;
       placementType: string;
       placements: Array<string>;
       locationIds: Array<string>;
@@ -250,7 +250,6 @@ export class TiktokCampaignService {
       );
     }
   }
-
   async createIdentity(
     accessToken: string,
     advertiserId: string,
@@ -281,7 +280,6 @@ export class TiktokCampaignService {
       );
     }
   }
-
   // Get User's Videos
   async fetchUploadedVideos(
     accessToken: string,
@@ -353,8 +351,8 @@ export class TiktokCampaignService {
     scheduleEndTime?: string,
   ) {
     try {
-      await this.orderService.checkPayAbility(userId, budget, 25);
-      const budgetMode = 'BUDGET_MODE_DYNAMIC_DAILY_BUDGET';
+       await this.orderService.checkPayAbility(userId, budget, 25);
+       const budgetMode = 'BUDGET_MODE_DYNAMIC_DAILY_BUDGET';
       // Step 1: Create Campaign
       this.logger.log('Step 1: Creating campaign...');
       const campaignDetails = {
@@ -444,6 +442,9 @@ export class TiktokCampaignService {
       }
       if (scheduleType == 'SCHEDULE_START_END ') {
         adGroupDetails.scheduleEndTime = scheduleEndTime;
+      }
+      if(objectiveType==='REACH'||objectiveType==='VIDEO_VIEWS'||objectiveType==='ENGAGEMENT'){
+        adGroupDetails.tiktok_subplacements=["IN_FEED"]
       }
       this.logger.log(`Ad Group details: ${JSON.stringify(adGroupDetails)}`);
 

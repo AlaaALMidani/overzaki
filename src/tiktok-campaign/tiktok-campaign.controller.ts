@@ -60,6 +60,8 @@ export class TiktokCampaignController {
       { name: 'videoFile', maxCount: 1 },
       { name: 'logoFile', maxCount: 1 },
       { name: 'coverFile', maxCount: 1 },
+      { name: 'logoFile', maxCount: 1 },
+      { name: 'coverFile', maxCount: 1 },
     ]),
   )
   async FeedAd(
@@ -92,6 +94,8 @@ export class TiktokCampaignController {
       locationIds: rawLocationIds,
       interestCategoryIds,
       operatingSystems,
+      // devicePriceRanges,
+      // deviceModelIds,
       // devicePriceRanges,
       // deviceModelIds,
       scheduleEndTime,
@@ -173,6 +177,8 @@ export class TiktokCampaignController {
       locationIds,
       interestCategoryIds,
       operatingSystems,
+      // devicePriceRanges,
+      // deviceModelIds,
       // devicePriceRanges,
       // deviceModelIds,
       videoFile,
