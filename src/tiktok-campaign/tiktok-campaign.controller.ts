@@ -89,11 +89,11 @@ export class TiktokCampaignController {
       appName,
       adText,
       url,
-      ageGroups:rawAgeGroups,
-      languages:rawLanguages,
+      ageGroups: rawAgeGroups,
+      languages: rawLanguages,
       locationIds: rawLocationIds,
-      interestCategoryIds:rawInterestCategoryIds,
-      operatingSystems:rawOperatingSystems,
+      interestCategoryIds: rawInterestCategoryIds,
+      operatingSystems: rawOperatingSystems,
       // devicePriceRanges,
       // deviceModelIds,
       // devicePriceRanges,
@@ -102,10 +102,12 @@ export class TiktokCampaignController {
     } = body;
     console.log(body);
     const locationIds = this.normalizeArray(rawLocationIds);
-    const ageGroups =this.normalizeArray(rawAgeGroups);
-    const languages=this.normalizeArray(rawLanguages);
-    const interestCategoryIds=this.normalizeArray(rawInterestCategoryIds);
-    const operatingSystems=this.normalizeArray(rawOperatingSystems);
+    const ageGroups = this.normalizeArray(rawAgeGroups);
+    // const ageGroups = rawAgeGroups;
+    // console.log(ageGroups);
+    const languages = this.normalizeArray(rawLanguages);
+    const interestCategoryIds = this.normalizeArray(rawInterestCategoryIds);
+    const operatingSystems = this.normalizeArray(rawOperatingSystems);
     if (
       !accessToken ||
       !advertiserId ||
@@ -259,10 +261,13 @@ export class TiktokCampaignController {
     }
   }
   private normalizeArray(input: any): string[] {
+    console.log('input', input);
     if (Array.isArray(input)) {
+      console.log('(Array.isArray(input)', input);
       return [...new Set(input)];
     }
     if (typeof input === 'string') {
+      console.log('typeof input === string', input);
       return [
         ...new Set(
           input
@@ -274,7 +279,7 @@ export class TiktokCampaignController {
     }
     throw new Error('Invalid input type for array normalization');
   }
-  
+
   // private convertDaypartingToString(
   //   dayparting: Record<string, { start: string; end: string }>,
   // ): string {
