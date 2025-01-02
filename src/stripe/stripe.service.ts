@@ -27,7 +27,7 @@ export class StripeService {
     }
     try {
       const paymentIntent = await this.stripe.paymentIntents.create({
-        amount: amount * 100,
+        amount: amount,
         currency,
         customer,
         payment_method_types: ['card'],
@@ -42,7 +42,7 @@ export class StripeService {
   async refundPayment(paymentIntentId: string, amount?: number) {
     return await this.stripe.refunds.create({
       payment_intent: paymentIntentId,
-      amount: amount ? amount * 100 : undefined,
+      amount: amount ? amount : undefined,
     });
   }
   public constructEvent(payload: any, signature: string) {
