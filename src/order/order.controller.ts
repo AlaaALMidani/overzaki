@@ -177,6 +177,7 @@ export class OrderController {
   async deposit(@Body() body: { amount: number }, @Req() req: any,) {
     const { amount } = body;
     console.log('body', body);
+    
     const paymentIntent = await this.stripeService.createPaymentIntent(
       amount,
       'usd',
