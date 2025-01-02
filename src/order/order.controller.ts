@@ -54,15 +54,14 @@ export class OrderController {
       { userId: userId.toString() },
       // customer: customerId,
     );
-
+    //  balance: await this.orderService.updateUserBalance(
+    //         userId,
+    //         +amount * 100,
+    //         'deposit',
+    //       ),
     return {
       success: true,
       clientSecret: paymentIntent.client_secret,
-      balance: await this.orderService.updateUserBalance(
-        userId,
-        +amount,
-        'deposit',
-      ),
     };
   }
   @Post('update-status')

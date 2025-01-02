@@ -27,7 +27,9 @@ export class WebhookController {
     @Req() req,
     @Headers('stripe-signature') signature: string,
   ) {
+    console.log('stripe-signature', signature);
     const rawBody = req['body'].toString();
+    console.log('rawBody', rawBody);
     try {
       const event = this.stripeService.verifyWebhookSignature(
         rawBody,
@@ -36,13 +38,14 @@ export class WebhookController {
       console.log('Webhook received:', event);
 
       this.logger.log(`Received Stripe event: ${event.type}`);
-
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+      console.log('paymentIntent', paymentIntent);
       if (event.type === 'payment_intent.succeeded') {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        this.orderService.updateOrderStatus(
-          paymentIntent.metadata.orderId,
-          'approved',
-        );
+        // this.orderService.updateOrderStatus(
+        //   paymentIntent.metadata.orderId,
+        //   'approved',
+        // );
 
         this.orderGateway.notifyOrderStatus(
           paymentIntent.metadata.orderId,
