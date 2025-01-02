@@ -519,8 +519,8 @@ export class TiktokCampaignService {
         'Tiktok feed',
         budget,
         {
-          // campaign,
-          // adGroup,
+          campaign,
+          adGroup,
           // identity: existingIdentity || { data: { identity_id: identityId } },
           ...createAdResponse.data.data.creatives[0],
         },
