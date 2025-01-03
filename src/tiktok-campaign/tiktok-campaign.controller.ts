@@ -100,7 +100,7 @@ export class TiktokCampaignController {
       // deviceModelIds,
       scheduleEndTime,
     } = body;
-    console.log(body);
+    console.log('request from frontend:', body);
     const locationIds = this.normalizeArray(rawLocationIds);
     const ageGroups = this.normalizeArray(rawAgeGroups);
     // const ageGroups = rawAgeGroups;
@@ -227,7 +227,7 @@ export class TiktokCampaignController {
         message: 'Report fetched successfully',
         data: reportCampaign,
         details: report.details,
-        status : report.status,
+        status: report.status,
       };
     } catch (error) {
       throw new HttpException(
