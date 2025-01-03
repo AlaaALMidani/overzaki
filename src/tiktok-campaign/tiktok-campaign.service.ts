@@ -579,9 +579,9 @@ export class TiktokCampaignService {
         },
       });
       console.log(orderId)
-      const details = await this.orderService.getOrderById(orderId)
-      console.log(details)
-      return { ...response.data, details };
+      const order = await this.orderService.getOrderById(orderId)
+      console.log(order)
+      return { ...response.data, details:order.details };
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
       console.log(error)
