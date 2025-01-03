@@ -585,7 +585,7 @@ export class TiktokCampaignService {
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
       console.log(error)
-      throw new Error(errorDetails?.message || 'Failed to fetch');
+      throw error
     }
   }
 }
