@@ -578,7 +578,7 @@ export class TiktokCampaignService {
 ]),
         },
       });
-      return {...response.data, details:this.orderService.getOrderById(orderId)};
+      return {...response.data, details:await this.orderService.getOrderById(orderId)};
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
       throw new Error(errorDetails?.message || 'Failed to fetch');
