@@ -530,7 +530,7 @@ export class TiktokCampaignService {
             budget: budget,
             videoUpload,
             coverUpload,
-            logoFile,
+            logoUpload,
           },
           campaign,
           adGroup,
