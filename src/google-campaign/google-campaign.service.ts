@@ -109,15 +109,8 @@ export class GoogleCampaignService {
     }
   }
   async getCampaignReport(
-    // customerId: string,
-    // refreshToken: string,
     campaignResourceName: string,
   ) {
-    // const customer = this.googleAdsApi.Customer({
-    //   refresh_token: refreshToken,
-    //   customer_id: customerId,
-    // });
-
     try {
       const report = await this.googleAdsClient.report({
         entity: 'campaign',

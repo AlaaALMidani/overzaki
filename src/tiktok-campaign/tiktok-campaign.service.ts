@@ -1,5 +1,6 @@
+/* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, ConsoleLogger, Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import * as FormData from 'form-data';
 import * as crypto from 'crypto';
@@ -11,13 +12,13 @@ export class TiktokCampaignService {
   constructor(
     private readonly httpService: HttpService,
     private readonly orderService: OrderService,
-  ) {}
+  ) { }
 
   private getBaseUrl(): string {
     return process.env.NODE_ENV === 'production'
       ? 'https://business-api.tiktok.com/open_api/'
       : process.env.TIKTOK_BASE_URL ||
-          'https://sandbox-ads.tiktok.com/open_api/';
+      'https://sandbox-ads.tiktok.com/open_api/';
   }
   // Generate TikTok OAuth URL
   getAuthUrl() {
@@ -519,25 +520,38 @@ export class TiktokCampaignService {
         'Tiktok feed',
         budget,
         {
+          base: {
+            campaign_id: campaign.data.campaign_id,
+            campaign_name: campaign.data.campaign_name,
+            create_time: campaign.data.create_time,
+            budget_mode: campaign.data.budget_mode,
+            schedule_start_time: adGroup.data.schedule_start_time,
+            schedule_end_time: adGroup.data.schedule_end_time,
+            budget: budget,
+            videoUpload,
+            coverUpload,
+            logoFile,
+          },
           campaign,
           adGroup,
           // identity: existingIdentity || { data: { identity_id: identityId } },
           ...createAdResponse.data.data.creatives[0],
         },
       );
-      return order;
+      return {
+        ...order, details: order.details.base
+      };
     } catch (error) {
       this.logger.error('Error during setupAdCampaign:', error.message);
       if (error.message === 'Campaign creation failed: Missing campaign ID.') {
         throw new BadRequestException('Campaign name is already exist.');
-      } else {
-        throw new BadRequestException(error.message);
       }
+      throw error;
     }
   }
 
   // Fetch Campaign Report
-  async getReport(access_token: string, advertiser_id: string): Promise<any> {
+  async getReport(access_token: string, advertiser_id: string, orderId: string): Promise<any> {
     const endpoint = `${this.getBaseUrl()}v1.3/report/integrated/get`;
     try {
       const response = await axios.get(endpoint, {
@@ -567,10 +581,14 @@ export class TiktokCampaignService {
           ]),
         },
       });
-      return response.data;
+      console.log(orderId)
+      const order = await this.orderService.getOrderById(orderId)
+      console.log(order)
+      return { ...response.data, details:order.details ,status:order.status };
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
-      throw new Error(errorDetails?.message || 'Failed to fetch');
+      console.log(error)
+      throw error
     }
   }
 }
