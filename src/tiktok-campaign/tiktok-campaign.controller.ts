@@ -226,7 +226,8 @@ export class TiktokCampaignController {
       return {
         message: 'Report fetched successfully',
         data: reportCampaign,
-        details: report.details
+        details: report.details,
+        status : report.status,
       };
     } catch (error) {
       throw new HttpException(

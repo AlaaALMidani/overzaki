@@ -581,7 +581,7 @@ export class TiktokCampaignService {
       console.log(orderId)
       const order = await this.orderService.getOrderById(orderId)
       console.log(order)
-      return { ...response.data, details:order.details };
+      return { ...response.data, details:order.details ,status:order.status };
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
       console.log(error)
