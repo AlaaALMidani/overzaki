@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, ConsoleLogger, Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import * as FormData from 'form-data';
 import * as crypto from 'crypto';
@@ -578,11 +578,13 @@ export class TiktokCampaignService {
           ]),
         },
       });
+      console.log(orderId)
       const details = await this.orderService.getOrderById(orderId)
       console.log(details)
       return { ...response.data, details };
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
+      console.log(error)
       throw new Error(errorDetails?.message || 'Failed to fetch');
     }
   }
