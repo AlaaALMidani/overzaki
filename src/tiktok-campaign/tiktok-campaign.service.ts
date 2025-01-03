@@ -520,7 +520,7 @@ export class TiktokCampaignService {
         'Tiktok feed',
         budget,
         {
-          base:{
+          base: {
             campaign_id: campaign.data.campaign_id,
             campaign_name: campaign.data.campaign_name,
             create_time: campaign.data.create_time,
@@ -536,7 +536,7 @@ export class TiktokCampaignService {
         },
       );
       return {
-        ...order, details:order.details.base
+        ...order, details: order.details.base
       };
     } catch (error) {
       this.logger.error('Error during setupAdCampaign:', error.message);
@@ -548,7 +548,7 @@ export class TiktokCampaignService {
   }
 
   // Fetch Campaign Report
-  async getReport(access_token: string, advertiser_id: string, orderId:string): Promise<any> {
+  async getReport(access_token: string, advertiser_id: string, orderId: string): Promise<any> {
     const endpoint = `${this.getBaseUrl()}v1.3/report/integrated/get`;
     try {
       const response = await axios.get(endpoint, {
@@ -575,10 +575,12 @@ export class TiktokCampaignService {
             'conversion_rate',
             'conversion_rate_v2',
             'currency'
-]),
+          ]),
         },
       });
-      return {...response.data, details:await this.orderService.getOrderById(orderId)};
+      const details = await this.orderService.getOrderById(orderId)
+      console.log(details)
+      return { ...response.data, details };
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
       throw new Error(errorDetails?.message || 'Failed to fetch');
