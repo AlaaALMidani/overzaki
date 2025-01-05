@@ -2,7 +2,7 @@
 import { MiddlewareConsumer, Module, OnModuleInit, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { GoogleCampaignModule } from './google-campaign/google-campaign.module';
+//import { GoogleCampaignModule } from './google-campaign/google-campaign.module';
 import { TiktokCampaignModule } from './tiktok-campaign/tiktok-campaign.module';
 import { FacebookCampaignModule } from './facebook-campaign/facebook-campaign.module';
 import { YouTubeCampaignModule } from './youtupe-campaign/youtube-campaing.module';
