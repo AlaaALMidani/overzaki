@@ -21,7 +21,7 @@ import { JwtModule } from '@nestjs/jwt'; // Import JwtModule
       isGlobal: true,
     }),
     MongooseModule.forRoot(process.env.MONGO_URI),
-    GoogleCampaignModule,
+    //  GoogleCampaignModule,
     TiktokCampaignModule,
     YouTubeCampaignModule,
     FacebookCampaignModule,
