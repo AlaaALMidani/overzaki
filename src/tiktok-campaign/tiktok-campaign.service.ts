@@ -625,7 +625,7 @@ export class TiktokCampaignService {
     scheduleEndTime?: string,
   ) {
     try {
-      await this.orderService.checkPayAbility(userId, budget, 25);
+      await this.orderService.checkPayAbility(userId, budget, 25,1000);
       const budgetMode = 'BUDGET_MODE_TOTAL';
       // Step 1: Create Campaign
       let authVideo = await this.AuthVideo("1548a753b674f01b55dbfb056ab18ed8653780f6", "7447536677184372754", authCode);
