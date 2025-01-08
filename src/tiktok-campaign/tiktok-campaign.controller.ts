@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   Controller,
   Get,
@@ -12,9 +13,7 @@ import {
   UploadedFiles,
   Req,
 } from '@nestjs/common';
-import {
-  FileFieldsInterceptor,
-} from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { TiktokCampaignService } from './tiktok-campaign.service';
 @Controller('tiktok-campaign')
 export class TiktokCampaignController {
@@ -177,11 +176,9 @@ export class TiktokCampaignController {
     return result;
   }
 
-  @Post('SparkAD')
-  async SparkAd(
-    @Body() body: any,
-    @Req() req: any,
-  ) {
+  @Post('SparkAd')
+  async SparkAd(@Body() body: any, @Req() req: any) {
+    console.log(body);
     const {
       accessToken,
       advertiserId,
@@ -193,7 +190,7 @@ export class TiktokCampaignController {
       spendingPower,
       scheduleType,
       scheduleStartTime,
-      // dayparting: rawDayparting,
+      dayparting: rawDayparting,
       budget,
       url,
       ageGroups: rawAgeGroups,
@@ -205,7 +202,7 @@ export class TiktokCampaignController {
       // deviceModelIds,
       scheduleEndTime,
     } = body;
-    console.log(body);
+
     const locationIds = this.normalizeArray(rawLocationIds);
     const ageGroups = this.normalizeArray(rawAgeGroups);
     const languages = this.normalizeArray(rawLanguages);
@@ -218,16 +215,16 @@ export class TiktokCampaignController {
       !locationIds ||
       !scheduleEndTime ||
       !scheduleStartTime ||
-      !budget 
+      !budget
     ) {
       throw new HttpException(
         'Missing required fields for campaign setup.',
         HttpStatus.BAD_REQUEST,
       );
     }
-    
+
     // let parsedDayparting: Record<string, { start: string; end: string }>;
-    // parsedDayparting = JSON.parse(rawDayparting);
+    // // parsedDayparting = JSON.parse(rawDayparting);
     // try {
     // } catch (error) {
     //   console.log('object');
@@ -239,7 +236,7 @@ export class TiktokCampaignController {
 
     // const processedDayparting =
     // this.convertDaypartingToString(parsedDayparting);
-   
+
     const result = await this.campaignService.CreateSpark(
       req.user.id,
       req.user.walletId,
@@ -294,7 +291,7 @@ export class TiktokCampaignController {
       const reportCampaign = report.data.list.filter(
         (a) => a.dimensions.campaign_id == campaignId,
       );
-  
+
       return {
         message: 'Report fetched successfully',
         data: reportCampaign,
@@ -308,7 +305,7 @@ export class TiktokCampaignController {
       );
     }
   }
-  
+
   private normalizeArray(input: any): string[] {
     console.log('input', input);
     if (Array.isArray(input)) {
