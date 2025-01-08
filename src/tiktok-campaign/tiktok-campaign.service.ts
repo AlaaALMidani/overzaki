@@ -287,46 +287,6 @@ export class TiktokCampaignService {
       );
     }
   }
-  // Get User's Videos
-  async fetchUploadedVideos(
-    accessToken: string,
-    advertiserId: string,
-  ): Promise<any> {
-    const endpoint = `${this.getBaseUrl()}v1.3/file/video/ad/search/`;
-    try {
-      const response = await axios.get(endpoint, {
-        headers: {
-          'Access-Token': accessToken,
-          'Content-Type': 'application/json',
-        },
-        params: { advertiser_id: advertiserId },
-      });
-
-      return response.data?.data;
-    } catch (error) {
-      const errorDetails = error.response?.data || error.message;
-      throw new Error(
-        errorDetails?.message || 'Failed to fetch uploaded videos',
-      );
-    }
-  }
-
-  async fetchIdentity(accessToken: string, advertiserId: string): Promise<any> {
-    const endpoint = `${this.getBaseUrl()}v1.3/identity/get/`;
-    try {
-      const response = await axios.get(endpoint, {
-        headers: {
-          'Access-Token': accessToken,
-          'Content-Type': 'application/json',
-        },
-        params: { advertiser_id: advertiserId },
-      });
-      return response.data;
-    } catch (error) {
-      const errorDetails = error.response?.data || error.message;
-      throw new Error(errorDetails?.message || 'Failed to fetch');
-    }
-  }
 
   async CreateFeed(
     userId: string,
@@ -612,8 +572,6 @@ export class TiktokCampaignService {
     scheduleStartTime: string,
     // dayparting: string,
     budget: number,
-    appName: string,
-    adText: string,
     url: string,
     ageGroups: Array<string>,
     languages: Array<string>,
@@ -721,9 +679,8 @@ export class TiktokCampaignService {
             ad_format: 'SINGLE_VIDEO',
             tiktok_item_id: itemId,
             call_to_action: callToAction,
-            display_name: appName,
-            app_name: appName,
-            ad_text: adText,   
+            display_name: campaignName,
+            app_name: campaignName,  
             landing_page_url: url,
             url: url,
           },
@@ -751,7 +708,7 @@ export class TiktokCampaignService {
       const order = await this.orderService.createOrderWithTransaction(
         userId,
         walletId,
-        'Tiktok feed',
+        'Tiktok spark',
         budget,
         {
           base: {

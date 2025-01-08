@@ -178,7 +178,6 @@ export class TiktokCampaignController {
   }
 
   @Post('SparkAD')
- 
   async SparkAd(
     @Body() body: any,
     @Req() req: any,
@@ -196,8 +195,6 @@ export class TiktokCampaignController {
       scheduleStartTime,
       // dayparting: rawDayparting,
       budget,
-      appName,
-      adText,
       url,
       ageGroups: rawAgeGroups,
       languages: rawLanguages,
@@ -221,8 +218,7 @@ export class TiktokCampaignController {
       !locationIds ||
       !scheduleEndTime ||
       !scheduleStartTime ||
-      !budget ||
-      !adText
+      !budget 
     ) {
       throw new HttpException(
         'Missing required fields for campaign setup.',
@@ -259,8 +255,6 @@ export class TiktokCampaignController {
       scheduleStartTime,
       // processedDayparting,
       budget,
-      appName,
-      adText,
       url,
       ageGroups,
       languages,
@@ -273,7 +267,6 @@ export class TiktokCampaignController {
     );
     return result;
   }
-
 
   @Post('campaignReport')
   async campaignReport(
