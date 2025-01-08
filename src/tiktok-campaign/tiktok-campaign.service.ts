@@ -592,7 +592,6 @@ export class TiktokCampaignService {
       this.logger.log(videoInfo)
       const identityId = videoInfo.data?.list?.[0]?.user_info?.identity_id;
       const itemId = videoInfo.data?.list?.[0]?.item_info?.item_id;
-
       if (!identityId || !itemId) {
         throw new Error('Failed to retrieve required video or identity information.');
       }
