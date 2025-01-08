@@ -610,9 +610,8 @@ export class TiktokCampaignService {
           'Failed to retrieve required video or identity information.',
         );
       }
-
-      this.logger.log(identityId);
-      this.logger.log(itemId);
+      this.logger.log(identityId)
+      this.logger.log(itemId)
       const campaignDetails = {
         campaignName,
         objectiveType,
@@ -626,11 +625,9 @@ export class TiktokCampaignService {
       );
       this.logger.log(campaign);
       const campaignId = campaign?.data?.campaign_id;
-
       if (!campaignId) {
         throw new Error('Campaign creation failed: Missing campaign ID.');
       }
-
       //  Create Ad Group
       this.logger.log(' Creating ad group...');
       const adGroupDetails: any = {
