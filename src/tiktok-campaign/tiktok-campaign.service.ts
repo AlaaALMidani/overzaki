@@ -358,7 +358,7 @@ export class TiktokCampaignService {
     scheduleEndTime?: string,
   ) {
     try {
-      await this.orderService.checkPayAbility(userId, budget, 25);
+      await this.orderService.checkPayAbility(userId, budget, 25,1000);
       const budgetMode = 'BUDGET_MODE_TOTAL';
       // Step 1: Create Campaign
       this.logger.log('Step 1: Creating campaign...');
