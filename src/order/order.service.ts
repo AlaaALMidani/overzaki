@@ -65,10 +65,20 @@ export class OrderService {
     }
     return newOrders;
   }
-  async checkPayAbility(userId: string, amount: number, minAmount: number) {
+  async checkPayAbility(
+    userId: string,
+    amount: number,
+    minAmount: number,
+    maxAmount: any,
+  ) {
     if (amount < minAmount) {
       throw new BadRequestException(
         'Ad budget should be greater than or equal to ' + minAmount,
+      );
+    }
+    if (amount >= maxAmount) {
+      throw new BadRequestException(
+        'Ad budget should be less than   to ' + maxAmount,
       );
     }
     const wallet = await this.walletService.getWalletByUserId(userId);
