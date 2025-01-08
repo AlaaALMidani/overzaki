@@ -173,7 +173,6 @@ export class TiktokCampaignService {
     }
   }
 
-
   async createAdGroup(
     accessToken: string,
     advertiserId: string,
@@ -255,7 +254,6 @@ export class TiktokCampaignService {
       );
     }
   }
-
 
   async createIdentity(
     accessToken: string,
@@ -595,8 +593,6 @@ export class TiktokCampaignService {
       if (!identityId || !itemId) {
         throw new Error('Failed to retrieve required video or identity information.');
       }
-
-
       this.logger.log(identityId)
       this.logger.log(itemId)
       const campaignDetails = {
@@ -608,11 +604,9 @@ export class TiktokCampaignService {
       const campaign = await this.createCampaign(accessToken, advertiserId, campaignDetails);
       this.logger.log(campaign)
       const campaignId = campaign?.data?.campaign_id;
-
       if (!campaignId) {
         throw new Error('Campaign creation failed: Missing campaign ID.');
       }
-
       //  Create Ad Group
       this.logger.log(' Creating ad group...');
       const adGroupDetails: any = {
@@ -737,7 +731,6 @@ export class TiktokCampaignService {
       throw error;
     }
   }
-
 
   // Fetch Campaign Report
   async getReport(access_token: string, advertiser_id: string, orderId: string): Promise<any> {
