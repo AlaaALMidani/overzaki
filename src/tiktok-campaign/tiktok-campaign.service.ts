@@ -1,4 +1,11 @@
-import { BadRequestException, ConsoleLogger, Injectable, Logger } from '@nestjs/common';
+/* eslint-disable prefer-const */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import {
+  BadRequestException,
+  ConsoleLogger,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import axios from 'axios';
 import * as FormData from 'form-data';
 import * as crypto from 'crypto';
@@ -11,13 +18,13 @@ export class TiktokCampaignService {
   constructor(
     private readonly httpService: HttpService,
     private readonly orderService: OrderService,
-  ) { }
+  ) {}
 
   private getBaseUrl(): string {
     return process.env.NODE_ENV === 'production'
       ? 'https://business-api.tiktok.com/open_api/'
       : process.env.TIKTOK_BASE_URL ||
-      'https://sandbox-ads.tiktok.com/open_api/';
+          'https://sandbox-ads.tiktok.com/open_api/';
   }
 
   // Generate TikTok OAuth URL
@@ -316,7 +323,7 @@ export class TiktokCampaignService {
     scheduleEndTime?: string,
   ) {
     try {
-      await this.orderService.checkPayAbility(userId, budget, 25,1000);
+      await this.orderService.checkPayAbility(userId, budget, 25, 1000);
       const budgetMode = 'BUDGET_MODE_TOTAL';
       // Step 1: Create Campaign
       this.logger.log('Step 1: Creating campaign...');
@@ -503,7 +510,8 @@ export class TiktokCampaignService {
         },
       );
       return {
-        ...order, details: order.details.base
+        ...order,
+        details: order.details.base,
       };
     } catch (error) {
       this.logger.error('Error during setupAdCampaign:', error.message);
@@ -518,7 +526,7 @@ export class TiktokCampaignService {
     try {
       const payload = {
         advertiser_id: advertiserId,
-        auth_code: authCode
+        auth_code: authCode,
       };
       const response = await axios.post(
         `https://business-api.tiktok.com/open_api/v1.3/tt_video/authorize/`,
@@ -581,17 +589,26 @@ export class TiktokCampaignService {
     scheduleEndTime?: string,
   ) {
     try {
-      await this.orderService.checkPayAbility(userId, budget, 25,1000);
+      await this.orderService.checkPayAbility(userId, budget, 25, 1000);
       const budgetMode = 'BUDGET_MODE_TOTAL';
       // Step 1: Create Campaign
-      let authVideo = await this.AuthVideo("1548a753b674f01b55dbfb056ab18ed8653780f6", "7447536677184372754", authCode);
-      let videoInfo = await this.getVideoInfo("1548a753b674f01b55dbfb056ab18ed8653780f6", "7447536677184372754");
-      this.logger.log(authVideo)
-      this.logger.log(videoInfo)
+      let authVideo = await this.AuthVideo(
+        '1548a753b674f01b55dbfb056ab18ed8653780f6',
+        '7447536677184372754',
+        authCode,
+      );
+      let videoInfo = await this.getVideoInfo(
+        '1548a753b674f01b55dbfb056ab18ed8653780f6',
+        '7447536677184372754',
+      );
+      this.logger.log(authVideo);
+      this.logger.log(videoInfo);
       const identityId = videoInfo.data?.list?.[0]?.user_info?.identity_id;
       const itemId = videoInfo.data?.list?.[0]?.item_info?.item_id;
       if (!identityId || !itemId) {
-        throw new Error('Failed to retrieve required video or identity information.');
+        throw new Error(
+          'Failed to retrieve required video or identity information.',
+        );
       }
       this.logger.log(identityId)
       this.logger.log(itemId)
@@ -601,8 +618,12 @@ export class TiktokCampaignService {
         budgetMode: 'BUDGET_MODE_TOTAL',
         budget,
       };
-      const campaign = await this.createCampaign(accessToken, advertiserId, campaignDetails);
-      this.logger.log(campaign)
+      const campaign = await this.createCampaign(
+        accessToken,
+        advertiserId,
+        campaignDetails,
+      );
+      this.logger.log(campaign);
       const campaignId = campaign?.data?.campaign_id;
       if (!campaignId) {
         throw new Error('Campaign creation failed: Missing campaign ID.');
@@ -667,13 +688,13 @@ export class TiktokCampaignService {
         creatives: [
           {
             ad_name: campaignName,
-            identity_type: "AUTH_CODE",
+            identity_type: 'AUTH_CODE',
             identity_id: identityId,
             ad_format: 'SINGLE_VIDEO',
             tiktok_item_id: itemId,
             call_to_action: callToAction,
             display_name: campaignName,
-            app_name: campaignName,  
+            app_name: campaignName,
             landing_page_url: url,
             url: url,
           },
@@ -720,7 +741,8 @@ export class TiktokCampaignService {
         },
       );
       return {
-        ...order, details: order.details.base
+        ...order,
+        details: order.details.base,
       };
     } catch (error) {
       this.logger.error('Error during setupAdCampaign:', error.message);
@@ -733,7 +755,11 @@ export class TiktokCampaignService {
   }
 
   // Fetch Campaign Report
-  async getReport(access_token: string, advertiser_id: string, orderId: string): Promise<any> {
+  async getReport(
+    access_token: string,
+    advertiser_id: string,
+    orderId: string,
+  ): Promise<any> {
     const endpoint = `${this.getBaseUrl()}v1.3/report/integrated/get`;
     try {
       const response = await axios.get(endpoint, {
@@ -759,18 +785,18 @@ export class TiktokCampaignService {
             'cost_per_conversion',
             'conversion_rate',
             'conversion_rate_v2',
-            'currency'
+            'currency',
           ]),
         },
       });
-      console.log(orderId)
-      const order = await this.orderService.getOrderById(orderId)
-      console.log(order)
+      console.log(orderId);
+      const order = await this.orderService.getOrderById(orderId);
+      console.log(order);
       return { ...response.data, details: order.details, status: order.status };
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
-      console.log(error)
-      throw error
+      console.log(error);
+      throw error;
     }
   }
 }
