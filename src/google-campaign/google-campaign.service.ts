@@ -189,7 +189,7 @@ export class GoogleCampaignService {
         WHERE
           geo_target_constant.status = 'ENABLED'
           AND geo_target_constant.name LIKE '%${keyword}%'
-        LIMIT 15
+        LIMIT 8
       `;
 
       const rows = await this.googleAdsClient.query(query);
