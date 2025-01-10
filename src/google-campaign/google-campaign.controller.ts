@@ -1,10 +1,10 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Post, Body, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Body, HttpException, HttpStatus, Get, Query } from '@nestjs/common';
 import { GoogleCampaignService } from './google-campaign.service';
 
 @Controller('google-campaign')
 export class GoogleCampaignController {
-  constructor(private readonly googleCampaignService: GoogleCampaignService) {}
+  constructor(private readonly googleCampaignService: GoogleCampaignService) { }
 
   @Post('create-search-ad')
   async createSearchAd(@Body() body: any) {
@@ -29,11 +29,12 @@ export class GoogleCampaignController {
         path2: body.path2,
         sitelinks: body.sitelinks,
         callouts: body.callouts,
-        phoneNumber: body.phoneNumber,
+        phoneNumbers: body.phoneNumbers,
         location: body.location,
         promotions: body.promotions,
         ageRanges: body.ageRanges, // Added ageRanges
-        languages: body.languages, // Added languages
+        languages: body.languages,
+        keywords: body.keywords
       });
 
       return {
@@ -41,14 +42,24 @@ export class GoogleCampaignController {
         data: response,
       };
     } catch (error) {
-      // throw new HttpException(
-      //   {
-      //     message: 'Error creating Search Ad',
-      //     error: error.message || 'Unknown error',
-      //   },
-      //   HttpStatus.INTERNAL_SERVER_ERROR,
-      // );
+
       throw error
+    }
+  }
+
+  @Get('available-locations') async getAvailableLocations(
+    @Query('keyword') keyword: string,
+  ) {
+    
+    try {
+      const locations = await this.googleCampaignService.getAvailableLocations(keyword);
+      return {
+        message: 'Available locations fetched successfully',
+        data: locations,
+      };
+    } catch (error: any) {
+      throw new HttpException(
+        { message: 'Failed to fetch available locations', error: error?.errors || error?.message || 'Unknown error', }, HttpStatus.INTERNAL_SERVER_ERROR,);
     }
   }
 }
