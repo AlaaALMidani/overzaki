@@ -9,15 +9,11 @@ import {
   HttpException,
   HttpStatus,
   Logger,
-  UploadedFile,
   UseInterceptors,
   UploadedFiles,
   Req,
 } from '@nestjs/common';
-import {
-  FileInterceptor,
-  FileFieldsInterceptor,
-} from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { TiktokCampaignService } from './tiktok-campaign.service';
 @Controller('tiktok-campaign')
 export class TiktokCampaignController {
@@ -60,8 +56,6 @@ export class TiktokCampaignController {
       { name: 'videoFile', maxCount: 1 },
       { name: 'logoFile', maxCount: 1 },
       { name: 'coverFile', maxCount: 1 },
-      { name: 'logoFile', maxCount: 1 },
-      { name: 'coverFile', maxCount: 1 },
     ]),
   )
   async FeedAd(
@@ -96,15 +90,11 @@ export class TiktokCampaignController {
       operatingSystems: rawOperatingSystems,
       // devicePriceRanges,
       // deviceModelIds,
-      // devicePriceRanges,
-      // deviceModelIds,
       scheduleEndTime,
     } = body;
     console.log('request from frontend:', body);
     const locationIds = this.normalizeArray(rawLocationIds);
     const ageGroups = this.normalizeArray(rawAgeGroups);
-    // const ageGroups = rawAgeGroups;
-    // console.log(ageGroups);
     const languages = this.normalizeArray(rawLanguages);
     const interestCategoryIds = this.normalizeArray(rawInterestCategoryIds);
     const operatingSystems = this.normalizeArray(rawOperatingSystems);
@@ -186,16 +176,94 @@ export class TiktokCampaignController {
     return result;
   }
 
-  // private parseJson(json: any, field: string) {
-  //   try {
-  //     return typeof json === 'string' ? JSON.parse(json) : json;
-  //   } catch (error) {
-  //     throw new HttpException(
-  //       `Invalid JSON format for ${field}`,
-  //       HttpStatus.BAD_REQUEST,
-  //     );
-  //   }
-  // }
+  @Post('SparkAd')
+  async SparkAd(@Body() body: any, @Req() req: any) {
+    console.log(body);
+    const {
+      accessToken,
+      advertiserId,
+      authCode,
+      campaignName,
+      objectiveType,
+      callToAction,
+      gender,
+      spendingPower,
+      scheduleType,
+      scheduleStartTime,
+      dayparting: rawDayparting,
+      budget,
+      url,
+      ageGroups: rawAgeGroups,
+      languages: rawLanguages,
+      locationIds: rawLocationIds,
+      interestCategoryIds: rawInterestCategoryIds,
+      operatingSystems: rawOperatingSystems,
+      // devicePriceRanges,
+      // deviceModelIds,
+      scheduleEndTime,
+    } = body;
+
+    const locationIds = this.normalizeArray(rawLocationIds);
+    const ageGroups = this.normalizeArray(rawAgeGroups);
+    const languages = this.normalizeArray(rawLanguages);
+    const interestCategoryIds = this.normalizeArray(rawInterestCategoryIds);
+    const operatingSystems = this.normalizeArray(rawOperatingSystems);
+    if (
+      !accessToken ||
+      !advertiserId ||
+      !campaignName ||
+      !locationIds ||
+      !scheduleEndTime ||
+      !scheduleStartTime ||
+      !budget
+    ) {
+      throw new HttpException(
+        'Missing required fields for campaign setup.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // let parsedDayparting: Record<string, { start: string; end: string }>;
+    // // parsedDayparting = JSON.parse(rawDayparting);
+    // try {
+    // } catch (error) {
+    //   console.log('object');
+    //   throw new HttpException(
+    //     'Invalid JSON format for dayparting.',
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
+
+    // const processedDayparting =
+    // this.convertDaypartingToString(parsedDayparting);
+
+    const result = await this.campaignService.CreateSpark(
+      req.user.id,
+      req.user.walletId,
+      accessToken,
+      advertiserId,
+      authCode,
+      campaignName,
+      objectiveType,
+      callToAction,
+      gender,
+      spendingPower,
+      scheduleType,
+      scheduleStartTime,
+      // processedDayparting,
+      budget,
+      url,
+      ageGroups,
+      languages,
+      locationIds,
+      interestCategoryIds,
+      operatingSystems,
+      // devicePriceRanges,
+      // deviceModelIds,
+      scheduleEndTime,
+    );
+    return result;
+  }
 
   @Post('campaignReport')
   async campaignReport(
@@ -223,6 +291,7 @@ export class TiktokCampaignController {
       const reportCampaign = report.data.list.filter(
         (a) => a.dimensions.campaign_id == campaignId,
       );
+
       return {
         message: 'Report fetched successfully',
         data: reportCampaign,
@@ -236,6 +305,7 @@ export class TiktokCampaignController {
       );
     }
   }
+
   private normalizeArray(input: any): string[] {
     console.log('input', input);
     if (Array.isArray(input)) {
