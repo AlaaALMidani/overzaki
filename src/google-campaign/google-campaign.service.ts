@@ -3,6 +3,7 @@ import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { GoogleAdsApi, Customer, ResourceNames } from 'google-ads-api';
 import { google } from 'google-ads-api';
 import { enums } from 'google-ads-api';
+import { ICampaignCriterion } from 'google-ads-api';
 @Injectable()
 export class GoogleCampaignService {
   private readonly googleAdsClient: Customer;
@@ -36,6 +37,7 @@ export class GoogleCampaignService {
     finalUrl: string;
     path1?: string;
     path2?: string;
+    genders: string[];
     keywords: {
       keyword: string;
       type: string;
@@ -68,6 +70,7 @@ export class GoogleCampaignService {
         path1 = '',
         path2 = '',
         ageRanges,
+        genders = [],
         languages = [],
         keywords,
       } = params;
@@ -83,9 +86,9 @@ export class GoogleCampaignService {
       if (languages.length) {
         await this.addLanguageTargeting(campaignResourceName, languages);
       }
-      // if (ageRanges.length) {
-      //   await this.addAgeTargeting(campaignResourceName, ageRanges);
-      // }
+      if (ageRanges.length) {
+        await this.addAgeTargeting(campaignResourceName, ageRanges);
+      }
       const adGroupResourceName = await this.createAdGroup(campaignName, campaignResourceName);
       await this.addKeywordsToAdGroup(adGroupResourceName, keywords)
 
@@ -113,8 +116,6 @@ export class GoogleCampaignService {
       );
     }
   }
-
-
   private async createCampaignBudget(campaignName: string, budgetAmount: number): Promise<string> {
     console.log('Creating campaign budget...');
     const response = await this.googleAdsClient.campaignBudgets.create([
@@ -130,7 +131,6 @@ export class GoogleCampaignService {
     if (!budgetResourceName) throw new Error('Failed to create campaign budget.');
     return budgetResourceName;
   }
-
   private validateEnvVariables() {
     const requiredEnvVars = [
       'GOOGLE_ADS_CLIENT_ID',
@@ -214,8 +214,37 @@ export class GoogleCampaignService {
     }
   }
 
-
-
+  async addGenderTargeting(campaignResourceName: string): Promise<void> {
+    try {
+      const genders = [
+        enums.GenderType.MALE,
+        enums.GenderType.FEMALE,
+        enums.GenderType.UNDETERMINED,
+      ];
+  
+      const operations = genders.map(gender => ({
+        create: {
+          campaign: campaignResourceName,
+          gender: gender,
+        } as ICampaignCriterion,
+      }));
+  
+      await this.googleAdsClient.campaignCriteria.create(operations);
+  
+      console.log('Gender targeting added:', genders);
+    } catch (error: any) {
+      console.error('Error adding gender targeting:', error);
+      this.logger.error('Error adding gender targeting:', error);
+      throw new HttpException(
+        {
+          message: 'Failed to add gender targeting',
+          error: error?.errors || error?.message || 'Unknown error',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+  
   private async addKeywordsToAdGroup(adGroupResourceName: string, keywords: {
     keyword: string;
     type: string;
@@ -287,43 +316,117 @@ export class GoogleCampaignService {
     console.log('Ad creation completed.');
   }
 
-  private async addAgeTargeting(campaignResourceName: string, ageRanges: string[]) {
-    console.log('إضافة استهداف الفئات العمرية...');
+  // private async addAgeTargeting(campaignResourceName: string, ageRanges: string[]) {
+  //   console.log('إضافة استهداف الفئات العمرية...');
 
-    // خريطة معرفات الفئات العمرية في Google Ads
-    const ageRangeMapping: { [key: string]: string } = {
-      "AGE_RANGE_18_24": "503001",
-      "AGE_RANGE_25_34": "503002",
-      "AGE_RANGE_35_44": "503003",
-      "AGE_RANGE_45_54": "503004",
-      "AGE_RANGE_55_64": "503005",
-      "AGE_RANGE_65_UP": "503006",
-    };
+  //   // خريطة معرفات الفئات العمرية في Google Ads
+  //   const ageRangeMapping: { [key: string]: string } = {
+  //     "AGE_RANGE_18_24": "503001",
+  //     "AGE_RANGE_25_34": "503002",
+  //     "AGE_RANGE_35_44": "503003",
+  //     "AGE_RANGE_45_54": "503004",
+  //     "AGE_RANGE_55_64": "503005",
+  //     "AGE_RANGE_65_UP": "503006",
+  //   };
 
-    // إنشاء أهداف الاستهداف
-    const ageRangeTargets = ageRanges.map(age => {
-      const criterionId = ageRangeMapping[age];
-      if (!criterionId) {
-        throw new Error(`فئة عمرية غير صحيحة: ${age}`);
-      }
+  //   // إنشاء أهداف الاستهداف
+  //   const ageRangeTargets = ageRanges.map(age => {
+  //     const criterionId = ageRangeMapping[age];
+  //     if (!criterionId) {
+  //       throw new Error(`فئة عمرية غير صحيحة: ${age}`);
+  //     }
 
-      return {
-        campaign: campaignResourceName,
-        criterion_id: criterionId,
-        status: 'ENABLED', // تفعيل الاستهداف الإيجابي
-      };
-    });
+  //     return {
+  //       campaign: campaignResourceName,
+  //       criterion_id: criterionId,
+  //       status: 'ENABLED', // تفعيل الاستهداف الإيجابي
+  //     };
+  //   });
 
+  //   try {
+  //     // استدعاء API لإضافة الاستهداف
+  //     const response = await this.googleAdsClient.campaignCriteria.create(ageRangeTargets);
+  //     console.log('تمت إضافة استهداف الفئات العمرية بنجاح:', response);
+  //   } catch (error) {
+  //     console.error('فشل في إضافة استهداف الفئات العمرية:', error);
+  //     throw error;
+  //   }
+  // }
+
+  async addAgeTargeting(campaignResourceName: string): Promise<void> {
     try {
-      // استدعاء API لإضافة الاستهداف
-      const response = await this.googleAdsClient.campaignCriteria.create(ageRangeTargets);
-      console.log('تمت إضافة استهداف الفئات العمرية بنجاح:', response);
-    } catch (error) {
-      console.error('فشل في إضافة استهداف الفئات العمرية:', error);
-      throw error;
+      const ageRanges = [
+        "AGE_RANGE_18_24",
+        "AGE_RANGE_25_34",
+        "AGE_RANGE_35_44",
+        "AGE_RANGE_45_54",
+        "AGE_RANGE_55_64",
+        "AGE_RANGE_65_UP",
+      ];
+
+      const operations = ageRanges.map(ageRange => ({
+        campaign: campaignResourceName,
+        age_range: ageRange,
+      }));
+
+      await this.googleAdsClient.campaignCriteria.create(operations);
+
+      console.log('Age targeting added:', ageRanges);
+    } catch (error: any) {
+      console.error('Error adding age targeting:', error);
+      this.logger.error('Error adding age targeting:', error);
+      throw new HttpException(
+        {
+          message: 'Failed to add age targeting',
+          error: error?.errors || error?.message || 'Unknown error',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 
+
+  async getKeywordSuggestions(keyword: string , locations:string[]): Promise<any> {
+    try {
+      const response = await this.googleAdsClient.keywordPlanIdeas.generateKeywordIdeas({
+        customer_id: process.env.GOOGLE_ADS_CUSTOMER_ID,
+        keyword_plan_network: 'GOOGLE_SEARCH',
+        keyword_seed: {
+          keywords: [keyword],
+        },
+        geo_target_constants: locations,
+        include_adult_keywords: false,
+        page_token: '',
+        page_size: 3, 
+        keyword_annotation: [],
+        toJSON: function (): { [k: string]: any; } {
+          throw new Error('Function not implemented.');
+        }
+      });
+      console.log(response)
+      const formattedResponse = response.map((item: any) => ({
+        text: item.text,
+        competition: item.keyword_idea_metrics?.competition || null,
+        avg_monthly_searches: item.keyword_idea_metrics?.avg_monthly_searches || null,
+      }));
+   
+      return {
+         formattedResponse,
+      };
+    } catch (error: any) {
+      console.error('Error fetching keyword suggestions:', error);
+      this.logger.error('Error fetching keyword suggestions:', error);
+      throw new HttpException(
+        {
+          message: 'Failed to fetch keyword suggestions',
+          error: error?.errors || error?.message || 'Unknown error',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+  
+  
   private async addLanguageTargeting(campaignResourceName: string, languages: any[]) {
     console.log('Adding language targeting...');
 
@@ -488,3 +591,5 @@ export class GoogleCampaignService {
     }
   }
 }
+
+

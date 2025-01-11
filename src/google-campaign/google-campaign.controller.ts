@@ -34,7 +34,8 @@ export class GoogleCampaignController {
         promotions: body.promotions,
         ageRanges: body.ageRanges, // Added ageRanges
         languages: body.languages,
-        keywords: body.keywords
+        keywords: body.keywords,
+        genders: body.gender
       });
 
       return {
@@ -50,7 +51,7 @@ export class GoogleCampaignController {
   @Get('available-locations') async getAvailableLocations(
     @Query('keyword') keyword: string,
   ) {
-    
+
     try {
       const locations = await this.googleCampaignService.getAvailableLocations(keyword);
       return {
@@ -62,4 +63,27 @@ export class GoogleCampaignController {
         { message: 'Failed to fetch available locations', error: error?.errors || error?.message || 'Unknown error', }, HttpStatus.INTERNAL_SERVER_ERROR,);
     }
   }
+  @Post('keyword-suggestions')
+  async getKeywordSuggestions(
+    @Body('keyword') keyword: string,
+    @Body('geo_target_constants') geoTargetConstants: string[],
+  ) {
+    try {
+      const suggestions = await this.googleCampaignService.getKeywordSuggestions(keyword, geoTargetConstants);
+      return {
+        message: 'Keyword suggestions fetched successfully',
+        data: suggestions,
+      };
+    } catch (error: any) {
+      throw new HttpException(
+        {
+          message: 'Failed to fetch keyword suggestions',
+          error: error?.errors || error?.message || 'Unknown error',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+
 }
