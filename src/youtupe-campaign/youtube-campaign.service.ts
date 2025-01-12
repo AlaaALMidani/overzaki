@@ -708,7 +708,7 @@ export class YouTubeCampaignService {
     };
   
     try {
-      const response = await this.googleAdsClient.campaigns.create([payload]);
+      const response = await this.googleAdsClient.campaigns.create((payload as any));
       const resourceName = response.results[0]?.resource_name;
   
       if (!resourceName) {
