@@ -69,7 +69,7 @@ export class GoogleCampaignService {
         path1 = '',
         path2 = '',
         ageRanges,
-        genders = [],
+       // genders = [],
         languages = [],
         keywords,
       } = params;
@@ -225,10 +225,10 @@ export class GoogleCampaignService {
         create: {
           campaign: campaignResourceName,
           gender: gender,
-        } as ICampaignCriterion,
+        } ,
       }));
 
-      await this.googleAdsClient.campaignCriteria.create(operations);
+      await this.googleAdsClient.campaignCriteria.create((operations as any));
 
       console.log('Gender targeting added:', genders);
     } catch (error: any) {
@@ -259,7 +259,7 @@ export class GoogleCampaignService {
 
     try {
       // Use the 'create' method to add the criteria
-      const response = await this.googleAdsClient.adGroupCriteria.create(adGroupCriteria);
+      const response = await this.googleAdsClient.adGroupCriteria.create((adGroupCriteria as any));
       console.log('Keywords added successfully:', response);
     } catch (error) {
       console.error('Failed to add keywords:', error);
