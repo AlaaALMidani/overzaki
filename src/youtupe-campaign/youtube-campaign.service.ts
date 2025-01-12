@@ -615,7 +615,7 @@ export class YouTubeCampaignService {
       };
 
     } catch (error) {
-      throw error ;
+      throw error;
       //this.handleGoogleAdsError(error);
     }
   }
@@ -675,6 +675,8 @@ export class YouTubeCampaignService {
     return resourceName;
   }
 
+
+
   private async createCampaign(
     name: string,
     budgetResourceName: string,
@@ -682,34 +684,51 @@ export class YouTubeCampaignService {
     endDate: string,
   ): Promise<string> {
     console.log('Creating campaign...');
-
-    const payload: any = {
+  
+    const payload = {
       start_date: startDate,
       end_date: endDate,
       name,
       status: 'PAUSED',
       advertising_channel_type: 'VIDEO',
-      advertising_channel_sub_type: 'VIDEO_ACTION',
+      advertising_channel_sub_type: 'VIDEO_ACTION', // Correct subtype
       campaign_budget: budgetResourceName,
-      bidding_strategy_type: 'TARGET_CPA', // Or 'MAXIMIZE_CONVERSIONS'
-      target_cpa: { target_cpa_micros: 2000000 }, // Only if using TARGET_CPA
+      bidding_strategy: {
+        maximize_conversion_value: {}, // Recommended for Video Action campaigns
+      },
+      video_campaign: {
+        video_bidding_strategy: 'TARGET_CPA',
+      },
       network_settings: {
-        target_youtube_watch: true, // Typically for Video Action
+        target_google_search: false,
+        target_search_network: false,
+        target_youtube_search: false,
+        target_youtube_watch: true,
       },
     };
-
-    const response = await this.googleAdsClient.campaigns.create(payload);
-    console.log(response)
-    const resourceName = response.results[0]?.resource_name;
-
-    // if (!resourceName) {
-    //   throw new Error('Failed to create campaign.');
-    // }
-
-    console.log('Campaign created:', resourceName);
-    return resourceName;
+  
+    try {
+      const response = await this.googleAdsClient.campaigns.create([payload]);
+      const resourceName = response.results[0]?.resource_name;
+  
+      if (!resourceName) {
+        throw new Error('Failed to create campaign.');
+      }
+  
+      console.log('Campaign created:', resourceName);
+      return resourceName;
+    } catch (error) {
+      console.log( JSON.stringify(error));
+      throw new HttpException(
+        {
+          message: 'Failed to create campaign.',
+          details: error.message,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
-
+  
   private async createAdGroup(
     name: string,
     campaignResourceName: string,

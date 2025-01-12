@@ -1,9 +1,8 @@
 /* eslint-disable prettier/prettier */
 import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { GoogleAdsApi, Customer, ResourceNames } from 'google-ads-api';
-import { google } from 'google-ads-api';
+
 import { enums } from 'google-ads-api';
-import { ICampaignCriterion } from 'google-ads-api';
 @Injectable()
 export class GoogleCampaignService {
   private readonly googleAdsClient: Customer;
@@ -87,7 +86,7 @@ export class GoogleCampaignService {
         await this.addLanguageTargeting(campaignResourceName, languages);
       }
       if (ageRanges.length) {
-        await this.addAgeTargeting(campaignResourceName, ageRanges);
+        await this.addAgeTargeting(campaignResourceName);
       }
       const adGroupResourceName = await this.createAdGroup(campaignName, campaignResourceName);
       await this.addKeywordsToAdGroup(adGroupResourceName, keywords)
@@ -369,7 +368,7 @@ export class GoogleCampaignService {
         age_range: ageRange,
       }));
 
-      await this.googleAdsClient.campaignCriteria.create(operations);
+     await this.googleAdsClient.campaignCriteria.create((operations as any));
 
       console.log('Age targeting added:', ageRanges);
     } catch (error: any) {
@@ -404,14 +403,14 @@ export class GoogleCampaignService {
         }
       }); 
       console.log(response)
-      const formattedResponse = response.map((item: any) => ({
+      
+      const formattedResponse =(response as any).map((item: any) => ({
         text: item.text,
         competition: item.keyword_idea_metrics?.competition || null,
         avg_monthly_searches: item.keyword_idea_metrics?.avg_monthly_searches || null,
       }));
 
       return formattedResponse ;
- 
     } catch (error: any) {
       console.error('Error fetching keyword suggestions:', error);
       this.logger.error('Error fetching keyword suggestions:', error);
@@ -426,11 +425,12 @@ export class GoogleCampaignService {
   }
 
 
+
   private async addLanguageTargeting(campaignResourceName: string, languages: any[]) {
     console.log('Adding language targeting...');
 
     // Map the languages to valid ICampaignCriterion objects
-    const languageTargets: google.ads.googleads.v17.resources.ICampaignCriterion[] = languages.map(language => ({
+    const languageTargets = languages.map(language => ({
       campaign: campaignResourceName,
       type: 'LANGUAGE',
       language: {
@@ -440,7 +440,7 @@ export class GoogleCampaignService {
     }));
 
     try {
-      const response = await this.googleAdsClient.campaignCriteria.create(languageTargets);
+      const response = await this.googleAdsClient.campaignCriteria.create((languageTargets as any));
       console.log('Language targeting added:', response);
     } catch (error) {
       console.error('Failed to add language targeting:', error);
@@ -536,35 +536,35 @@ export class GoogleCampaignService {
     return languageConstant;
   }
 
-  private async addCallExtension(campaignResourceName: string, phoneNumber: string) {
-    console.log('Adding call extension...');
+  // private async addCallExtension(campaignResourceName: string, phoneNumber: string) {
+  //   console.log('Adding call extension...');
 
-    // إعداد بيانات الـ Call Extension
-    const callExtension: any = {
-      campaign: campaignResourceName,
-      extension_type: google.ads.googleads.v17.enums.ExtensionTypeEnum.ExtensionType.CALL,
-      extensions: [
-        {
-          call_feed_item: {
-            phone_number: phoneNumber,
-            country_code: 'US', // غيّر رمز الدولة حسب الحاجة
-            call_conversion_reporting_state:
-              google.ads.googleads.v17.enums.CallConversionReportingStateEnum.CallConversionReportingState.USE_ACCOUNT_LEVEL_CALL_CONVERSION_ACTION,
-          },
-        },
-      ],
-    };
+  //   // إعداد بيانات الـ Call Extension
+  //   const callExtension: any = {
+  //     campaign: campaignResourceName,
+  //     extension_type: google.ads.googleads.v17.enums.ExtensionTypeEnum.ExtensionType.CALL,
+  //     extensions: [
+  //       {
+  //         call_feed_item: {
+  //           phone_number: phoneNumber,
+  //           country_code: 'US', // غيّر رمز الدولة حسب الحاجة
+  //           call_conversion_reporting_state:
+  //             google.ads.googleads.v17.enums.CallConversionReportingStateEnum.CallConversionReportingState.USE_ACCOUNT_LEVEL_CALL_CONVERSION_ACTION,
+  //         },
+  //       },
+  //     ],
+  //   };
 
-    try {
-      // استخدام دالة `create` لإضافة الـ Extension
-      const response = await this.googleAdsClient.campaignExtensionSettings.create([callExtension]);
+  //   try {
+  //     // استخدام دالة `create` لإضافة الـ Extension
+  //     const response = await this.googleAdsClient.campaignExtensionSettings.create([callExtension]);
 
-      console.log('Call extension added successfully:', response);
-    } catch (error) {
-      console.error('Failed to add call extension:', error);
-      throw error;
-    }
-  }
+  //     console.log('Call extension added successfully:', response);
+  //   } catch (error) {
+  //     console.error('Failed to add call extension:', error);
+  //     throw error;
+  //   }
+  // }
 
   private async addGeoTargeting(campaignResourceName: string): Promise<void> {
     console.log('Adding geo-targeting to campaign:', campaignResourceName);
