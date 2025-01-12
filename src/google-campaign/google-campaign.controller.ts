@@ -1,112 +1,89 @@
 /* eslint-disable prettier/prettier */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import {
-  Controller,
-  Post,
-  Body,
-  HttpException,
-  HttpStatus,
-  Request,
-} from '@nestjs/common';
+import { Controller, Post, Body, HttpException, HttpStatus, Get, Query } from '@nestjs/common';
 import { GoogleCampaignService } from './google-campaign.service';
+
 @Controller('google-campaign')
 export class GoogleCampaignController {
-  constructor(private readonly campaignService: GoogleCampaignService) {}
+  constructor(private readonly googleCampaignService: GoogleCampaignService) { }
 
-  // Route to create a campaign
-  @Post('create')
-  async createCampaign(@Request() req, @Body() body: any) {
-    const { name, budgetAmountMicros, startDate, endDate } = body;
-    console.log(req.user);
-    if (!name || !budgetAmountMicros || !startDate || !endDate) {
-      throw new HttpException(
-        'Missing required fields',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+  @Post('create-search-ad')
+  async createSearchAd(@Body() body: any) {
     try {
-      const formatedStrtDate = new Date(startDate).toISOString().split('T')[0];
-      const formatedEndDate = new Date(endDate).toISOString().split('T')[0];
-      const budgetAmount = budgetAmountMicros * 1_000_000;
-      const result = await this.campaignService.createCampaign(
-        name,
-        budgetAmount,
-        formatedStrtDate,
-        formatedEndDate,
-      );
+      // Validate budget amount
+      if (!body.budgetAmount || body.budgetAmount <= 0) {
+        throw new HttpException(
+          'Invalid budget amount. Please provide a valid value greater than 0.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      const response = await this.googleCampaignService.createFullSearchAd({
+        campaignName: body.campaignName,
+        budgetAmount: body.budgetAmount,
+        startDate: body.startDate,
+        endDate: body.endDate,
+        headlines: body.headlines,
+        descriptions: body.descriptions,
+        finalUrl: body.finalUrl,
+        path1: body.path1,
+        path2: body.path2,
+        sitelinks: body.sitelinks,
+        callouts: body.callouts,
+        phoneNumbers: body.phoneNumbers,
+        location: body.location,
+        promotions: body.promotions,
+        ageRanges: body.ageRanges, // Added ageRanges
+        languages: body.languages,
+        keywords: body.keywords,
+        genders: body.gender
+      });
+
       return {
-        message: 'Campaign created successfully',
-        data: result,
+        message: 'Search Ad created successfully',
+        data: response,
       };
     } catch (error) {
-      throw new HttpException(
-        error.response || 'Failed to create campaign',
-        HttpStatus.BAD_REQUEST,
-      );
+
+      throw error
     }
   }
 
-  // Route to verify the user's ID token
-  @Post('verify-token')
-  async verifyToken(@Body() body: any) {
-    const { idToken } = body;
-
-    if (!idToken) {
-      throw new HttpException('ID token is required', HttpStatus.BAD_REQUEST);
-    }
+  @Get('available-locations') async getAvailableLocations(
+    @Query('keyword') keyword: string,
+  ) {
 
     try {
-      const result = await this.campaignService.verifyIdToken(idToken);
+      const locations = await this.googleCampaignService.getAvailableLocations(keyword);
       return {
-        message: 'ID token verified successfully',
-        data: result,
+        message: 'Available locations fetched successfully',
+        data: locations,
       };
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(
-        error.errors || 'Failed to verify ID token',
+        { message: 'Failed to fetch available locations', error: error?.errors || error?.message || 'Unknown error', }, HttpStatus.INTERNAL_SERVER_ERROR,);
+    }
+  }
+  @Post('keyword-suggestions')
+  async getKeywordSuggestions(
+    @Body('keyword') keyword: string,
+    @Body('geo_target_constants') geoTargetConstants: string[],
+  ) {
+    try {
+      const suggestions = await this.googleCampaignService.getKeywordSuggestions(keyword, geoTargetConstants);
+      return {
+        message: 'Keyword suggestions fetched successfully',
+        data: suggestions,
+      };
+    } catch (error: any) {
+      throw new HttpException(
+        {
+          message: 'Failed to fetch keyword suggestions',
+          error: error?.errors || error?.message || 'Unknown error',
+        },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
-  // Route to get a campaign report
-  @Post('report')
-  async getCampaignReport(@Body() body: any) {
-    // const { customerId, refreshToken, campaignResourceName } = body;
-    const { campaignResourceName } = body;
 
-    // if (!customerId || !refreshToken || !campaignResourceName) {
-    //   throw new HttpException(
-    //     'Missing required fields in the body',
-    //     HttpStatus.BAD_REQUEST,
-    //   );
-    // }
-    console.log(body);
-    console.log(campaignResourceName);
-    if (!campaignResourceName) {
-      throw new HttpException(
-        'Missing required fields in the body',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    try {
-      const report = await this.campaignService.getCampaignReport(
-        // customerId,
-        // refreshToken,
-        campaignResourceName,
-      );
-      return {
-        message: 'Campaign report retrieved successfully',
-        data: report,
-      };
-    } catch (error) {
-      throw new HttpException(
-        JSON.stringify(error, null, 2) || 'Failed to fetch campaign report',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
 }
-
-//cbAewMdJOXHk2czr

@@ -41,21 +41,13 @@ export class WebhookController {
 
       if (event.type === 'payment_intent.succeeded') {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
-        // this.orderService.updateOrderStatus(
-        //   paymentIntent.metadata.orderId,
-        //   'approved',
-        // );
-
-        // this.orderGateway.notifyWalletStatus(
-        //   paymentIntent.metadata.orderId,
-        // );
         this.walletService.updateWalletAmountByUserStripeId(
-          paymentIntent.metadata.customer,
-          paymentIntent.amount,
+          paymentIntent.customer.toString(),
+          paymentIntent.amount / 100,
         );
 
         this.logger.log(
-          `Order ${paymentIntent.metadata.orderId} approved successfully.`,
+          `Order ${paymentIntent.customer} approved successfully.`,
         );
       }
 
@@ -75,13 +67,12 @@ export class WebhookController {
         );
         //  this.stripeService.refundPayment(paymentIntent.id, updatedOrder.amount);
 
-        this.logger.warn(
-          `Order ${paymentIntent.metadata.orderId} rejected and refunded.`,
-        );
+        // this.logger.warn(
+        //   `Order ${paymentIntent.metadata.orderId} rejected and refunded.`,
+        // );
       }
       return { received: true };
     } catch (err) {
-      console.error('Error processing webhook event', err);
       return { error: 'Webhook error' };
     }
   }

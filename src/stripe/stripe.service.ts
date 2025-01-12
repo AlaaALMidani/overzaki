@@ -18,7 +18,7 @@ export class StripeService {
   async createPaymentIntent(
     amount: number,
     currency: string,
-    metadata?: any,
+    customer: string,
   ): Promise<Stripe.Response<Stripe.PaymentIntent>> {
     if (!amount || !currency) {
       throw new Error(
@@ -29,7 +29,7 @@ export class StripeService {
       const paymentIntent = await this.stripe.paymentIntents.create({
         amount: amount * 100,
         currency,
-        metadata,
+        customer,
         payment_method_types: ['card'],
       });
       return paymentIntent;
@@ -42,7 +42,7 @@ export class StripeService {
   async refundPayment(paymentIntentId: string, amount?: number) {
     return await this.stripe.refunds.create({
       payment_intent: paymentIntentId,
-      amount: amount ? amount * 100 : undefined,
+      amount: amount ? amount : undefined,
     });
   }
   public constructEvent(payload: any, signature: string) {

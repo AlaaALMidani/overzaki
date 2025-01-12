@@ -78,7 +78,8 @@ export class AuthService {
     const wallet = await this.walletService.getWalletByUserId(user._doc._id)
 
     console.log(wallet)
-    const payload = { email: user._doc.email, id: user._doc._id, stripeId: user._doc.stripeUserId,walletId: wallet._id};
+    const payload = { email: user._doc.email, id: user._doc._id, stripeId: user._doc.stripeUserId, walletId: wallet._id};
+   console.log(payload)
     return {
       fullname: user._doc.fullname,
       accessToken: this.jwtService.sign(payload),

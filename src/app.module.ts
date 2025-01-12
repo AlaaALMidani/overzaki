@@ -1,6 +1,12 @@
 // eslint-disable-next-line prettier/prettier
-import { MiddlewareConsumer, Module, OnModuleInit, RequestMethod } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  OnModuleInit,
+  RequestMethod,
+} from '@nestjs/common';
 import { AppController } from './app.controller';
+
 import { AppService } from './app.service';
 import { GoogleCampaignModule } from './google-campaign/google-campaign.module';
 import { TiktokCampaignModule } from './tiktok-campaign/tiktok-campaign.module';
@@ -20,6 +26,7 @@ import { JwtModule } from '@nestjs/jwt'; // Import JwtModule
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+
     MongooseModule.forRoot(process.env.MONGO_URI),
     GoogleCampaignModule,
     TiktokCampaignModule,
@@ -45,6 +52,7 @@ export class AppModule implements OnModuleInit {
         { path: 'user/orders', method: RequestMethod.GET },
         { path: 'google-campaign/create', method: RequestMethod.POST },
         { path: 'tiktok-campaign/FeedAd', method: RequestMethod.POST },
+        { path: 'tiktok-campaign/SparkAd', method: RequestMethod.POST },
         { path: 'user/orders/deposit', method: RequestMethod.POST },
       );
   }
