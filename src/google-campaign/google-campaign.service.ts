@@ -221,16 +221,16 @@ export class GoogleCampaignService {
         enums.GenderType.FEMALE,
         enums.GenderType.UNDETERMINED,
       ];
-  
+
       const operations = genders.map(gender => ({
         create: {
           campaign: campaignResourceName,
           gender: gender,
         } as ICampaignCriterion,
       }));
-  
+
       await this.googleAdsClient.campaignCriteria.create(operations);
-  
+
       console.log('Gender targeting added:', genders);
     } catch (error: any) {
       console.error('Error adding gender targeting:', error);
@@ -244,7 +244,7 @@ export class GoogleCampaignService {
       );
     }
   }
-  
+
   private async addKeywordsToAdGroup(adGroupResourceName: string, keywords: {
     keyword: string;
     type: string;
@@ -386,7 +386,7 @@ export class GoogleCampaignService {
   }
 
 
-  async getKeywordSuggestions(keyword: string , locations:string[]): Promise<any> {
+  async getKeywordSuggestions(keyword: string, locations: string[]): Promise<any> {
     try {
       const response = await this.googleAdsClient.keywordPlanIdeas.generateKeywordIdeas({
         customer_id: process.env.GOOGLE_ADS_CUSTOMER_ID,
@@ -397,22 +397,21 @@ export class GoogleCampaignService {
         geo_target_constants: locations,
         include_adult_keywords: false,
         page_token: '',
-        page_size: 3, 
+        page_size: 3,
         keyword_annotation: [],
         toJSON: function (): { [k: string]: any; } {
           throw new Error('Function not implemented.');
         }
-      });
+      }); 
       console.log(response)
       const formattedResponse = response.map((item: any) => ({
         text: item.text,
         competition: item.keyword_idea_metrics?.competition || null,
         avg_monthly_searches: item.keyword_idea_metrics?.avg_monthly_searches || null,
       }));
-   
-      return {
-         formattedResponse,
-      };
+
+      return formattedResponse ;
+ 
     } catch (error: any) {
       console.error('Error fetching keyword suggestions:', error);
       this.logger.error('Error fetching keyword suggestions:', error);
@@ -425,8 +424,8 @@ export class GoogleCampaignService {
       );
     }
   }
-  
-  
+
+
   private async addLanguageTargeting(campaignResourceName: string, languages: any[]) {
     console.log('Adding language targeting...');
 
