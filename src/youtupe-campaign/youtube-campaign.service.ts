@@ -711,12 +711,6 @@ export class YouTubeCampaignService {
       advertising_channel_type: 'VIDEO',
       campaign_budget: budgetResourceName,  
       bidding_strategy: biddingStrategy,
-      network_settings: {
-        target_google_search: false,
-        target_search_network: false,
-        target_youtube_search: false,
-        target_youtube_watch: true,
-      },
     };
 
     console.log(payload);
