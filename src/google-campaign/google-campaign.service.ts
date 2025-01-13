@@ -383,8 +383,6 @@ export class GoogleCampaignService {
       );
     }
   }
-
-
   async getKeywordSuggestions(keyword: string, locations: string[]): Promise<any> {
     try {
       const response = await this.googleAdsClient.keywordPlanIdeas.generateKeywordIdeas({
@@ -423,9 +421,6 @@ export class GoogleCampaignService {
       );
     }
   }
-
-
-
   private async addLanguageTargeting(campaignResourceName: string, languages: any[]) {
     console.log('Adding language targeting...');
 
