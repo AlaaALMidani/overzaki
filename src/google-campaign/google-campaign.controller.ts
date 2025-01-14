@@ -30,7 +30,7 @@ export class GoogleCampaignController {
         sitelinks: body.sitelinks,
         callouts: body.callouts,
         phoneNumbers: body.phoneNumbers,
-        location: body.location,
+        locations: body.locations,
         promotions: body.promotions,
         ageRanges: body.ageRanges, // Added ageRanges
         languages: body.languages,

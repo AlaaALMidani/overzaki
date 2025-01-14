@@ -44,12 +44,7 @@ export class GoogleCampaignService {
     sitelinks?: { text: string; finalUrl: string }[];
     callouts?: string[];
     phoneNumbers?: string[];
-    location?: {
-      streetAddress: string;
-      city: string;
-      country: string;
-      postalCode: string;
-    };
+    locations?:string[]
     promotions?: { discount: string; finalUrl: string }[];
     ageRanges?: string[];
     languages?: any[];
@@ -70,6 +65,7 @@ export class GoogleCampaignService {
         path2 = '',
         ageRanges,
        // genders = [],
+       locations=[],
         languages = [],
         keywords,
       } = params;
@@ -81,13 +77,13 @@ export class GoogleCampaignService {
       console.log('Campaign created:', campaignResourceName);
 
       //await this.addCallExtension(campaignResourceName, params.phoneNumbers?.[0]);
-      await this.addGeoTargeting(campaignResourceName);
+      await this.addGeoTargeting(campaignResourceName , locations);
       if (languages.length) {
         await this.addLanguageTargeting(campaignResourceName, languages);
       }
-      if (ageRanges.length) {
-        await this.addAgeTargeting(campaignResourceName);
-      }
+      // if (ageRanges.length) {
+      //   await this.addAgeTargeting(campaignResourceName);
+      // }
       const adGroupResourceName = await this.createAdGroup(campaignName, campaignResourceName);
       await this.addKeywordsToAdGroup(adGroupResourceName, keywords)
 
@@ -562,17 +558,14 @@ export class GoogleCampaignService {
   //   }
   // }
 
-  private async addGeoTargeting(campaignResourceName: string): Promise<void> {
+  private async addGeoTargeting(campaignResourceName: string,locations:string []): Promise<void> {
     console.log('Adding geo-targeting to campaign:', campaignResourceName);
 
-    // Static list of country location IDs
-    const countryLocationIds = ['1010543', '2484', '2036']; // Netherlands, Canada, Australia
-
     // Prepare the campaign criteria
-    const campaignCriteria = countryLocationIds.map((locationId) => ({
+    const campaignCriteria = locations.map((location) => ({
       campaign: campaignResourceName,
       type: enums.CriterionType.LOCATION,
-      location: { geo_target_constant: ResourceNames.geoTargetConstant(locationId) }, // Ensure location is an object
+      location: { geo_target_constant: location}, // Ensure location is an object
       status: enums.CampaignCriterionStatus.ENABLED,
     }));
 
