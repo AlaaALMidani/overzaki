@@ -1,0 +1,540 @@
+[
+    {
+        "name_en": "Bahrain",
+        "name_ar": "البحرين",
+        "geoTargetConstantId": "geoTargetConstants/2048",
+        "regions": [
+            {
+                "name_en": "Southern Governorate",
+                "name_ar": "المحافظة الجنوبية",
+                "geoTargetConstantId": "geoTargetConstants/9069829"
+            },
+            {
+                "name_en": "Capital Governorate",
+                "name_ar": "محافظة العاصمة",
+                "geoTargetConstantId": "geoTargetConstants/9069830"
+            },
+            {
+                "name_en": "Northern Governorate",
+                "name_ar": "المحافظة الشمالية",
+                "geoTargetConstantId": "geoTargetConstants/9069831"
+            },
+            {
+                "name_en": "Muharraq Governorate",
+                "name_ar": "محافظة المحرق",
+                "geoTargetConstantId": "geoTargetConstants/9069832"
+            },
+            {
+                "name_en": "Central Governorate",
+                "name_ar": "المحافظة الوسطى",
+                "geoTargetConstantId": "geoTargetConstants/9069833"
+            }
+        ]
+    },
+    {
+        "name_en": "Jordan",
+        "name_ar": "الأردن",
+        "geoTargetConstantId": "geoTargetConstants/2400",
+        "regions": [
+            {
+                "name_en": "Jerash Governorate",
+                "name_ar": "محافظة جرش",
+                "geoTargetConstantId": "geoTargetConstants/9069817"
+            },
+            {
+                "name_en": "Amman Governorate",
+                "name_ar": "محافظة عمان",
+                "geoTargetConstantId": "geoTargetConstants/9069818"
+            },
+            {
+                "name_en": "Balqa Governorate",
+                "name_ar": "محافظة البلقاء",
+                "geoTargetConstantId": "geoTargetConstants/9069819"
+            },
+            {
+                "name_en": "Karak Governorate",
+                "name_ar": "محافظة الكرك",
+                "geoTargetConstantId": "geoTargetConstants/9069820"
+            },
+            {
+                "name_en": "Tafilah Governorate",
+                "name_ar": "محافظة الطفيلة",
+                "geoTargetConstantId": "geoTargetConstants/9069821"
+            },
+            {
+                "name_en": "Zarqa Governorate",
+                "name_ar": "محافظة الزرقاء",
+                "geoTargetConstantId": "geoTargetConstants/9069822"
+            },
+            {
+                "name_en": "Irbid Governorate",
+                "name_ar": "محافظة إربد",
+                "geoTargetConstantId": "geoTargetConstants/9069823"
+            },
+            {
+                "name_en": "Ajloun Governorate",
+                "name_ar": "محافظة عجلون",
+                "geoTargetConstantId": "geoTargetConstants/9069824"
+            },
+            {
+                "name_en": "Aqaba Governorate",
+                "name_ar": "محافظة العقبة",
+                "geoTargetConstantId": "geoTargetConstants/9069825"
+            },
+            {
+                "name_en": "Ma'an Governorate",
+                "name_ar": "محافظة معان",
+                "geoTargetConstantId": "geoTargetConstants/9069826"
+            },
+            {
+                "name_en": "Mafraq Governorate",
+                "name_ar": "محافظة المفرق",
+                "geoTargetConstantId": "geoTargetConstants/9069827"
+            },
+            {
+                "name_en": "Madaba Governorate",
+                "name_ar": "محافظة مادبا",
+                "geoTargetConstantId": "geoTargetConstants/9069828"
+            }
+        ]
+    },
+    {
+        "name_en": "Saudi Arabia",
+        "name_ar": "المملكة العربية السعودية",
+        "geoTargetConstantId": "geoTargetConstants/2682",
+        "regions": [
+            {
+                "name_en": "Riyadh Province",
+                "name_ar": "منطقة الرياض",
+                "geoTargetConstantId": "geoTargetConstants/20987"
+            },
+            {
+                "name_en": "Makkah Province",
+                "name_ar": "منطقة مكة",
+                "geoTargetConstantId": "geoTargetConstants/20988"
+            },
+            {
+                "name_en": "Eastern Province",
+                "name_ar": "المنطقة الشرقية",
+                "geoTargetConstantId": "geoTargetConstants/20989"
+            },
+            {
+                "name_en": "Al Madinah Province",
+                "name_ar": "منطقة المدينة المنورة",
+                "geoTargetConstantId": "geoTargetConstants/21448"
+            },
+            {
+                "name_en": "Al Qassim Province",
+                "name_ar": "منطقة القصيم",
+                "geoTargetConstantId": "geoTargetConstants/21449"
+            },
+            {
+                "name_en": "Hail Province",
+                "name_ar": "منطقة حائل",
+                "geoTargetConstantId": "geoTargetConstants/21450"
+            },
+            {
+                "name_en": "Tabuk Province",
+                "name_ar": "منطقة تبوك",
+                "geoTargetConstantId": "geoTargetConstants/21451"
+            },
+            {
+                "name_en": "Northern Borders Province",
+                "name_ar": "منطقة الحدود الشمالية",
+                "geoTargetConstantId": "geoTargetConstants/21452"
+            },
+            {
+                "name_en": "Jazan Province",
+                "name_ar": "منطقة جازان",
+                "geoTargetConstantId": "geoTargetConstants/21453"
+            },
+            {
+                "name_en": "Najran Province",
+                "name_ar": "منطقة نجران",
+                "geoTargetConstantId": "geoTargetConstants/21454"
+            },
+            {
+                "name_en": "Al Bahah Province",
+                "name_ar": "منطقة الباحة",
+                "geoTargetConstantId": "geoTargetConstants/21455"
+            },
+            {
+                "name_en": "Al Jowf Province",
+                "name_ar": "منطقة الجوف",
+                "geoTargetConstantId": "geoTargetConstants/21456"
+            },
+            {
+                "name_en": "Aseer Province",
+                "name_ar": "منطقة عسير",
+                "geoTargetConstantId": "geoTargetConstants/21457"
+            }
+        ]
+    },
+    {
+        "name_en": "Iraq",
+        "name_ar": "العراق",
+        "geoTargetConstantId": "geoTargetConstants/2368",
+        "regions": [
+            {
+                "name_en": "Al Muthanna Governorate",
+                "name_ar": "محافظة المثنى",
+                "geoTargetConstantId": "geoTargetConstants/9069850"
+            },
+            {
+                "name_en": "Babylon Governorate",
+                "name_ar": "محافظة بابل",
+                "geoTargetConstantId": "geoTargetConstants/9069851"
+            },
+            {
+                "name_en": "Erbil Governorate",
+                "name_ar": "محافظة أربيل",
+                "geoTargetConstantId": "geoTargetConstants/9069852"
+            },
+            {
+                "name_en": "Baghdad Governorate",
+                "name_ar": "محافظة بغداد",
+                "geoTargetConstantId": "geoTargetConstants/9069853"
+            },
+            {
+                "name_en": "Maysan Governorate",
+                "name_ar": "محافظة ميسان",
+                "geoTargetConstantId": "geoTargetConstants/9069854"
+            },
+            {
+                "name_en": "Karbala Governorate",
+                "name_ar": "محافظة كربلاء",
+                "geoTargetConstantId": "geoTargetConstants/9069855"
+            },
+            {
+                "name_en": "Diyala Governorate",
+                "name_ar": "محافظة ديالى",
+                "geoTargetConstantId": "geoTargetConstants/9069856"
+            },
+            {
+                "name_en": "Al Anbar Governorate",
+                "name_ar": "محافظة الأنبار",
+                "geoTargetConstantId": "geoTargetConstants/9069857"
+            },
+            {
+                "name_en": "Basra Governorate",
+                "name_ar": "محافظة البصرة",
+                "geoTargetConstantId": "geoTargetConstants/9069858"
+            },
+            {
+                "name_en": "Al-Qadisiyyah Governorate",
+                "name_ar": "محافظة القادسية",
+                "geoTargetConstantId": "geoTargetConstants/9069859"
+            },
+            {
+                "name_en": "Saladin Governorate",
+                "name_ar": "محافظة صلاح الدين",
+                "geoTargetConstantId": "geoTargetConstants/9069860"
+            },
+            {
+                "name_en": "Nineveh Governorate",
+                "name_ar": "محافظة نينوى",
+                "geoTargetConstantId": "geoTargetConstants/9069861"
+            },
+            {
+                "name_en": "Najaf Governorate",
+                "name_ar": "محافظة النجف",
+                "geoTargetConstantId": "geoTargetConstants/9069862"
+            },
+            {
+                "name_en": "Kirkuk Governorate",
+                "name_ar": "محافظة كركوك",
+                "geoTargetConstantId": "geoTargetConstants/9069863"
+            },
+            {
+                "name_en": "Duhok Governorate",
+                "name_ar": "محافظة دهوك",
+                "geoTargetConstantId": "geoTargetConstants/9069864"
+            },
+            {
+                "name_en": "Sulaymaniyah Governorate",
+                "name_ar": "محافظة السليمانية",
+                "geoTargetConstantId": "geoTargetConstants/9069865"
+            },
+            {
+                "name_en": "Dhi Qar Governorate",
+                "name_ar": "محافظة ذي قار",
+                "geoTargetConstantId": "geoTargetConstants/9069866"
+            },
+            {
+                "name_en": "Wasit Governorate",
+                "name_ar": "محافظة واسط",
+                "geoTargetConstantId": "geoTargetConstants/9069867"
+            }
+        ]
+    },
+    {
+        "name_en": "Egypt",
+        "name_ar": "مصر",
+        "geoTargetConstantId": "geoTargetConstants/2818",
+        "regions": [
+            {
+                "name_en": "Dakahlia Governorate",
+                "name_ar": "محافظة الدقهلية",
+                "geoTargetConstantId": "geoTargetConstants/21458"
+            },
+            {
+                "name_en": "Red Sea Governorate",
+                "name_ar": "محافظة البحر الأحمر",
+                "geoTargetConstantId": "geoTargetConstants/21459"
+            },
+            {
+                "name_en": "Beheira Governorate",
+                "name_ar": "محافظة البحيرة",
+                "geoTargetConstantId": "geoTargetConstants/21460"
+            },
+            {
+                "name_en": "Faiyum Governorate",
+                "name_ar": "محافظة الفيوم",
+                "geoTargetConstantId": "geoTargetConstants/21461"
+            },
+            {
+                "name_en": "Gharbia Governorate",
+                "name_ar": "محافظة الغربية",
+                "geoTargetConstantId": "geoTargetConstants/21462"
+            },
+            {
+                "name_en": "Alexandria Governorate",
+                "name_ar": "محافظة الإسكندرية",
+                "geoTargetConstantId": "geoTargetConstants/21463"
+            },
+            {
+                "name_en": "Ismailia Governorate",
+                "name_ar": "محافظة الإسماعيلية",
+                "geoTargetConstantId": "geoTargetConstants/21464"
+            },
+            {
+                "name_en": "Giza Governorate",
+                "name_ar": "محافظة الجيزة",
+                "geoTargetConstantId": "geoTargetConstants/21465"
+            },
+            {
+                "name_en": "Menofia Governorate",
+                "name_ar": "محافظة المنوفية",
+                "geoTargetConstantId": "geoTargetConstants/21466"
+            },
+            {
+                "name_en": "Minya Governorate",
+                "name_ar": "محافظة المنيا",
+                "geoTargetConstantId": "geoTargetConstants/21467"
+            },
+            {
+                "name_en": "Cairo Governorate",
+                "name_ar": "محافظة القاهرة",
+                "geoTargetConstantId": "geoTargetConstants/21468"
+            },
+            {
+                "name_en": "Al-Qalyubia Governorate",
+                "name_ar": "محافظة القليوبية",
+                "geoTargetConstantId": "geoTargetConstants/21469"
+            },
+            {
+                "name_en": "Luxor Governorate",
+                "name_ar": "محافظة الأقصر",
+                "geoTargetConstantId": "geoTargetConstants/21470"
+            },
+            {
+                "name_en": "The New Valley Governorate",
+                "name_ar": "محافظة الوادي الجديد",
+                "geoTargetConstantId": "geoTargetConstants/21472"
+            },
+            {
+                "name_en": "Suez Governorate",
+                "name_ar": "محافظة السويس",
+                "geoTargetConstantId": "geoTargetConstants/21473"
+            },
+            {
+                "name_en": "Al-Sharqia Governorate",
+                "name_ar": "محافظة الشرقية",
+                "geoTargetConstantId": "geoTargetConstants/21474"
+            },
+            {
+                "name_en": "Aswan Governorate",
+                "name_ar": "محافظة أسوان",
+                "geoTargetConstantId": "geoTargetConstants/21475"
+            },
+            {
+                "name_en": "Assiut Governorate",
+                "name_ar": "محافظة أسيوط",
+                "geoTargetConstantId": "geoTargetConstants/21476"
+            },
+            {
+                "name_en": "Beni Suef Governorate",
+                "name_ar": "محافظة بني سويف",
+                "geoTargetConstantId": "geoTargetConstants/21477"
+            },
+            {
+                "name_en": "Port Said Governorate",
+                "name_ar": "محافظة بورسعيد",
+                "geoTargetConstantId": "geoTargetConstants/21478"
+            },
+            {
+                "name_en": "Damietta Governorate",
+                "name_ar": "محافظة دمياط",
+                "geoTargetConstantId": "geoTargetConstants/21479"
+            },
+            {
+                "name_en": "South Sinai Governorate",
+                "name_ar": "محافظة جنوب سيناء",
+                "geoTargetConstantId": "geoTargetConstants/21480"
+            },
+            {
+                "name_en": "Kafr El-Sheikh Governorate",
+                "name_ar": "محافظة كفر الشيخ",
+                "geoTargetConstantId": "geoTargetConstants/21481"
+            },
+            {
+                "name_en": "Marsa Matrouh Governorate",
+                "name_ar": "محافظة مطروح",
+                "geoTargetConstantId": "geoTargetConstants/21482"
+            },
+            {
+                "name_en": "Qena Governorate",
+                "name_ar": "محافظة قنا",
+                "geoTargetConstantId": "geoTargetConstants/21483"
+            },
+            {
+                "name_en": "North Sinai Governorate",
+                "name_ar": "محافظة شمال سيناء",
+                "geoTargetConstantId": "geoTargetConstants/21484"
+            },
+            {
+                "name_en": "Sohag Governorate",
+                "name_ar": "محافظة سوهاج",
+                "geoTargetConstantId": "geoTargetConstants/21485"
+            },
+            {
+                "name_en": "6th of October City",
+                "name_ar": "مدينة 6 أكتوبر",
+                "geoTargetConstantId": "geoTargetConstants/9048953"
+            },
+            {
+                "name_en": "Mahallet Hassan",
+                "name_ar": "محلة حسن",
+                "geoTargetConstantId": "geoTargetConstants/9048954"
+            },
+            {
+                "name_en": "New Cairo City",
+                "name_ar": "مدينة القاهرة الجديدة",
+                "geoTargetConstantId": "geoTargetConstants/9048955"
+            },
+            {
+                "name_en": "10th of Ramadan City",
+                "name_ar": "مدينة العاشر من رمضان",
+                "geoTargetConstantId": "geoTargetConstants/9073634"
+            },
+            {
+                "name_en": "El-Mahalla El-Kubra",
+                "name_ar": "المحلة الكبرى",
+                "geoTargetConstantId": "geoTargetConstants/9073635"
+            },
+            {
+                "name_en": "Al Sananiyah",
+                "name_ar": "السّنانية",
+                "geoTargetConstantId": "geoTargetConstants/9073636"
+            },
+            {
+                "name_en": "Al naamnah",
+                "name_ar": "النعامنة",
+                "geoTargetConstantId": "geoTargetConstants/9073637"
+            },
+            {
+                "name_en": "Arab El-Raml",
+                "name_ar": "العرب الرمل",
+                "geoTargetConstantId": "geoTargetConstants/9073638"
+            },
+            {
+                "name_en": "Badr City",
+                "name_ar": "مدينة بدر",
+                "geoTargetConstantId": "geoTargetConstants/9073639"
+            },
+            {
+                "name_en": "Desouk",
+                "name_ar": "دسوق",
+                "geoTargetConstantId": "geoTargetConstants/9073640"
+            },
+            {
+                "name_en": "Al Obour City",
+                "name_ar": "مدينة العبور",
+                "geoTargetConstantId": "geoTargetConstants/9073641"
+            },
+            {
+                "name_en": "El Sadat City",
+                "name_ar": "مدينة السادات",
+                "geoTargetConstantId": "geoTargetConstants/9073642"
+            },
+            {
+                "name_en": "Al Shorouk City",
+                "name_ar": "مدينة الشروق",
+                "geoTargetConstantId": "geoTargetConstants/9073643"
+            },
+            {
+                "name_en": "El-Senbellawein",
+                "name_ar": "السنبلوين",
+                "geoTargetConstantId": "geoTargetConstants/9073644"
+            },
+            {
+                "name_en": "Girga",
+                "name_ar": "جرجا",
+                "geoTargetConstantId": "geoTargetConstants/9073645"
+            },
+            {
+                "name_en": "Itay Al Barud",
+                "name_ar": "إيتاي البارود",
+                "geoTargetConstantId": "geoTargetConstants/9073646"
+            },
+            {
+                "name_en": "Madinaty",
+                "name_ar": "مدينتي",
+                "geoTargetConstantId": "geoTargetConstants/9073647"
+            },
+            {
+                "name_en": "Monshaat El-Salam",
+                "name_ar": "منشأة السلام",
+                "geoTargetConstantId": "geoTargetConstants/9073648"
+            }
+        ]
+    },
+    {
+        "name_en": "Kuwait",
+        "name_ar": "الكويت",
+        "geoTargetConstantId": "geoTargetConstants/2414",
+        "regions": [
+          {
+            "name_en": "Al Farwaniyah Governorate",
+            "name_ar": "محافظة الفروانية",
+            "geoTargetConstantId": "geoTargetConstants/9069547"
+          },
+          {
+            "name_en": "Mubarak Al-Kabeer Governorate",
+            "name_ar": "محافظة مبارك الكبير",
+            "geoTargetConstantId": "geoTargetConstants/9069548"
+          },
+          {
+            "name_en": "Hawalli Governorate",
+            "name_ar": "محافظة حولي",
+            "geoTargetConstantId": "geoTargetConstants/9069549"
+          },
+          {
+            "name_en": "Al Ahmadi Governorate",
+            "name_ar": "محافظة الأحمدي",
+            "geoTargetConstantId": "geoTargetConstants/9069550"
+          },
+          {
+            "name_en": "Al Asimah Governate",
+            "name_ar": "محافظة العاصمة",
+            "geoTargetConstantId": "geoTargetConstants/9069551"
+          },
+          {
+            "name_en": "Al Jahra Governorate",
+            "name_ar": "محافظة الجهراء",
+            "geoTargetConstantId": "geoTargetConstants/9069552"
+          }
+        ]
+      }
+      
+]

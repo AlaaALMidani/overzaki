@@ -384,15 +384,17 @@ export class GoogleCampaignService {
     }
   }
   async getKeywordSuggestions(keyword: string, locations: string[]): Promise<any> {
+   console.log(locations)
     try {
       const response = await this.googleAdsClient.keywordPlanIdeas.generateKeywordIdeas({
         customer_id: process.env.GOOGLE_ADS_CUSTOMER_ID,
         keyword_plan_network: 'GOOGLE_SEARCH',
         keyword_seed: {
           keywords: [keyword],
-        },
+        },  
+        language:'languageConstants/1000',
         geo_target_constants: locations,
-        include_adult_keywords: false,
+        include_adult_keywords: false, 
         page_token: '',
         page_size: 3,
         keyword_annotation: [],
@@ -410,14 +412,13 @@ export class GoogleCampaignService {
 
       return formattedResponse ;
     } catch (error: any) {
-      console.error('Error fetching keyword suggestions:', error);
-      this.logger.error('Error fetching keyword suggestions:', error);
+      console.log('Error fetching keyword suggestions:', error);
       throw new HttpException(
         {
-          message: 'Failed to fetch keyword suggestions',
-          error: error?.errors || error?.message || 'Unknown error',
+          message: 'Failed to create ad group ad.',
+          details: error,
         },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        HttpStatus.BAD_REQUEST,
       );
     }
   }
@@ -429,7 +430,7 @@ export class GoogleCampaignService {
       campaign: campaignResourceName,
       type: 'LANGUAGE',
       language: {
-        language_constant: this.getLanguageId(language.language),
+        language_constant: this.getLanguageId(language),
       },
       status: 'ENABLED', // You must provide a status
     }));
@@ -585,5 +586,3 @@ export class GoogleCampaignService {
     }
   }
 }
-
-

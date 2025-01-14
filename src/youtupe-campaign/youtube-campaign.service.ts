@@ -603,7 +603,7 @@ export class YouTubeCampaignService {
       //const videoAssetResourceName = await this.createVideoAsset(name, videoId);
       const budgetResourceName = await this.createCampaignBudget(name, budgetAmountMicros);
       const biddingStrategy = await this.createBiddingStrategy(name, budgetAmountMicros)
-      const campaignResourceName = await this.createCampaign(name, budgetResourceName, startDate, endDate ,biddingStrategy);
+      const campaignResourceName = await this.createCampaign(name, budgetResourceName, startDate, endDate, biddingStrategy);
       const adGroupResourceName = await this.createAdGroup(name, campaignResourceName);
       const adResourceName = await this.createAdGroupAd(adGroupResourceName, 'customers/5522941096/assets/194392630367');
       console.log('=== YouTube campaign creation completed successfully ===');
@@ -651,26 +651,36 @@ export class YouTubeCampaignService {
     return resourceName;
   }
   private async createBiddingStrategy(name: string, amountMicros: number): Promise<string> {
-    console.log('Creating Target CPA bidding strategy...');
+    try {
+      console.log('Creating Target CPA bidding strategy...');
 
-    const response = await this.googleAdsClient.biddingStrategies.create([
-      {
-        name: `${name}_TargetCPA`,
-        type: 'TARGET_CPA',
-        target_cpa: {
-          target_cpa_micros: 1000000, // Example: 5.00 USD = 5000000 micros
+      const response = await this.googleAdsClient.biddingStrategies.create([
+        {
+          name: `${name}_TargetCPA`,
+          type: 'TARGET_CPA',
+          target_cpa: {
+            target_cpa_micros: 1000000, // Example: 5.00 USD = 5000000 micros
+          },
         },
-      },
-    ]);
+      ]);
 
-    const resourceName = response.results[0]?.resource_name;
+      const resourceName = response.results[0]?.resource_name;
 
-    if (!resourceName) {
-      throw new Error('Failed to create Target CPA bidding strategy.');
+      if (!resourceName) {
+        throw new Error('Failed to create Target CPA bidding strategy.');
+      }
+
+      console.log('Bidding strategy created:', resourceName);
+      return resourceName;
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: 'Failed to create campaign.',
+          details: error,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
     }
-
-    console.log('Bidding strategy created:', resourceName);
-    return resourceName;
   }
 
   private async createCampaignBudget(
@@ -709,7 +719,7 @@ export class YouTubeCampaignService {
       name,
       status: 'PAUSED',
       advertising_channel_type: 'VIDEO',
-      campaign_budget: budgetResourceName,  
+      campaign_budget: budgetResourceName,
       bidding_strategy: biddingStrategy,
     };
 
@@ -738,7 +748,7 @@ export class YouTubeCampaignService {
   private async createAdGroup(
     name: string,
     campaignResourceName: string,
- 
+
   ): Promise<string> {
     try {
       console.log('Creating ad group...');
@@ -774,7 +784,7 @@ export class YouTubeCampaignService {
   ): Promise<string> {
     try {
       console.log('Creating ad group ad...');
-  
+
       const response = await this.googleAdsClient.adGroupAds.create([
         {
           ad_group: adGroupResourceName,
@@ -796,12 +806,12 @@ export class YouTubeCampaignService {
           status: 'ENABLED',
         },
       ]);
-  
+
       const resourceName = response.results[0]?.resource_name;
       if (!resourceName) {
         throw new Error('Failed to create ad group ad.');
       }
-  
+
       console.log('Ad group ad created:', resourceName);
       return resourceName;
     } catch (error) {
@@ -814,7 +824,7 @@ export class YouTubeCampaignService {
       );
     }
   }
-  
+
   private handleGoogleAdsError(error: any): void {
     const errorDetails = error.errors?.map((err: any) => ({
       message: err.message,
