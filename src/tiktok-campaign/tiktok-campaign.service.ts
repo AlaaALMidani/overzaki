@@ -2,7 +2,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   BadRequestException,
-  ConsoleLogger,
   Injectable,
   Logger,
 } from '@nestjs/common';
