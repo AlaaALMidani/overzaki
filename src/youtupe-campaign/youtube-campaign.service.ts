@@ -600,11 +600,12 @@ export class YouTubeCampaignService {
   }> {
     try {
       console.log('=== Starting YouTube campaign creation process ===');
-      const videoAssetResourceName = await this.createVideoAsset(name, videoId);
+      //const videoAssetResourceName = await this.createVideoAsset(name, videoId);
       const budgetResourceName = await this.createCampaignBudget(name, budgetAmountMicros);
-      const campaignResourceName = await this.createCampaign(name, budgetResourceName, startDate, endDate);
+      const biddingStrategy = await this.createBiddingStrategy(name, budgetAmountMicros)
+      const campaignResourceName = await this.createCampaign(name, budgetResourceName, startDate, endDate, biddingStrategy);
       const adGroupResourceName = await this.createAdGroup(name, campaignResourceName);
-      const adResourceName = await this.createAdGroupAd(adGroupResourceName, videoAssetResourceName);
+      const adResourceName = await this.createAdGroupAd(adGroupResourceName, 'customers/5522941096/assets/194392630367');
       console.log('=== YouTube campaign creation completed successfully ===');
 
       return {
@@ -619,7 +620,6 @@ export class YouTubeCampaignService {
       //this.handleGoogleAdsError(error);
     }
   }
-
   private validateVideoId(videoId: string): string {
     if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
       throw new HttpException(
@@ -629,7 +629,6 @@ export class YouTubeCampaignService {
     }
     return videoId;
   }
-
   private async createVideoAsset(
     name: string,
     videoId: string,
@@ -644,13 +643,44 @@ export class YouTubeCampaignService {
         type: 'YOUTUBE_VIDEO',
       },
     ]);
-
     const resourceName = response.results[0]?.resource_name;
     if (!resourceName) {
       throw new Error('Failed to upload video asset.');
     }
     console.log('Video asset created:', resourceName);
     return resourceName;
+  }
+  private async createBiddingStrategy(name: string, amountMicros: number): Promise<string> {
+    try {
+      console.log('Creating Target CPA bidding strategy...');
+
+      const response = await this.googleAdsClient.biddingStrategies.create([
+        {
+          name: `${name}_TargetCPA`,
+          type: 'TARGET_CPA',
+          target_cpa: {
+            target_cpa_micros: 1000000, // Example: 5.00 USD = 5000000 micros
+          },
+        },
+      ]);
+
+      const resourceName = response.results[0]?.resource_name;
+
+      if (!resourceName) {
+        throw new Error('Failed to create Target CPA bidding strategy.');
+      }
+
+      console.log('Bidding strategy created:', resourceName);
+      return resourceName;
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: 'Failed to create campaign.',
+          details: error,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
   private async createCampaignBudget(
@@ -674,109 +704,125 @@ export class YouTubeCampaignService {
     console.log('Campaign budget created:', resourceName);
     return resourceName;
   }
-
-
-
   private async createCampaign(
     name: string,
     budgetResourceName: string,
     startDate: string,
     endDate: string,
+    biddingStrategy: string,
   ): Promise<string> {
+
     console.log('Creating campaign...');
-  
     const payload = {
       start_date: startDate,
       end_date: endDate,
       name,
       status: 'PAUSED',
       advertising_channel_type: 'VIDEO',
-      advertising_channel_sub_type: 'VIDEO_ACTION', // Correct subtype
       campaign_budget: budgetResourceName,
-      bidding_strategy: {
-        maximize_conversion_value: {}, // Recommended for Video Action campaigns
-      },
-      video_campaign: {
-        video_bidding_strategy: 'TARGET_CPA',
-      },
-      network_settings: {
-        target_google_search: false,
-        target_search_network: false,
-        target_youtube_search: false,
-        target_youtube_watch: true,
-      },
+      bidding_strategy: biddingStrategy,
     };
-  
+
+    console.log(payload);
     try {
-      const response = await this.googleAdsClient.campaigns.create((payload as any));
+      const response = await this.googleAdsClient.campaigns.create([(payload as any)]); // Wrap payload in an array
       const resourceName = response.results[0]?.resource_name;
-  
+      console.log(response);
       if (!resourceName) {
         throw new Error('Failed to create campaign.');
       }
-  
+
       console.log('Campaign created:', resourceName);
       return resourceName;
     } catch (error) {
-      console.log( JSON.stringify(error));
+      console.log(JSON.stringify(error));
       throw new HttpException(
         {
           message: 'Failed to create campaign.',
-          details: error.message,
+          details: error,
         },
         HttpStatus.BAD_REQUEST,
       );
     }
   }
-  
   private async createAdGroup(
     name: string,
     campaignResourceName: string,
+
   ): Promise<string> {
-    console.log('Creating ad group...');
-    const response = await this.googleAdsClient.adGroups.create([
-      {
-        name: `${name}_AdGroup`,
-        campaign: campaignResourceName,
-        status: 'ENABLED',
-        type: 'VIDEO_TRUE_VIEW_IN_STREAM',
-      },
-    ]);
+    try {
+      console.log('Creating ad group...');
+      const response = await this.googleAdsClient.adGroups.create([
+        {
+          name: `${name}_AdGroup`,
+          campaign: campaignResourceName,
+          type: 'VIDEO_TRUE_VIEW_IN_STREAM', // Use 'VIDEO' instead of 'VIDEO_TRUE_VIEW_IN_STREAM'
+          cpc_bid_micros: 1000000, // Optional: Set a bid amount (1 USD in micros)
+        },
+      ]);
 
-    const resourceName = response.results[0]?.resource_name;
-    if (!resourceName) {
-      throw new Error('Failed to create ad group.');
+      const resourceName = response.results[0]?.resource_name;
+      if (!resourceName) {
+        throw new Error('Failed to create ad group.');
+      }
+      console.log('Ad group created:', resourceName);
+      return resourceName;
     }
-    console.log('Ad group created:', resourceName);
-    return resourceName;
+    catch (error) {
+      throw new HttpException(
+        {
+          message: 'Failed to create campaign.',
+          details: error,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
-
   private async createAdGroupAd(
     adGroupResourceName: string,
     videoAssetResourceName: string,
   ): Promise<string> {
-    console.log('Creating ad group ad...');
-    const response = await this.googleAdsClient.adGroupAds.create([
-      {
-        ad_group: adGroupResourceName,
-        ad: {
-          video_ad: {
-            video: {
-              asset: videoAssetResourceName,
-            },
-            in_stream: {},
-          },
-        },
-        status: 'ENABLED',
-      },
-    ]);
+    try {
+      console.log('Creating ad group ad...');
 
-    const resourceName = response.results[0]?.resource_name;
-    if (!resourceName) {
-      throw new Error('Failed to create ad group ad.');
+      const response = await this.googleAdsClient.adGroupAds.create([
+        {
+          ad_group: adGroupResourceName,
+          ad: {
+            name: 'YouTube Video Ad',
+            final_urls: ['https://www.overzaki.com'], // Replace with your landing page URL
+            video_responsive_ad: {
+              headlines: [
+                { text: 'Check out this video!' },
+              ],
+              descriptions: [
+                { text: 'Learn more about our amazing product.' },
+              ],
+              videos: [
+                { asset: videoAssetResourceName },
+              ],
+            },
+          },
+          status: 'ENABLED',
+        },
+      ]);
+
+      const resourceName = response.results[0]?.resource_name;
+      if (!resourceName) {
+        throw new Error('Failed to create ad group ad.');
+      }
+
+      console.log('Ad group ad created:', resourceName);
+      return resourceName;
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: 'Failed to create ad group ad.',
+          details: error,
+        },
+        HttpStatus.BAD_REQUEST,
+      );
     }
-    console.log('Ad group ad created:', resourceName);
-    return resourceName;
   }
 
   private handleGoogleAdsError(error: any): void {

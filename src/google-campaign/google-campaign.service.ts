@@ -44,12 +44,7 @@ export class GoogleCampaignService {
     sitelinks?: { text: string; finalUrl: string }[];
     callouts?: string[];
     phoneNumbers?: string[];
-    location?: {
-      streetAddress: string;
-      city: string;
-      country: string;
-      postalCode: string;
-    };
+    locations?:string[]
     promotions?: { discount: string; finalUrl: string }[];
     ageRanges?: string[];
     languages?: any[];
@@ -70,6 +65,7 @@ export class GoogleCampaignService {
         path2 = '',
         ageRanges,
        // genders = [],
+       locations=[],
         languages = [],
         keywords,
       } = params;
@@ -81,13 +77,13 @@ export class GoogleCampaignService {
       console.log('Campaign created:', campaignResourceName);
 
       //await this.addCallExtension(campaignResourceName, params.phoneNumbers?.[0]);
-      await this.addGeoTargeting(campaignResourceName);
+      await this.addGeoTargeting(campaignResourceName , locations);
       if (languages.length) {
         await this.addLanguageTargeting(campaignResourceName, languages);
       }
-      if (ageRanges.length) {
-        await this.addAgeTargeting(campaignResourceName);
-      }
+      // if (ageRanges.length) {
+      //   await this.addAgeTargeting(campaignResourceName);
+      // }
       const adGroupResourceName = await this.createAdGroup(campaignName, campaignResourceName);
       await this.addKeywordsToAdGroup(adGroupResourceName, keywords)
 
@@ -383,18 +379,18 @@ export class GoogleCampaignService {
       );
     }
   }
-
-
   async getKeywordSuggestions(keyword: string, locations: string[]): Promise<any> {
+   console.log(locations)
     try {
       const response = await this.googleAdsClient.keywordPlanIdeas.generateKeywordIdeas({
         customer_id: process.env.GOOGLE_ADS_CUSTOMER_ID,
         keyword_plan_network: 'GOOGLE_SEARCH',
         keyword_seed: {
           keywords: [keyword],
-        },
+        },  
+        language:'languageConstants/1000',
         geo_target_constants: locations,
-        include_adult_keywords: false,
+        include_adult_keywords: false, 
         page_token: '',
         page_size: 3,
         keyword_annotation: [],
@@ -412,20 +408,16 @@ export class GoogleCampaignService {
 
       return formattedResponse ;
     } catch (error: any) {
-      console.error('Error fetching keyword suggestions:', error);
-      this.logger.error('Error fetching keyword suggestions:', error);
+      console.log('Error fetching keyword suggestions:', error);
       throw new HttpException(
         {
-          message: 'Failed to fetch keyword suggestions',
-          error: error?.errors || error?.message || 'Unknown error',
+          message: 'Failed to create ad group ad.',
+          details: error,
         },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        HttpStatus.BAD_REQUEST,
       );
     }
   }
-
-
-
   private async addLanguageTargeting(campaignResourceName: string, languages: any[]) {
     console.log('Adding language targeting...');
 
@@ -434,7 +426,7 @@ export class GoogleCampaignService {
       campaign: campaignResourceName,
       type: 'LANGUAGE',
       language: {
-        language_constant: this.getLanguageId(language.language),
+        language_constant: this.getLanguageId(language),
       },
       status: 'ENABLED', // You must provide a status
     }));
@@ -566,17 +558,14 @@ export class GoogleCampaignService {
   //   }
   // }
 
-  private async addGeoTargeting(campaignResourceName: string): Promise<void> {
+  private async addGeoTargeting(campaignResourceName: string,locations:string []): Promise<void> {
     console.log('Adding geo-targeting to campaign:', campaignResourceName);
 
-    // Static list of country location IDs
-    const countryLocationIds = ['1010543', '2484', '2036']; // Netherlands, Canada, Australia
-
     // Prepare the campaign criteria
-    const campaignCriteria = countryLocationIds.map((locationId) => ({
+    const campaignCriteria = locations.map((location) => ({
       campaign: campaignResourceName,
       type: enums.CriterionType.LOCATION,
-      location: { geo_target_constant: ResourceNames.geoTargetConstant(locationId) }, // Ensure location is an object
+      location: { geo_target_constant: location}, // Ensure location is an object
       status: enums.CampaignCriterionStatus.ENABLED,
     }));
 
@@ -590,5 +579,3 @@ export class GoogleCampaignService {
     }
   }
 }
-
-

@@ -30,7 +30,7 @@ export class GoogleCampaignController {
         sitelinks: body.sitelinks,
         callouts: body.callouts,
         phoneNumbers: body.phoneNumbers,
-        location: body.location,
+        locations: body.locations,
         promotions: body.promotions,
         ageRanges: body.ageRanges, // Added ageRanges
         languages: body.languages,
@@ -68,21 +68,13 @@ export class GoogleCampaignController {
     @Body('keyword') keyword: string,
     @Body('geo_target_constants') geoTargetConstants: string[],
   ) {
-    try {
-      const suggestions = await this.googleCampaignService.getKeywordSuggestions(keyword, geoTargetConstants);
-      return {
-        message: 'Keyword suggestions fetched successfully',
-        data: suggestions,
-      };
-    } catch (error: any) {
-      throw new HttpException(
-        {
-          message: 'Failed to fetch keyword suggestions',
-          error: error?.errors || error?.message || 'Unknown error',
-        },
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
+
+    const suggestions = await this.googleCampaignService.getKeywordSuggestions(keyword, geoTargetConstants);
+    return {
+      message: 'Keyword suggestions fetched successfully',
+      data: suggestions,
+    };
+
   }
 
 
