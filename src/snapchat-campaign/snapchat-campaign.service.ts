@@ -333,7 +333,7 @@ export class SnapchatCampaignService {
             ad_squad_id: adSquadId,
             creative_id: creativeId,
             name: name,
-            type: type,
+            type: "SNAP_AD",
             status: "PAUSED"
           }
         ]
