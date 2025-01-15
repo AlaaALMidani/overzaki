@@ -67,9 +67,10 @@ export class GoogleCampaignController {
   async getKeywordSuggestions(
     @Body('keyword') keyword: string,
     @Body('geo_target_constants') geoTargetConstants: string[],
+    @Body('language') language: string,
   ) {
 
-    const suggestions = await this.googleCampaignService.getKeywordSuggestions(keyword, geoTargetConstants);
+    const suggestions = await this.googleCampaignService.getKeywordSuggestions(keyword, geoTargetConstants , language);
     return {
       message: 'Keyword suggestions fetched successfully',
       data: suggestions,
