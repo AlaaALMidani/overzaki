@@ -20,6 +20,12 @@ export class YouTubeCampaignController {
     @Body('videoId') videoId: string,
     @Body('startDate') startDate: string,
     @Body('endDate') endDate: string,
+    @Body('headlines') headlines: string[],
+    @Body('descriptions') descriptions: string[],
+    @Body('finalUrl') finalUrl: string,
+    @Body('businessName') businessName: string,
+    @Body('squareImageUrl') squareImageUrl: string,
+    @Body('landscapeImageUrl') landscapeImageUrl: string,
     @Body('biddingStrategy') biddingStrategy: string,
   ) {
     try {
@@ -29,15 +35,20 @@ export class YouTubeCampaignController {
         videoId,
         startDate,
         endDate,
+        squareImageUrl,
+        landscapeImageUrl,
+        finalUrl,
+        businessName,
+        headlines,
+        descriptions,
         biddingStrategy,
       );
       return result;
     } catch (error) {
-      throw error;
       throw new HttpException(
         {
           message: 'Failed to create YouTube campaign.',
-          details: error.message,
+          details: error,
         },
         HttpStatus.BAD_REQUEST,
       );
