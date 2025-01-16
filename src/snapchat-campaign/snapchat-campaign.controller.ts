@@ -98,8 +98,8 @@ export class SnapchatCampaignController {
     try {
       this.logger.log('Initiating Snap Ad creation...');
       const result = await this.campaignService.createSnapAd(
-        req.user.id,
-        req.user.walletId,
+        // req.user.id,
+        // req.user.walletId,
         objective,
         name,
         'SNAP_ADS',

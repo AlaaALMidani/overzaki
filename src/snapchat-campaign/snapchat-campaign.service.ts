@@ -293,8 +293,8 @@ export class SnapchatCampaignService {
   }
 
   async createSnapAd(
-    userId: string,
-    walletId: string,
+    // userId: string,
+    // walletId: string,
     objective: string,
     name: string,
     type: "SNAP_ADS",
@@ -401,35 +401,35 @@ export class SnapchatCampaignService {
         },
       );
       const ad = response.data
-      const order = await this.orderService.createOrderWithTransaction(
-        userId,
-        walletId,
-        'Snapchat snap',
-        budget,
-        {
-          base: {
-            campaign_id: campaignId,
-            campaing_name: campaignResponse.campaigns[0].campaign.name,
-            create_time: campaignResponse.campaigns[0].campaign.created_at,
-            schedule_start_time: adSquadResponse.adsquads[0].adsquad.start_time,
-            schedule_end_time: adSquadResponse.adsquads[0].adsquad.end_time,
-            budget: budget,
-            video: video
-          },
-          campaignResponse,
-          mediaResponse,
-          video,
-          creativeResponse,
-          adSquadResponse,
-          ad
-        }
-      )
-      // Step 7: Return success
-      return {
-        ...order,
-        details: order.details.base,
-      };
-  
+      // const order = await this.orderService.createOrderWithTransaction(
+      //   userId,
+      //   walletId,
+      //   'Snapchat snap',
+      //   budget,
+      //   {
+      //     base: {
+      //       campaign_id: campaignId,
+      //       campaing_name: campaignResponse.campaigns[0].campaign.name,
+      //       create_time: campaignResponse.campaigns[0].campaign.created_at,
+      //       schedule_start_time: adSquadResponse.adsquads[0].adsquad.start_time,
+      //       schedule_end_time: adSquadResponse.adsquads[0].adsquad.end_time,
+      //       budget: budget,
+      //       video: video
+      //     },
+      //     campaignResponse,
+      //     mediaResponse,
+      //     video,
+      //     creativeResponse,
+      //     adSquadResponse,
+      //     ad
+      //   }
+      // )
+      // // Step 7: Return success
+      // return {
+      //   ...order,
+      //   details: order.details.base,
+      // };
+      return ad
     } catch (error) {
       this.logger.error('Error during Snap Ad creation:', error.message);
       throw error;
