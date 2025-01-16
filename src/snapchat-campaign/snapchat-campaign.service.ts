@@ -313,10 +313,9 @@ export class SnapchatCampaignService {
     file: Express.Multer.File,
   ) {
     try {
-      // this.logger.log('Refreshing access token...');
-      // const accessToken = await this.refreshAccessToken();
-      // this.logger.log('Access token refreshed successfully.' + accessToken);
-      const accessToken = "eyJpc3MiOiJodHRwczpcL1wvYWNjb3VudHMuc25hcGNoYXQuY29tXC9hY2NvdW50c1wvb2F1dGgyXC90b2tlbiIsInR5cCI6IkpXVCIsImVuYyI6IkExMjhDQkMtSFMyNTYiLCJhbGciOiJkaXIiLCJraWQiOiJhY2Nlc3MtdG9rZW4tYTEyOGNiYy1oczI1Ni4wIn0..W2kiKWJRrG4JMdP9xyI8Cw.wilLjM0uKAf2ktCe6RiYq_BWVoQyAAuNS8U1aYI_KjfS8cry1sHUfiidBsv36E28R0bsFn8B-M-2f-I9B7pWfdflGQYUkYkZ79y0iW5ZpFd05F14q2sgfNC3BMnK4VI_4SXXP9xMjJ_8eXblu3JJ6ypvVLP5dTjnXT7pQwEmfWD5IUGrWvkii3U2gL56KEf-Yz_nlXPNTDHT9ZDPuR9n9n-paMKSeDKedyzsE84T5H7u8aGw8ntrrb_kr2YFpQCricZqtBBdnpDst2b7Vlfr2SNmWhToNunbG3RdZRRHmWEjfqfiT1pB-IzLDhLB7R8V2kQmnuAb_jVCIbSotMvfoQPHn0L7ASBw38jbNpN_QJz756Vlv_eq_FayjLELUdueDp7KxOEMdCtFXib1DDyTyFoOhPh-NUJvqEJrSpjRJQcJdY1nXazpi6q3CCKnbyOOQlY2qiejGbeVoZPROW03lHHXKaqcR57JYAsWS191tT0kBO8FzrblJCBOeGAT32kr3HEXUUn1HPDIAXEgdWHAtwZtgimYiWfQRZ0DBkvfzVhdV--FGEDRE9MMyJvXD8H7lkd8z75QWTFurwNIo96zFpvOg3fLMZtNC99SZL79Ug0mPNDiBxPst_j7F5hJvn2gPIFG360l5C5pjH_PKDfxBe5Rslf2LBtDzH2xeqguzvVYuTvAMgF-Bq15UJ7CkuZy_UHTX9PHG0R1vejbRhLgkWaoc23lGF4KnO6o4-zEg70.hwT2WuUmhgHUBDp42F2W4Q"
+      this.logger.log('Refreshing access token...');
+      const accessToken = await this.refreshAccessToken();
+      this.logger.log('Access token refreshed successfully.' + accessToken);
       const adAccountId = "993c271d-05ce-4c6a-aeeb-13b62b657ae6";
       const profileId = "aca22c35-6fee-4912-a3ad-9ddc20fd21b7";
       const fileType = file.mimetype.startsWith('video') ? 'VIDEO' : 'IMAGE';
