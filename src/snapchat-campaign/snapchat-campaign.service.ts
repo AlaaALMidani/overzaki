@@ -155,7 +155,7 @@ export class SnapchatCampaignService {
     };
 
     // Log the payload for debugging
-    this.logger.log(`Creating creative with the following payload: ${JSON.stringify(payload)}`);
+    
 
     const endpoint = `https://adsapi.snapchat.com/v1/adaccounts/${adAccountId}/creatives`;
 
@@ -166,27 +166,14 @@ export class SnapchatCampaignService {
           'Authorization': `Bearer ${accessToken}`,
         },
       });
-
-      // Log the successful response
-      this.logger.log(`Creative created successfully: ${JSON.stringify(response.data)}`);
-
-      // Return the response data
       return response.data;
     } catch (error) {
-      // Detailed error handling
       const errorDetails = error.response?.data || error.message;
-
-      // Log the error response to assist with debugging
-      this.logger.error(`Error creating creative: ${JSON.stringify(errorDetails)}`);
-
-      // Check for specific errors
       if (error.response && error.response.data) {
         if (error.response.data.message) {
           throw new Error(error.response.data.message);
         }
       }
-
-      // Throw a general error if no specific message is found
       throw new Error(errorDetails?.message || 'Creative creation failed');
     }
   }
@@ -294,8 +281,8 @@ export class SnapchatCampaignService {
   }
 
   async createSnapAd(
-    // userId: string,
-    // walletId: string,
+    userId: string,
+    walletId: string,
     objective: string,
     name: string,
     type: "SNAP_ADS",
@@ -323,7 +310,6 @@ export class SnapchatCampaignService {
       // Step 1: Create media
       this.logger.log('Creating media...');
       const mediaResponse = await this.createMedia(accessToken, name, adAccountId,fileType);
-      this.logger.log(`${JSON.stringify(mediaResponse)}`)
       const mediaId = mediaResponse.media[0].media.id;
 
       this.logger.log(`Media created with ID: ${mediaId}`);
@@ -331,7 +317,6 @@ export class SnapchatCampaignService {
       // Step 2: Upload video
       this.logger.log('Uploading file...');
       const UploadedFile = await this.uploadFile(file, accessToken, mediaId);
-      this.logger.log(`${JSON.stringify(UploadedFile)}`)
       this.logger.log('file uploaded successfully.');
 
       // Step 3: Create creative
@@ -346,7 +331,7 @@ export class SnapchatCampaignService {
         headline,
         profileId
       );
-      this.logger.log(`${JSON.stringify(creativeResponse)}`)
+     
       const creativeId = creativeResponse.creatives[0].creative.id;
       this.logger.log(`Creative created with ID: ${creativeId}`);
 
@@ -379,9 +364,10 @@ export class SnapchatCampaignService {
         languages,
         osType
       );
-      this.logger.log(`${JSON.stringify(adSquadResponse)}`)
+      
       const adSquadId = adSquadResponse.adsquads[0].adsquad.id;
       this.logger.log(`Ad squad created with ID: ${adSquadId}`);
+      this.logger.log('Creating ad ...');
       const payload = {
         ads: [
           {
@@ -404,6 +390,7 @@ export class SnapchatCampaignService {
         },
       );
       const ad = response.data
+      this.logger.log(' ad created'+ad.ads[0].ad.id);
       // const order = await this.orderService.createOrderWithTransaction(
       //   userId,
       //   walletId,
@@ -417,22 +404,19 @@ export class SnapchatCampaignService {
       //       schedule_start_time: adSquadResponse.adsquads[0].adsquad.start_time,
       //       schedule_end_time: adSquadResponse.adsquads[0].adsquad.end_time,
       //       budget: budget,
-      //       video: video
+      //       video: UploadedFile
       //     },
       //     campaignResponse,
       //     mediaResponse,
-      //     video,
+      //     UploadedFile,
       //     creativeResponse,
       //     adSquadResponse,
       //     ad
       //   }
       // )
-      // // Step 7: Return success
-      // return {
-      //   ...order,
-      //   details: order.details.base,
-      // };
-   return ad
+      // Step 7: Return success
+      return ad
+
     } catch (error) {
       this.logger.error('Error during Snap Ad creation:', error.message);
       throw error;
