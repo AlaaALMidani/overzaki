@@ -283,8 +283,8 @@ export class SnapchatCampaignService {
     file: Express.Multer.File,
   ) {
     try {
-      const accessToken= "eyJpc3MiOiJodHRwczpcL1wvYWNjb3VudHMuc25hcGNoYXQuY29tXC9hY2NvdW50c1wvb2F1dGgyXC90b2tlbiIsInR5cCI6IkpXVCIsImVuYyI6IkExMjhDQkMtSFMyNTYiLCJhbGciOiJkaXIiLCJraWQiOiJhY2Nlc3MtdG9rZW4tYTEyOGNiYy1oczI1Ni4wIn0..dV7uu0cNwOW2aupnMOXuYg.PlPEqMgcJBVvf_jd9fK2ayCvlaeh1VaIa9tfS8Xygi2-k2CVnMToIdUCd5fv1fjx3hIa-EwIVxOxxHjFLlWRcFtGMIoZFDe4-XKSc9Bfy5qwOFJef4iGOCV2SeXLldKiw3H1suyR3Vs-lIN6oLch5gFFGNbEvI1VI9PvGE-wyrVvOP3N1Abwnw9-4XWUUGOBETy3_o_BgeLaxRitF6d6It3ISACCIsCkCzQlUvHtlNgZDEZup8oJZKrIScE7BJidiW7ms0F_NAYCrbxdi8l_M30cSeBd6cv_YsdT3LXFAbVQM97W_c5EqLbv5qLKrFG73O_olbgWcNob_JAe58CK3QKwd9RTfwO-4PX5o9Ljs48xAy1rKLXcJ8x5ZOB6v_OWXC5LbbHT3TABY60c9y0VA6U7bQllFH04F_DBikO1xUYObxlnyA3cgSsxn6pkuZ-GZ1zPyKVdRVE-htnOoUAYIWj9Wr9VmxnD1Wq_0uzMBMnwXWbonjoyM8aTIwoxNUAwaO1eOZK68GCs1UK7cYDSW1aLl8wMUBXw0bP7xqNwKct5PE6vEJYJfx9Gh8HBWBW8fMhYNt_e1mAWJO15G-PCApFiKDM69WY6KkE6ma7IKChzGiiD97xlEeT5V3e-dssMTnpPzpfZMW5eguBwhoWBqIP4gM0mjg-OB48CSQbWoV6Tpiq4wOkp04q6buKh1T9fLHaCt6lWimu3KIvn9MXf_xRnn577QpxQVlmr4q2oepA.uOdy3m2qyLh0lOifMQKnYg";
- 
+      const accessToken="eyJpc3MiOiJodHRwczpcL1wvYWNjb3VudHMuc25hcGNoYXQuY29tXC9hY2NvdW50c1wvb2F1dGgyXC90b2tlbiIsInR5cCI6IkpXVCIsImVuYyI6IkExMjhDQkMtSFMyNTYiLCJhbGciOiJkaXIiLCJraWQiOiJhY2Nlc3MtdG9rZW4tYTEyOGNiYy1oczI1Ni4wIn0..j9bp_o4i5X6qzbhkLGUrZg.FA10WBlBxBGjQdtSWGbOzIW6hlmMs8ZalWpfxIdzxWoCIZCfXpbeVrYJwtvxpoR4XJb6SDiOQf3AcKXQw2WRNL4wIhFOQXc1A7oSW8Ejd7MgzW0l3tCLj7kTmK7-6k3hd109RazrMaaCr6RZuspOucnL2YhZQ70Tn6yJMruZf13iWdaEwcX_g_LxnO5b__zvdY8xzVIq1giwcx649U9dn5IhU7-zwBOdOh0iA_ReCWmahCECHOUJei9fABvBWn4oMkSmF_8ImuHQHdgDUhUddHg4ZSGuCDZYoMxol0EvpA87-uK1fVv6K8Z6BORZORfAzSue3ePz2sVyIgDPLrPhbEnxNgoZSdJBdTCDQrqEa-ncWvreo06dbmuqTVC0n598JLYpyg3hjfxHa3D9AX5vZeKZM9K-p1yV9BUiOKr3sSmfeBXaFRL5-lcnk6s48FlG1p0F3qLzHGsMzye5p30ufAzXE2MQCpmeahfQFx23Y1pLLCE1VFUg2ql7CdTDtnlDThNffu7Xmuow_pkECvjVyjElr2GvxjpM_Mohrv8P4yJrnpIpN7ttyx1TTDC4F4OijUup6BB_t7xPPpQF1NMxBEUA1W5yLq9ItIk1KjKLWq_Kg5oZJa9zGa6vyD2Xj_LnChUwDi2O_KBf7NXt3hwpbCB7P7vgyvKt22qgR-z4Vxutz7j5J17877vPm_NySoTo8oS4pfugpnlE15_pRYP4_bMSB8tHVpuyUexY5TMI_oQ.DPntv8iHhiex3so2bcPouA";
+
       const adAccountId = "993c271d-05ce-4c6a-aeeb-13b62b657ae6";
       const profileId = "aca22c35-6fee-4912-a3ad-9ddc20fd21b7";
       // Step 1: Create media
@@ -297,7 +297,7 @@ export class SnapchatCampaignService {
 
       // Step 2: Upload video
       this.logger.log('Uploading video...');
-      await this.uploadVideo(file, accessToken, mediaId);
+     const video= await this.uploadVideo(file, accessToken, mediaId);
       this.logger.log('Video uploaded successfully.');
 
       // Step 3: Create creative
@@ -378,16 +378,26 @@ export class SnapchatCampaignService {
         {
           base:{
             campaign_id:campaignId,
+            campaing_name:campaignResponse.campaigns[0].campaign.name,
+            create_time:campaignResponse.campaigns[0].campaign.created_at,
+            schedule_start_time:adSquadResponse.adsquads[0].adsquad.start_time,
+            schedule_end_time:adSquadResponse.adsquads[0].adsquad.end_time,
+            budget:budget,
+            video:video
           },
-          campaignId,
-          adSquadId,
-          creativeId,
-          mediaId,
+          campaignResponse,
+          mediaResponse,
+          video,
+          creativeResponse,
+          adSquadResponse,
           ad
         }
       )
       // Step 7: Return success
-      return order
+      return {
+        ...order,
+        details: order.details.base,
+      };
     } catch (error) {
       this.logger.error('Error during Snap Ad creation:', error.message);
       throw error;
