@@ -111,14 +111,14 @@ export class SnapchatCampaignService {
       creatives: [
         {
           ad_account_id: adAccountId,
-          top_snap_media_id: mediaId, // Ensure this is the correct media ID from `createMedia`.
+          top_snap_media_id: mediaId, 
           name: name,
-          type: type, // Should be "SNAP_AD" or another valid type.
+          type: type,
           brand_name: brandName,
-          headline: headline, // Ensure this meets Snapchat's content guidelines.
+          headline: headline,
           shareable: true,
           profile_properties: {
-            profile_id: profileId, // Ensure this profile ID is linked to the ad account.
+            profile_id: profileId,
           },
         },
       ],
@@ -161,13 +161,12 @@ export class SnapchatCampaignService {
     }
   }
   
-
-
   async createCampaign(
     accessToken: string,
     name: string,
     adAccountId: string,
-    startTime: string
+    startTime: string,
+    objective: string
   ) {
     try {
       const payload = {
@@ -176,7 +175,8 @@ export class SnapchatCampaignService {
             name: name,
             ad_account_id: adAccountId,
             status: "PAUSED",
-            start_time: startTime
+            start_time: startTime,
+            objective,
           }
         ]
       };
@@ -203,12 +203,19 @@ export class SnapchatCampaignService {
     campaignId: string,
     type: string,
     minAge: string,
-    conuntryCode: string,
+    maxAge:string,
+    gender:string,
+    countryCodes: string[],
     budget: number,
     startTime: string,
     endTime: string,
+    languages: string[],
+    osType:string
   ) {
     try {
+      const geos = countryCodes.map((code) => ({
+        country_code: code,
+      }));
       const payload = {
         adsquads: [
           {
@@ -219,14 +226,18 @@ export class SnapchatCampaignService {
             targeting: {
               demographics: [
                 {
-                  min_age: minAge
+                  min_age: minAge,
+                  max_age:maxAge,
+                  gender:gender,
+                  languages: languages,
                 }
               ],
-              geos: [
+              geos: geos,
+              devices: [
                 {
-                  country_code: conuntryCode
-                }
-              ]
+                  os_type: osType,
+                },
+              ],
             },
             bid_micro: (budget / 10)* 1000000,
             lifetime_budget_micro: budget * 1000000,
@@ -255,20 +266,25 @@ export class SnapchatCampaignService {
   async createSnapAd(
     userId: string,
     walletId: string,
+    objective: string,
     name: string,
     type: "SNAP_ADS",
     minAge: string,
-    countryCode: string,
+    maxAge:string,
+    gender:string,
+    countryCodes: string[],
     budget: number,
     startTime: string,
     endTime: string,
     brandName: string,
     headline: string,
+    languages: string[],
+    osType:string,
     file: Express.Multer.File,
   ) {
     try {
-      const accessToken= "eyJpc3MiOiJodHRwczpcL1wvYWNjb3VudHMuc25hcGNoYXQuY29tXC9hY2NvdW50c1wvb2F1dGgyXC90b2tlbiIsInR5cCI6IkpXVCIsImVuYyI6IkExMjhDQkMtSFMyNTYiLCJhbGciOiJkaXIiLCJraWQiOiJhY2Nlc3MtdG9rZW4tYTEyOGNiYy1oczI1Ni4wIn0..PGZLaTGwFq1iRKaWVT8Y6Q.aC5MEEozVtJKdvPXxcG1Opa5fmiTHEa0I_JgTigmjR2MdojeRbNETQ5IsQHL2syWbLlbEJhYPunRBtm2gxv39Bt1eFXBb-4AIWny17sryJ2XIQZu0_iQbMg-X_duaJccToJTmyWMPmP21tAn6q3smZu3SY3TV4wfHXnEFDO7PrHlbMXb7dimQ7LPKTBX-WbS1p3uKVAm7weiBO8NDhOriuQOQzPp3B8hwXsBGxfn-VWFGtoQNU_-Ara_plMOeRB1FT7Dw1IHYBJHcnxJyiQyF5diH593eLAmFOCNBeaw9cYoBkwXiZAxoM43J5TzrlwK_hFHyLTuVelGfFoTfdclzEy8BQ98fxV0F4hGK8R6hen2mVYFyGrDqJ8UNugAc1ybH7B76QP9D2JFxx3rgtlNHhHWkisaGAW51eOz3Vea4V4iEGWa5d0aTlYT1SdFofcIM-klF0ZtBHhdaoYgsJ8Lqr4mWANvD3YLYApaIni8paKC7AGo548oI9sAUbr2GdYPx-N9gb-hg4LYEyWAGvbuITWAzp4kRfVOIXg9zQLW0zFQAWPzpOYbVEFQ6FeCQpoStX7PDhCxoeEX1E_oNaU2DnfwnI6NdsfsA7Uy2w16JF5Ak2ciTcYSkZuoXHPtwEbUSSm_huVeJaG7eTgBM2RPXdlGVuyjtWKdFsVcZjgMU-4aW1GMtJdZjMp7EvKT_2Z5Ht9LL18xy6mRisYmzDLvyv7pnPu1BDrFMjvI0GZHvhA.DYw_OSv2wmrSbAySuFuu9A";
-  
+      const accessToken= "eyJpc3MiOiJodHRwczpcL1wvYWNjb3VudHMuc25hcGNoYXQuY29tXC9hY2NvdW50c1wvb2F1dGgyXC90b2tlbiIsInR5cCI6IkpXVCIsImVuYyI6IkExMjhDQkMtSFMyNTYiLCJhbGciOiJkaXIiLCJraWQiOiJhY2Nlc3MtdG9rZW4tYTEyOGNiYy1oczI1Ni4wIn0..dV7uu0cNwOW2aupnMOXuYg.PlPEqMgcJBVvf_jd9fK2ayCvlaeh1VaIa9tfS8Xygi2-k2CVnMToIdUCd5fv1fjx3hIa-EwIVxOxxHjFLlWRcFtGMIoZFDe4-XKSc9Bfy5qwOFJef4iGOCV2SeXLldKiw3H1suyR3Vs-lIN6oLch5gFFGNbEvI1VI9PvGE-wyrVvOP3N1Abwnw9-4XWUUGOBETy3_o_BgeLaxRitF6d6It3ISACCIsCkCzQlUvHtlNgZDEZup8oJZKrIScE7BJidiW7ms0F_NAYCrbxdi8l_M30cSeBd6cv_YsdT3LXFAbVQM97W_c5EqLbv5qLKrFG73O_olbgWcNob_JAe58CK3QKwd9RTfwO-4PX5o9Ljs48xAy1rKLXcJ8x5ZOB6v_OWXC5LbbHT3TABY60c9y0VA6U7bQllFH04F_DBikO1xUYObxlnyA3cgSsxn6pkuZ-GZ1zPyKVdRVE-htnOoUAYIWj9Wr9VmxnD1Wq_0uzMBMnwXWbonjoyM8aTIwoxNUAwaO1eOZK68GCs1UK7cYDSW1aLl8wMUBXw0bP7xqNwKct5PE6vEJYJfx9Gh8HBWBW8fMhYNt_e1mAWJO15G-PCApFiKDM69WY6KkE6ma7IKChzGiiD97xlEeT5V3e-dssMTnpPzpfZMW5eguBwhoWBqIP4gM0mjg-OB48CSQbWoV6Tpiq4wOkp04q6buKh1T9fLHaCt6lWimu3KIvn9MXf_xRnn577QpxQVlmr4q2oepA.uOdy3m2qyLh0lOifMQKnYg";
+ 
       const adAccountId = "993c271d-05ce-4c6a-aeeb-13b62b657ae6";
       const profileId = "aca22c35-6fee-4912-a3ad-9ddc20fd21b7";
       // Step 1: Create media
@@ -306,7 +322,8 @@ export class SnapchatCampaignService {
         accessToken,
         name,
         adAccountId,
-        startTime
+        startTime,
+        objective,
       );
       const campaignId = campaignResponse.campaigns[0].campaign.id;
       this.logger.log(`Campaign created with ID: ${campaignId}`);
@@ -319,10 +336,14 @@ export class SnapchatCampaignService {
         campaignId,
         type,
         minAge,
-        countryCode,
+        maxAge,
+        gender,
+        countryCodes,
         budget,
         startTime,
-        endTime
+        endTime,
+        languages,
+        osType
       );
       this.logger.log(`${JSON.stringify(adSquadResponse)}`)
       const adSquadId = adSquadResponse.adsquads[0].adsquad.id;
@@ -366,10 +387,7 @@ export class SnapchatCampaignService {
         }
       )
       // Step 7: Return success
-      return {
-       ...order,
-       details:order.details.base
-      };
+      return order
     } catch (error) {
       this.logger.error('Error during Snap Ad creation:', error.message);
       throw error;

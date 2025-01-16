@@ -14,10 +14,13 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { SnapchatCampaignService } from './snapchat-campaign.service';
+
 @Controller('snapchat-campaign')
 export class SnapchatCampaignController {
   private readonly logger = new Logger(SnapchatCampaignController.name);
+
   constructor(private readonly campaignService: SnapchatCampaignService) { }
+
   @Get('login')
   @Redirect()
   login() {
@@ -57,38 +60,66 @@ export class SnapchatCampaignController {
   ) {
     const {
       name,
+      objective,
       minAge,
-      countryCode,
+      maxAge,
+      gender,
+      languages,
+      countryCodes,
+      osType,
       budget,
       startTime,
       endTime,
       brandName,
       headline,
+      callToAction,
+      url
     } = body;
-    if (!name || !minAge || !countryCode || !budget || !startTime || !endTime || !brandName || !headline) {
+
+    // Validate required fields
+    if (
+      !name ||
+      !minAge ||
+      !countryCodes ||
+      !budget ||
+      !startTime ||
+      !endTime ||
+      !brandName ||
+      !headline
+    ) {
       throw new HttpException(
         'Missing required fields. Please check your input.',
         HttpStatus.BAD_REQUEST,
       );
     }
+
     if (!file) {
       throw new HttpException('Video file is required', HttpStatus.BAD_REQUEST);
     }
+
+    // Ensure countryCodes and languages are arrays
+    const countryCodesArray = this.ensureArray(countryCodes);
+    const languagesArray = this.ensureArray(languages);
 
     try {
       this.logger.log('Initiating Snap Ad creation...');
       const result = await this.campaignService.createSnapAd(
         req.user.id,
         req.user.walletId,
+        objective,
         name,
-        "SNAP_ADS",
+        'SNAP_ADS',
         minAge,
-        countryCode,
+        maxAge,
+        gender,
+        countryCodesArray,
         parseFloat(budget),
         startTime,
         endTime,
         brandName,
         headline,
+        languagesArray,
+        osType,
         file,
       );
 
@@ -102,5 +133,26 @@ export class SnapchatCampaignController {
     }
   }
 
+  /**
+   * Helper function to ensure the input is an array.
+   * @param input - The input value (string, array, or undefined).
+   * @returns An array of strings.
+   */
+  ensureArray(input: string | string[] | undefined): string[] {
+    if (!input) {
+      return []; // Return an empty array if input is undefined or null
+    }
 
+    if (Array.isArray(input)) {
+      return input; // Return the input as-is if it's already an array
+    }
+
+    if (typeof input === 'string') {
+      // Split the string by commas and trim each value
+      return input.split(',').map((item) => item.trim());
+    }
+
+    // If input is a single value, wrap it in an array
+    return [input];
+  }
 }
