@@ -75,8 +75,6 @@ export class SnapchatCampaignController {
       callToAction,
       url
     } = body;
-
-
     if (
       !name ||
       !minAge ||
@@ -92,14 +90,11 @@ export class SnapchatCampaignController {
         HttpStatus.BAD_REQUEST,
       );
     }
-
     if (!file) {
       throw new HttpException('Video file is required', HttpStatus.BAD_REQUEST);
     }
-
     const countryCodesArray = this.ensureArray(countryCodes);
     const languagesArray = this.ensureArray(languages);
-
     try {
       this.logger.log('Initiating Snap Ad creation...');
       const result = await this.campaignService.createSnapAd(
