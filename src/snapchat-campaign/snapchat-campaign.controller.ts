@@ -76,7 +76,7 @@ export class SnapchatCampaignController {
       url
     } = body;
 
-    // Validate required fields
+
     if (
       !name ||
       !minAge ||
@@ -97,7 +97,6 @@ export class SnapchatCampaignController {
       throw new HttpException('Video file is required', HttpStatus.BAD_REQUEST);
     }
 
-    // Ensure countryCodes and languages are arrays
     const countryCodesArray = this.ensureArray(countryCodes);
     const languagesArray = this.ensureArray(languages);
 
@@ -140,19 +139,14 @@ export class SnapchatCampaignController {
    */
   ensureArray(input: string | string[] | undefined): string[] {
     if (!input) {
-      return []; // Return an empty array if input is undefined or null
+      return [];
     }
-
     if (Array.isArray(input)) {
-      return input; // Return the input as-is if it's already an array
+      return input;
     }
-
     if (typeof input === 'string') {
-      // Split the string by commas and trim each value
       return input.split(',').map((item) => item.trim());
     }
-
-    // If input is a single value, wrap it in an array
     return [input];
   }
 }
