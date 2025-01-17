@@ -43,6 +43,7 @@ export class YouTubeCampaignService {
     }
   }
 
+
   async createYouTubeCampaign(
     name: string,
     budgetAmountMicros: number,
@@ -180,47 +181,6 @@ export class YouTubeCampaignService {
     console.log('Campaign budget created:', resourceName);
     return resourceName;
   }
-  // private async createCampaign(
-  //   name: string,
-  //   budgetResourceName: string,
-  //   startDate: string,
-  //   endDate: string,
-  //   biddingStrategy: string,
-  // ): Promise<string> {
-
-  //   console.log('Creating campaign...');
-  //   const payload = {
-  //     start_date: startDate,
-  //     end_date: endDate,
-  //     name,
-  //     status: 'PAUSED',
-  //     advertising_channel_type: 'DISCOVERY',
-  //     campaign_budget: budgetResourceName,
-  //     bidding_strategy: biddingStrategy,
-  //   };
-
-  //   console.log(payload);
-  //   try {
-  //     const response = await this.googleAdsClient.campaigns.create([(payload as any)]); // Wrap payload in an array
-  //     const resourceName = response.results[0]?.resource_name;
-  //     console.log(response);
-  //     if (!resourceName) {
-  //       throw new Error('Failed to create campaign.');
-  //     }
-
-  //     console.log('Campaign created:', resourceName);
-  //     return resourceName;
-  //   } catch (error) {
-  //     console.log(JSON.stringify(error));
-  //     throw new HttpException(
-  //       {
-  //         message: 'Failed to create campaign.',
-  //         details: error,
-  //       },
-  //       HttpStatus.BAD_REQUEST,
-  //     );
-  //   }
-  // }
   private async createCampaign(
     name: string,
     budgetResourceName: string,
@@ -228,24 +188,36 @@ export class YouTubeCampaignService {
     endDate: string,
     biddingStrategy: string,
   ): Promise<string> {
+
     console.log('Creating campaign...');
     const payload = {
       start_date: startDate,
       end_date: endDate,
       name,
-      status: 'PAUSED',
-      advertising_channel_type: 'DISPLAY', // Discovery campaign
+      advertising_channel_type: "VIDEO",
+      status: "PAUSED",
+      video_campaign: {
+        video_campaign_settings: {
+          video_ad_inventory_control: {
+            allow_in_stream: true, // Enable in-stream ads
+            allow_in_feed: false, // Disable in-feed ads
+            allow_shorts: true, // Enable ads in YouTube Shorts
+          },
+        }
+      },
       campaign_budget: budgetResourceName,
-      bidding_strategy_type: 'TARGET_CPA', // Use 'TARGET_CPA' or 'MAXIMIZE_CONVERSIONS'
-      bidding_strategy: biddingStrategy
+      bidding_strategy: biddingStrategy,
     };
 
+    console.log(payload);
     try {
-      const response = await this.googleAdsClient.campaigns.create([(payload as any)]);
+      const response = await this.googleAdsClient.campaigns.create([(payload as any)]); // Wrap payload in an array
       const resourceName = response.results[0]?.resource_name;
+      console.log(response);
       if (!resourceName) {
         throw new Error('Failed to create campaign.');
       }
+
       console.log('Campaign created:', resourceName);
       return resourceName;
     } catch (error) {
@@ -259,6 +231,45 @@ export class YouTubeCampaignService {
       );
     }
   }
+  // private async createCampaign(
+  //   name: string,
+  //   budgetResourceName: string,
+  //   startDate: string,
+  //   endDate: string,
+  //   biddingStrategy: string,
+  // ): Promise<string> {
+  //   console.log('Creating campaign...');
+  //   const payload = {
+  //     start_date: startDate,
+  //     end_date: endDate,
+  //     name,
+
+  //     status: 'PAUSED',
+  //     advertising_channel_type: 'DISCOVERY', // Discovery campaign
+  //     campaign_budget: budgetResourceName,
+  //     bidding_strategy_type: 'TARGET_CPA', // Use 'TARGET_CPA' or 'MAXIMIZE_CONVERSIONS'
+  //     bidding_strategy: biddingStrategy
+  //   };
+
+  //   try {
+  //     const response = await this.googleAdsClient.campaigns.create([(payload as any)]);
+  //     const resourceName = response.results[0]?.resource_name;
+  //     if (!resourceName) {
+  //       throw new Error('Failed to create campaign.');
+  //     }
+  //     console.log('Campaign created:', resourceName);
+  //     return resourceName;
+  //   } catch (error) {
+  //     console.log(JSON.stringify(error));
+  //     throw new HttpException(
+  //       {
+  //         message: 'Failed to create campaign.',
+  //         details: error,
+  //       },
+  //       HttpStatus.BAD_REQUEST,
+  //     );
+  //   } 
+  // }
   private async createAdGroup(
     name: string,
     campaignResourceName: string,
@@ -269,7 +280,7 @@ export class YouTubeCampaignService {
         {
           name: `${name}_AdGroup`,
           campaign: campaignResourceName,
-        
+
           status: 'ENABLED',
         },
       ]);
@@ -278,7 +289,7 @@ export class YouTubeCampaignService {
       if (!resourceName) {
         throw new Error('Failed to create ad group.');
       }
-     
+
       console.log('Ad group created:', resourceName);
       return resourceName;
     } catch (error) {
@@ -354,9 +365,11 @@ export class YouTubeCampaignService {
         {
           ad_group: adGroupResourceName,
           ad: {
-            name: 'Discovery Ad',
+
+            type: "RESPONSIVE_SEARCH_AD",
             final_urls: [finalUrl], // Landing page URL
             responsive_display_ad: {
+
               business_name: businessName, // Business name
               marketing_images: [{ asset: marketingImageUrl }], // Landscape image
               square_marketing_images: [{ asset: squareMarketingImageUrl }], // Square image
@@ -388,10 +401,10 @@ export class YouTubeCampaignService {
       );
     }
   }
-  private async createImageAsset(image: string, assetName: string): Promise<string> {
+  private async createImageAsset(file: string, assetName: string): Promise<string> {
     try {
       console.log('Uploading image asset...');
-      const absoluteImagePath = path.join(__dirname, image);
+      const absoluteImagePath = path.join(__dirname, file);
 
       // Read the image file and encode it to base64
       const image = fs.readFileSync(absoluteImagePath, { encoding: 'base64' });
@@ -421,21 +434,4 @@ export class YouTubeCampaignService {
     }
   }
 
-  private handleGoogleAdsError(error: any): void {
-    const errorDetails = error.errors?.map((err: any) => ({
-      message: err.message,
-      field: err.location?.field_path_elements,
-      reason: err.error_code,
-    }));
-
-    console.error('Google Ads API Error:', errorDetails);
-    throw error
-    throw new HttpException(
-      {
-        message: 'Failed to create YouTube campaign.',
-        details: errorDetails || error.message,
-      },
-      HttpStatus.BAD_REQUEST,
-    );
-  }
 }
