@@ -6,7 +6,6 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { YouTubeCampaignService } from './youtube-campaign.service';
-
 @Controller('youtube-campaign')
 export class YouTubeCampaignController {
   constructor(
@@ -24,8 +23,8 @@ export class YouTubeCampaignController {
     @Body('descriptions') descriptions: string[],
     @Body('finalUrl') finalUrl: string,
     @Body('businessName') businessName: string,
-    @Body('squareImageUrl') squareImageUrl: string,
-    @Body('landscapeImageUrl') landscapeImageUrl: string,
+    @Body('squareImage') squareImage: string,
+    @Body('landscapeImage') landscapeImage: string,
     @Body('biddingStrategy') biddingStrategy: string,
   ) {
     try {
@@ -35,8 +34,8 @@ export class YouTubeCampaignController {
         videoId,
         startDate,
         endDate,
-        squareImageUrl,
-        landscapeImageUrl,
+        squareImage,
+        landscapeImage,
         finalUrl,
         businessName,
         headlines,

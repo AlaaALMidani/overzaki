@@ -1,8 +1,4 @@
-import {
-  BadRequestException,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import * as FormData from 'form-data';
 import * as crypto from 'crypto';
@@ -16,35 +12,33 @@ export class SnapchatCampaignService {
   constructor(
     private readonly httpService: HttpService,
     private readonly orderService: OrderService,
-  ) { }
-
-
+  ) {}
 
   getAuthUrl() {
-    return `https://accounts.snapchat.com/accounts/oauth2/auth?response_type=code&client_id=${process.env.SNAPCHAT_CLEINT_ID}redirect_uri=https://postman-echo.com/get&scope=snapchat-marketing-api&state=unique_state_value`
+    return `https://accounts.snapchat.com/accounts/oauth2/auth?response_type=code&client_id=${process.env.SNAPCHAT_CLEINT_ID}redirect_uri=https://postman-echo.com/get&scope=snapchat-marketing-api&state=unique_state_value`;
   }
   async getAccessToken(authCode: string) {
-    const endpoint = 'https://accounts.snapchat.com/login/oauth2/access_token'
+    const endpoint = 'https://accounts.snapchat.com/login/oauth2/access_token';
     const payload = {
       client_id: process.env.SNAPCHAT_CLIENT_ID,
       client_secret: process.env.SNAPCHAT_CLIENT_SECRET,
       code: authCode,
       grant_type: 'authorization_code',
-    }
+    };
     try {
-      const response = await axios.post(
-        endpoint, payload,
-        {
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
-        }
-      );
+      const response = await axios.post(endpoint, payload, {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+      });
       console.log('Access Token Response:', response.data);
     } catch (error) {
-      console.error('Error fetching access token:', error.response?.data || error.message);
+      console.error(
+        'Error fetching access token:',
+        error.response?.data || error.message,
+      );
     }
-  };
+  }
 
   async refreshAccessToken(): Promise<string> {
     const endpoint = 'https://accounts.snapchat.com/login/oauth2/access_token';
@@ -54,14 +48,14 @@ export class SnapchatCampaignService {
       refresh_token: process.env.SNAPCHAT_REFRESH_TOKEN,
       grant_type: 'refresh_token',
     };
-  
+
     try {
       const response = await axios.post(endpoint, payload, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       });
-  
+
       const newAccessToken = response.data.access_token;
       const newRefreshToken = response.data.refresh_token;
       process.env.SNAPCHAT_REFRESH_TOKEN = newRefreshToken;
@@ -79,7 +73,7 @@ export class SnapchatCampaignService {
     accessToken: string,
     name: string,
     adAccountId: string,
-    type:string
+    type: string,
   ) {
     try {
       const payload = {
@@ -87,22 +81,23 @@ export class SnapchatCampaignService {
           {
             name: name,
             type: type,
-            ad_account_id: adAccountId
-          }
-        ]
+            ad_account_id: adAccountId,
+          },
+        ],
       };
-      const response = await axios.post(`https://adsapi.snapchat.com/v1/adaccounts/${adAccountId}/media`,
-        payload, {
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
+      const response = await axios.post(
+        `https://adsapi.snapchat.com/v1/adaccounts/${adAccountId}/media`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
         },
-      },
-      ); return response.data;
+      );
+      return response.data;
     } catch (error) {
       console.log(' Error', error.response?.data?.message);
-      throw new Error(
-        error.response?.data?.message || 'media creation failed',
-      );
+      throw new Error(error.response?.data?.message || 'media creation failed');
     }
   }
 
@@ -111,16 +106,16 @@ export class SnapchatCampaignService {
     accessToken: string,
     mediId: string,
   ): Promise<any> {
-    const endpoint = `https://adsapi.snapchat.com/v1/media/${mediId}/upload`
+    const endpoint = `https://adsapi.snapchat.com/v1/media/${mediId}/upload`;
     const formData = new FormData();
-    formData.append('file', file.buffer, { filename: file.originalname })
+    formData.append('file', file.buffer, { filename: file.originalname });
     try {
       const response = await axios.post(endpoint, formData, {
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
-      return response.data
+      return response.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
       throw new Error(errorDetails?.message || 'File  upload failed');
@@ -155,7 +150,9 @@ export class SnapchatCampaignService {
     };
 
     // Log the payload for debugging
-    this.logger.log(`Creating creative with the following payload: ${JSON.stringify(payload)}`);
+    this.logger.log(
+      `Creating creative with the following payload: ${JSON.stringify(payload)}`,
+    );
 
     const endpoint = `https://adsapi.snapchat.com/v1/adaccounts/${adAccountId}/creatives`;
 
@@ -163,12 +160,14 @@ export class SnapchatCampaignService {
       // Sending POST request to create the creative
       const response = await axios.post(endpoint, payload, {
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
       });
 
       // Log the successful response
-      this.logger.log(`Creative created successfully: ${JSON.stringify(response.data)}`);
+      this.logger.log(
+        `Creative created successfully: ${JSON.stringify(response.data)}`,
+      );
 
       // Return the response data
       return response.data;
@@ -177,7 +176,9 @@ export class SnapchatCampaignService {
       const errorDetails = error.response?.data || error.message;
 
       // Log the error response to assist with debugging
-      this.logger.error(`Error creating creative: ${JSON.stringify(errorDetails)}`);
+      this.logger.error(
+        `Error creating creative: ${JSON.stringify(errorDetails)}`,
+      );
 
       // Check for specific errors
       if (error.response && error.response.data) {
@@ -196,7 +197,7 @@ export class SnapchatCampaignService {
     name: string,
     adAccountId: string,
     startTime: string,
-    objective: string
+    objective: string,
   ) {
     try {
       const payload = {
@@ -204,20 +205,18 @@ export class SnapchatCampaignService {
           {
             name: name,
             ad_account_id: adAccountId,
-            status: "PAUSED",
+            status: 'PAUSED',
             start_time: startTime,
             objective,
-          }
-        ]
+          },
+        ],
       };
       const endpoint = `https://adsapi.snapchat.com/v1/adaccounts/${adAccountId}/campaigns`;
-      const response = await axios.post(
-        endpoint, payload, {
+      const response = await axios.post(endpoint, payload, {
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
-      },
-      );
+      });
       return response.data;
     } catch (error) {
       console.log(' Error', error.response?.data?.message);
@@ -240,7 +239,7 @@ export class SnapchatCampaignService {
     startTime: string,
     endTime: string,
     languages: string[],
-    osType: string
+    osType: string,
   ) {
     try {
       const geos = countryCodes.map((code) => ({
@@ -250,9 +249,9 @@ export class SnapchatCampaignService {
         adsquads: [
           {
             name: name,
-            status: "PAUSED",
+            status: 'PAUSED',
             campaign_id: campaignId,
-            type: "SNAP_ADS",
+            type: 'SNAP_ADS',
             targeting: {
               demographics: [
                 {
@@ -260,7 +259,7 @@ export class SnapchatCampaignService {
                   max_age: maxAge,
                   gender: gender,
                   languages: languages,
-                }
+                },
               ],
               geos: geos,
               devices: [
@@ -272,18 +271,16 @@ export class SnapchatCampaignService {
             bid_micro: (budget / 10) * 1000000,
             lifetime_budget_micro: budget * 1000000,
             start_time: startTime,
-            end_time: endTime
-          }
-        ]
+            end_time: endTime,
+          },
+        ],
       };
       const endpoint = `https://adsapi.snapchat.com/v1/campaigns/${campaignId}/adsquads`;
-      const response = await axios.post(
-        endpoint, payload, {
+      const response = await axios.post(endpoint, payload, {
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
-      },
-      );
+      });
       return response.data;
     } catch (error) {
       console.log(' Error', error.response?.data?.message);
@@ -298,7 +295,7 @@ export class SnapchatCampaignService {
     // walletId: string,
     objective: string,
     name: string,
-    type: "SNAP_ADS",
+    type: 'SNAP_ADS',
     minAge: string,
     maxAge: string,
     gender: string,
@@ -316,14 +313,19 @@ export class SnapchatCampaignService {
       this.logger.log('Refreshing access token...');
       const accessToken = await this.refreshAccessToken();
       this.logger.log('Access token refreshed successfully.' + accessToken);
-      const adAccountId = "993c271d-05ce-4c6a-aeeb-13b62b657ae6";
-      const profileId = "aca22c35-6fee-4912-a3ad-9ddc20fd21b7";
+      const adAccountId = '993c271d-05ce-4c6a-aeeb-13b62b657ae6';
+      const profileId = 'aca22c35-6fee-4912-a3ad-9ddc20fd21b7';
       const fileType = file.mimetype.startsWith('video') ? 'VIDEO' : 'IMAGE';
-      this.logger.log(fileType)
+      this.logger.log(fileType);
       // Step 1: Create media
       this.logger.log('Creating media...');
-      const mediaResponse = await this.createMedia(accessToken, name, adAccountId,fileType);
-      this.logger.log(`${JSON.stringify(mediaResponse)}`)
+      const mediaResponse = await this.createMedia(
+        accessToken,
+        name,
+        adAccountId,
+        fileType,
+      );
+      this.logger.log(`${JSON.stringify(mediaResponse)}`);
       const mediaId = mediaResponse.media[0].media.id;
 
       this.logger.log(`Media created with ID: ${mediaId}`);
@@ -331,7 +333,7 @@ export class SnapchatCampaignService {
       // Step 2: Upload video
       this.logger.log('Uploading file...');
       const UploadedFile = await this.uploadFile(file, accessToken, mediaId);
-      this.logger.log(`${JSON.stringify(UploadedFile)}`)
+      this.logger.log(`${JSON.stringify(UploadedFile)}`);
       this.logger.log('file uploaded successfully.');
 
       // Step 3: Create creative
@@ -341,12 +343,12 @@ export class SnapchatCampaignService {
         adAccountId,
         mediaId,
         name,
-        "SNAP_AD",
+        'SNAP_AD',
         brandName,
         headline,
-        profileId
+        profileId,
       );
-      this.logger.log(`${JSON.stringify(creativeResponse)}`)
+      this.logger.log(`${JSON.stringify(creativeResponse)}`);
       const creativeId = creativeResponse.creatives[0].creative.id;
       this.logger.log(`Creative created with ID: ${creativeId}`);
 
@@ -377,9 +379,9 @@ export class SnapchatCampaignService {
         startTime,
         endTime,
         languages,
-        osType
+        osType,
       );
-      this.logger.log(`${JSON.stringify(adSquadResponse)}`)
+      this.logger.log(`${JSON.stringify(adSquadResponse)}`);
       const adSquadId = adSquadResponse.adsquads[0].adsquad.id;
       this.logger.log(`Ad squad created with ID: ${adSquadId}`);
       const payload = {
@@ -388,22 +390,22 @@ export class SnapchatCampaignService {
             ad_squad_id: adSquadId,
             creative_id: creativeId,
             name: name,
-            type: "SNAP_AD",
-            status: "PAUSED"
-          }
-        ]
+            type: 'SNAP_AD',
+            status: 'PAUSED',
+          },
+        ],
       };
-      const endpoint = `https://adsapi.snapchat.com/v1/adsquads/${adSquadId}/ads`
+      const endpoint = `https://adsapi.snapchat.com/v1/adsquads/${adSquadId}/ads`;
       const response = await axios.post(
         `https://adsapi.snapchat.com/v1/adsquads/${adSquadId}/ads`,
         payload,
         {
           headers: {
-            'Authorization': `Bearer ${accessToken}`,
+            Authorization: `Bearer ${accessToken}`,
           },
         },
       );
-      const ad = response.data
+      const ad = response.data;
       // const order = await this.orderService.createOrderWithTransaction(
       //   userId,
       //   walletId,
@@ -432,7 +434,7 @@ export class SnapchatCampaignService {
       //   ...order,
       //   details: order.details.base,
       // };
-   return ad
+      return ad;
     } catch (error) {
       this.logger.error('Error during Snap Ad creation:', error.message);
       throw error;

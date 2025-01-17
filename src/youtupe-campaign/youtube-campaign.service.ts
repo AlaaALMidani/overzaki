@@ -3,6 +3,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { GoogleAdsApi, Customer } from 'google-ads-api';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
+import * as path from 'path';
 dotenv.config();
 
 @Injectable()
@@ -48,12 +49,12 @@ export class YouTubeCampaignService {
     videoId: string,
     startDate: string,
     endDate: string,
-    squareImageUrl: string,
-    landscapeImageUrl: string,
+    squareImage: string, // Square image file
+    landscapeImage: string, // Landscape image file
     finalUrl: string,
-    businessName:string,
-    headlines:string[],
-    descriptions:string[],
+    businessName: string,
+    headlines: string[],
+    descriptions: string[],
     biddingStrategy: string, // Use 'TARGET_CPA' or 'MANUAL_CPV'
   ): Promise<{
     message: string;
@@ -64,8 +65,8 @@ export class YouTubeCampaignService {
     try {
       console.log('=== Starting YouTube campaign creation process ===');
       const videoAssetResourceName = await this.createVideoAsset(name, videoId);
-      const squareImageAssetResourceName = await this.createImageAsset(squareImageUrl, `${name}_square`)
-      const landscapeImageAssetResourceName = await this.createImageAsset(landscapeImageUrl, `${name}_landscape`)
+      const squareImageAssetResourceName = await this.createImageAsset('../square1.png', `${name}_square`)
+      const landscapeImageAssetResourceName = await this.createImageAsset('../square_1.png', `${name}_landscape`)
       const budgetResourceName = await this.createCampaignBudget(name, budgetAmountMicros);
       const biddingStrategy = await this.createBiddingStrategy(name, budgetAmountMicros)
       const campaignResourceName = await this.createCampaign(name, budgetResourceName, startDate, endDate, biddingStrategy);
@@ -233,7 +234,7 @@ export class YouTubeCampaignService {
       end_date: endDate,
       name,
       status: 'PAUSED',
-      advertising_channel_type: 'DISCOVERY', // Discovery campaign
+      advertising_channel_type: 'DISPLAY', // Discovery campaign
       campaign_budget: budgetResourceName,
       bidding_strategy_type: 'TARGET_CPA', // Use 'TARGET_CPA' or 'MAXIMIZE_CONVERSIONS'
       bidding_strategy: biddingStrategy
@@ -268,8 +269,8 @@ export class YouTubeCampaignService {
         {
           name: `${name}_AdGroup`,
           campaign: campaignResourceName,
-
-
+        
+          status: 'ENABLED',
         },
       ]);
 
@@ -277,6 +278,7 @@ export class YouTubeCampaignService {
       if (!resourceName) {
         throw new Error('Failed to create ad group.');
       }
+     
       console.log('Ad group created:', resourceName);
       return resourceName;
     } catch (error) {
@@ -386,21 +388,26 @@ export class YouTubeCampaignService {
       );
     }
   }
-  private async createImageAsset(imageUrl: string, assetName: string): Promise<string> {
+  private async createImageAsset(image: string, assetName: string): Promise<string> {
     try {
       console.log('Uploading image asset...');
+      const absoluteImagePath = path.join(__dirname, image);
+
+      // Read the image file and encode it to base64
+      const image = fs.readFileSync(absoluteImagePath, { encoding: 'base64' });
+
       const response = await this.googleAdsClient.assets.create([
         {
           name: assetName,
           type: 'IMAGE', // Asset type is IMAGE
           image_asset: {
-            data: imageUrl, // URL of the image
+            data: image, // Convert file buffer to Base64
           },
         },
       ]);
 
       const resourceName = response.results[0]?.resource_name;
-     
+
       console.log('Image asset created:', resourceName);
       return resourceName;
     } catch (error) {
