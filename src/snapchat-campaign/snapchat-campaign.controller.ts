@@ -19,7 +19,7 @@ import { SnapchatCampaignService } from './snapchat-campaign.service';
 export class SnapchatCampaignController {
   private readonly logger = new Logger(SnapchatCampaignController.name);
 
-  constructor(private readonly campaignService: SnapchatCampaignService) { }
+  constructor(private readonly campaignService: SnapchatCampaignService) {}
 
   @Get('login')
   @Redirect()
@@ -73,7 +73,7 @@ export class SnapchatCampaignController {
       brandName,
       headline,
       callToAction,
-      url
+      url,
     } = body;
     if (
       !name ||
