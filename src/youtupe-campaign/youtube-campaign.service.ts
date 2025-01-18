@@ -10,9 +10,11 @@ dotenv.config();
 @Injectable()
 export class YouTubeCampaignService {
   private readonly googleAdsClient: Customer;
-  private readonly googleCampaignService: GoogleCampaignService;
+ 
 
-  constructor() {
+  constructor(
+    private readonly googleCampaignService: GoogleCampaignService,
+  ) {
     this.validateEnvVariables();
 
     const googleAdsApi = new GoogleAdsApi({
@@ -79,6 +81,7 @@ export class YouTubeCampaignService {
       const budgetResourceName = await this.createCampaignBudget(name, budgetAmountMicros);
       const biddingStrategy = await this.createBiddingStrategy(name, budgetAmountMicros)
       const campaignResourceName = await this.createCampaign(name, budgetResourceName, startDate, endDate, biddingStrategy);
+      
       await this.googleCampaignService.addLanguageTargeting(campaignResourceName, languages)
       await this.googleCampaignService.addGeoTargeting(campaignResourceName,locations)
       const adGroupResourceName = await this.createAdGroup(name, campaignResourceName);
@@ -103,6 +106,7 @@ export class YouTubeCampaignService {
       };
 
     } catch (error) {
+      console.log(error)
       throw error;
       //this.handleGoogleAdsError(error);
     }
