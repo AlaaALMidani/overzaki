@@ -422,46 +422,6 @@ export class SnapchatCampaignService {
       );
     }
   }
-
-  async createAd(
-    accessToken: string,
-    adSquadId: string,
-    creativeId: string,
-    name: string,
-    type: string,
-    status: string
-  ) {
-    try {
-      const endpoint = `https://adsapi.snapchat.com/v1/adsquads/${adSquadId}/ads`
-      const payload = {
-        ads: [
-          {
-            ad_squad_id: adSquadId,
-            creative_id: creativeId,
-            name: name,
-            type: type,
-            status: "PAUSED"
-          }
-        ]
-      };
-      const response = await axios.post(
-        endpoint,
-        payload,
-        {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-          },
-        },
-      );
-      return response.data;
-    } catch (error) {
-      console.log(' Error', error.response?.data?.message);
-      throw new Error(
-        error.response?.data?.message || 'Ad creation failed',
-      );
-    }
-  }
-
   async createSnapAd(
     userId: string,
     walletId: string,
@@ -548,7 +508,6 @@ export class SnapchatCampaignService {
         osType,
       );
 
-
       const adSquadId = adSquadResponse.adsquads[0].adsquad.id;
       this.logger.log(`Ad squad created with ID: ${adSquadId}`);
 
@@ -575,7 +534,7 @@ export class SnapchatCampaignService {
         },
       );
       const ad = response.data
-      this.logger.log(' ad created' + ad.ads[0].ad.id);
+      this.logger.log(' ad created'+ad.ads[0].ad.id);
       // const order = await this.orderService.createOrderWithTransaction(
       //   userId,
       //   walletId,
