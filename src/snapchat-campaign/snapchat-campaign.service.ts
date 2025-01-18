@@ -260,15 +260,19 @@ export class SnapchatCampaignService {
       }
       let demographics = []
       if (gender === "MALE" || gender === "FEMALE") {
-        demographics.push({ gender: gender });
+        demographics.push({
+          gender: gender,
+          min_age: minAge,
+          max_age: maxAge,
+          languages: languages,
+        });
       } else {
-        demographics.push({ gender: "MALE" }, { gender: "FEMALE" });
+        demographics.push({
+          gender: "MALE", min_age: minAge,
+          max_age: maxAge,
+          languages: languages,
+        }, { gender: "FEMALE" }, { gender: "OTHER" });
       }
-      demographics.push({
-        min_age: minAge,
-        max_age: maxAge,
-        languages: languages,
-      })
       const payload = {
         adsquads: [
           {
