@@ -214,7 +214,7 @@ export class SnapchatCampaignService {
             ad_account_id: adAccountId,
             status: 'PAUSED',
             start_time: startTime,
-            objective_v2: objective,
+            objective: objective,
           },
         ],
       };
@@ -252,6 +252,13 @@ export class SnapchatCampaignService {
       const geos = countryCodes.map((code) => ({
         country_code: code,
       }));
+      let devices = [];
+      if (osType === "iOS" || osType === "ANDROID") {
+        devices.push({ os_type: osType });
+       } else {
+        devices.push({ os_type: "IOS" }, { os_type: "ANDROID" });
+      }
+
       const payload = {
         adsquads: [
           {
@@ -269,11 +276,7 @@ export class SnapchatCampaignService {
                 },
               ],
               geos: geos,
-              devices: [
-                {
-                  os_type: osType,
-                },
-              ],
+              devices:devices
             },
             bid_micro: (budget / 10) * 1000000,
             lifetime_budget_micro: budget * 1000000,
@@ -521,9 +524,9 @@ export class SnapchatCampaignService {
         languages,
         osType,
       );
+      this.logger.log(JSON.stringify(adSquadResponse));
       const adSquadId = adSquadResponse.adsquads[0].adsquad.id;
       this.logger.log(`Ad squad created with ID: ${adSquadId}`);
-
       // Step 6: Create ad
       this.logger.log('Creating ad...');
       const adPayload = {
