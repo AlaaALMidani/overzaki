@@ -256,7 +256,7 @@ export class SnapchatCampaignService {
       if (osType === "iOS" || osType === "ANDROID") {
         devices.push({ os_type: osType });
        } else {
-        devices.push({ os_type: "IOS" }, { os_type: "ANDROID" },{ os_type: "WEB" });
+        devices.push({ os_type: "iOS" }, { os_type: "ANDROID" },{ os_type: "WEB" });
       }
 
       const payload = {
