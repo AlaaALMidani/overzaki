@@ -180,7 +180,7 @@ export class YouTubeCampaignService {
     }
     console.log('Campaign budget created:', resourceName);
     return resourceName;
-  }
+    }
   private async createCampaign(
     name: string,
     budgetResourceName: string,
@@ -188,36 +188,25 @@ export class YouTubeCampaignService {
     endDate: string,
     biddingStrategy: string,
   ): Promise<string> {
-
     console.log('Creating campaign...');
     const payload = {
       start_date: startDate,
       end_date: endDate,
       name,
-      advertising_channel_type: "VIDEO",
-      status: "PAUSED",
-      video_campaign: {
-        video_campaign_settings: {
-          video_ad_inventory_control: {
-            allow_in_stream: true, // Enable in-stream ads
-            allow_in_feed: false, // Disable in-feed ads
-            allow_shorts: true, // Enable ads in YouTube Shorts
-          },
-        }
-      },
+
+      status: 'PAUSED',
+      advertising_channel_type: 'DISPLAY', // Discovery campaign
       campaign_budget: budgetResourceName,
-      bidding_strategy: biddingStrategy,
+      bidding_strategy_type: 'TARGET_CPA', // Use 'TARGET_CPA' or 'MAXIMIZE_CONVERSIONS'
+      bidding_strategy: biddingStrategy
     };
 
-    console.log(payload);
     try {
-      const response = await this.googleAdsClient.campaigns.create([(payload as any)]); // Wrap payload in an array
+      const response = await this.googleAdsClient.campaigns.create([(payload as any)]);
       const resourceName = response.results[0]?.resource_name;
-      console.log(response);
       if (!resourceName) {
         throw new Error('Failed to create campaign.');
       }
-
       console.log('Campaign created:', resourceName);
       return resourceName;
     } catch (error) {
@@ -229,47 +218,8 @@ export class YouTubeCampaignService {
         },
         HttpStatus.BAD_REQUEST,
       );
-    }
+    } 
   }
-  // private async createCampaign(
-  //   name: string,
-  //   budgetResourceName: string,
-  //   startDate: string,
-  //   endDate: string,
-  //   biddingStrategy: string,
-  // ): Promise<string> {
-  //   console.log('Creating campaign...');
-  //   const payload = {
-  //     start_date: startDate,
-  //     end_date: endDate,
-  //     name,
-
-  //     status: 'PAUSED',
-  //     advertising_channel_type: 'DISCOVERY', // Discovery campaign
-  //     campaign_budget: budgetResourceName,
-  //     bidding_strategy_type: 'TARGET_CPA', // Use 'TARGET_CPA' or 'MAXIMIZE_CONVERSIONS'
-  //     bidding_strategy: biddingStrategy
-  //   };
-
-  //   try {
-  //     const response = await this.googleAdsClient.campaigns.create([(payload as any)]);
-  //     const resourceName = response.results[0]?.resource_name;
-  //     if (!resourceName) {
-  //       throw new Error('Failed to create campaign.');
-  //     }
-  //     console.log('Campaign created:', resourceName);
-  //     return resourceName;
-  //   } catch (error) {
-  //     console.log(JSON.stringify(error));
-  //     throw new HttpException(
-  //       {
-  //         message: 'Failed to create campaign.',
-  //         details: error,
-  //       },
-  //       HttpStatus.BAD_REQUEST,
-  //     );
-  //   } 
-  // }
   private async createAdGroup(
     name: string,
     campaignResourceName: string,
@@ -280,7 +230,7 @@ export class YouTubeCampaignService {
         {
           name: `${name}_AdGroup`,
           campaign: campaignResourceName,
-
+          type:'DISPLAY_STANDARD',
           status: 'ENABLED',
         },
       ]);
@@ -302,52 +252,7 @@ export class YouTubeCampaignService {
       );
     }
   }
-  private async createAdGroupAd(
-    adGroupResourceName: string,
-    videoAssetResourceName: string,
-  ): Promise<string> {
-    try {
-      console.log('Creating ad group ad...');
 
-      const response = await this.googleAdsClient.adGroupAds.create([
-        {
-          ad_group: adGroupResourceName,
-          ad: {
-            name: 'YouTube Video Ad',
-            final_urls: ['https://www.overzaki.com'], // Replace with your landing page URL
-            responsive_display_ad: {
-              headlines: [
-                { text: 'Check out this video!' },
-              ],
-              descriptions: [
-                { text: 'Learn more about our amazing product.' },
-              ],
-              youtube_videos: [
-                { asset: videoAssetResourceName },
-              ],
-            },
-          },
-          status: 'ENABLED',
-        },
-      ]);
-
-      const resourceName = response.results[0]?.resource_name;
-      if (!resourceName) {
-        throw new Error('Failed to create ad group ad.');
-      }
-
-      console.log('Ad group ad created:', resourceName);
-      return resourceName;
-    } catch (error) {
-      throw new HttpException(
-        {
-          message: 'Failed to create ad group ad.',
-          details: error,
-        },
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-  }
   private async createDiscoveryAd(
     adGroupResourceName: string,
     businessName: string, // Business name
@@ -360,16 +265,32 @@ export class YouTubeCampaignService {
   ): Promise<string> {
     try {
       console.log('Creating Discovery Ad...');
-
+      const x ={
+        ad: {
+          name: 'YouTube Video Ad', 
+          final_urls: [finalUrl], // Landing page URL
+          responsive_display_ad: {
+            business_name: businessName, // Business name
+            marketing_images: [{ asset: marketingImageUrl }], // Landscape image
+            square_marketing_images: [{ asset: squareMarketingImageUrl }], // Square image
+            headlines: headlines.map((text) => ({ text })), // Headlines
+            descriptions: descriptions.map((text) => ({ text })), // Descriptions
+            
+            youtube_videos: [
+              { asset: videoAssetResourceName },
+            ],
+          },
+        },
+      }
+      console.log(JSON.stringify(x,null,2))
       const response = await this.googleAdsClient.adGroupAds.create([
         {
           ad_group: adGroupResourceName,
           ad: {
-
-            type: "RESPONSIVE_SEARCH_AD",
+            name: 'YouTube Video Ad',  
+           type:'RESPONSIVE_DISPLAY_AD',
             final_urls: [finalUrl], // Landing page URL
             responsive_display_ad: {
-
               business_name: businessName, // Business name
               marketing_images: [{ asset: marketingImageUrl }], // Landscape image
               square_marketing_images: [{ asset: squareMarketingImageUrl }], // Square image
@@ -378,6 +299,8 @@ export class YouTubeCampaignService {
               youtube_videos: [
                 { asset: videoAssetResourceName },
               ],
+              long_headline:{text:headlines[0]},
+              square_logo_images:[{ asset: squareMarketingImageUrl }]
             },
           },
           status: 'ENABLED',
