@@ -106,23 +106,29 @@ export class SnapchatCampaignService {
   }
 
   async uploadFile(
-    file: Express.Multer.File,
+    file: string,
     accessToken: string,
-    mediId: string,
+    mediaId: string,
   ): Promise<any> {
-    const endpoint = `https://adsapi.snapchat.com/v1/media/${mediId}/upload`;
+    const endpoint = `https://adsapi.snapchat.com/v1/media/${mediaId}/upload`;
+    const base64Data = file.split(';base64,').pop();
+    if (!base64Data) {
+      throw new Error('Invalid base64 file data');
+    }
+    const fileBuffer = Buffer.from(base64Data, 'base64');
     const formData = new FormData();
-    formData.append('file', file.buffer, { filename: file.originalname });
+    formData.append('file', fileBuffer, { filename:'uploaded' });
     try {
       const response = await axios.post(endpoint, formData, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
+          ...formData.getHeaders(),
         },
       });
       return response.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
-      throw new Error(errorDetails?.message || 'File  upload failed');
+      throw new Error(errorDetails?.message || 'File upload failed');
     }
   }
 
@@ -438,7 +444,7 @@ export class SnapchatCampaignService {
     headline: string,
     languages: string[],
     osType: string,
-    file: Express.Multer.File,
+    file:string,
   ) {
     try {
       this.logger.log('Refreshing access token...');
@@ -446,9 +452,9 @@ export class SnapchatCampaignService {
       this.logger.log('Access token refreshed successfully.' + accessToken);
       const adAccountId = '993c271d-05ce-4c6a-aeeb-13b62b657ae6';
       const profileId = 'aca22c35-6fee-4912-a3ad-9ddc20fd21b7';
-      const fileType = file.mimetype.startsWith('video') ? 'VIDEO' : 'IMAGE';
+      const fileType = file.startsWith('data:image') ? 'IMAGE' : 'VIDEO';
       this.logger.log(fileType)
-
+      
       // Step 1: Create media
       this.logger.log('Creating media...');
       const mediaResponse = await this.createMedia(accessToken, name, adAccountId, fileType);
@@ -583,11 +589,11 @@ export class SnapchatCampaignService {
     languages: string[],
     osType: string,
     callToActoin,
-    mainFile: Express.Multer.File,
-    product1: Express.Multer.File,
-    product2: Express.Multer.File,
-    product3: Express.Multer.File,
-    product4: Express.Multer.File,
+    mainFile: string,
+    product1: string,
+    product2: string,
+    product3: string,
+    product4: string,
     interactionType: string,
     mainUrl: string,
     productUrls: string[]
@@ -611,7 +617,7 @@ export class SnapchatCampaignService {
         continue;
       }
 
-      const fileType = productFile.mimetype.startsWith('video') ? 'VIDEO' : 'IMAGE';
+      const fileType = productFile.startsWith('data:image') ? 'IMAGE' : 'VIDEO';
       this.logger.log(`Processing product ${i + 1} with file type: ${fileType}`);
 
       this.logger.log(`Creating media for product ${i + 1}...`);
@@ -661,7 +667,7 @@ export class SnapchatCampaignService {
    
     this.logger.log(`Interaction zone created with ID: ${interactionZoneId}`);
 
-    const fileType = mainFile.mimetype.startsWith('video') ? 'VIDEO' : 'IMAGE';
+    const fileType = mainFile.startsWith('video') ? 'VIDEO' : 'IMAGE';
     this.logger.log(fileType)
 
     // Step 5: Create media

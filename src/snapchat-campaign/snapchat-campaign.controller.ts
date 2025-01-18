@@ -19,7 +19,7 @@ import { SnapchatCampaignService } from './snapchat-campaign.service';
 export class SnapchatCampaignController {
   private readonly logger = new Logger(SnapchatCampaignController.name);
 
-  constructor(private readonly campaignService: SnapchatCampaignService) {}
+  constructor(private readonly campaignService: SnapchatCampaignService) { }
 
   @Get('login')
   @Redirect()
@@ -52,11 +52,9 @@ export class SnapchatCampaignController {
   }
 
   @Post('SnapAd')
-  @UseInterceptors(FileFieldsInterceptor([{ name: 'file', maxCount: 1 }]))
   async createSnapAd(
     @Body() body: any,
     @Req() req: any,
-    @UploadedFiles() files: { file?: Express.Multer.File[] },
   ) {
     const {
       name,
@@ -74,6 +72,7 @@ export class SnapchatCampaignController {
       headline,
       callToAction,
       url,
+      file
     } = body;
 
     if (
@@ -92,7 +91,7 @@ export class SnapchatCampaignController {
       );
     }
 
-    if (!files.file || files.file.length === 0) {
+    if (!file) {
       throw new HttpException('Video file is required', HttpStatus.BAD_REQUEST);
     }
 
@@ -117,7 +116,7 @@ export class SnapchatCampaignController {
         headline,
         languagesArray,
         osType,
-        files.file[0],
+        file,
       );
 
       return {
@@ -131,26 +130,9 @@ export class SnapchatCampaignController {
   }
 
   @Post('CollectionAd')
-  @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'mainFile', maxCount: 1 },
-      { name: 'product1', maxCount: 1 },
-      { name: 'product2', maxCount: 1 },
-      { name: 'product3', maxCount: 1 },
-      { name: 'product4', maxCount: 1 },
-    ]),
-  )
   async createCollectionAd(
     @Body() body: any,
     @Req() req: any,
-    @UploadedFiles()
-    files: {
-      mainFile?: Express.Multer.File[];
-      product1?: Express.Multer.File[];
-      product2?: Express.Multer.File[];
-      product3?: Express.Multer.File[];
-      product4?: Express.Multer.File[];
-    },
   ) {
     const {
       name,
@@ -170,6 +152,11 @@ export class SnapchatCampaignController {
       mainUrl,
       productUrls,
       callToActoin,
+      mainFile,
+      product1,
+      product2,
+      product3,
+      product4,
     } = body;
 
     if (
@@ -191,15 +178,15 @@ export class SnapchatCampaignController {
       );
     }
 
-    if (!files.mainFile || files.mainFile.length === 0) {
+    if (!mainFile) {
       throw new HttpException('Main file is required', HttpStatus.BAD_REQUEST);
     }
 
     if (
-      !files.product1 &&
-      !files.product2 &&
-      !files.product3 &&
-      !files.product4
+      !product1 &&
+      !product2 &&
+      !product3 &&
+      !product4
     ) {
       throw new HttpException(
         'At least one product file is required',
@@ -228,11 +215,11 @@ export class SnapchatCampaignController {
         languagesArray,
         osType,
         callToActoin,
-        files.mainFile[0],
-        files.product1 ? files.product1[0] : undefined,
-        files.product2 ? files.product2[0] : undefined,
-        files.product3 ? files.product3[0] : undefined,
-        files.product4 ? files.product4[0] : undefined,
+        mainFile,
+        product1,
+        product2,
+        product3,
+        product4,
         interactionType,
         mainUrl,
         productUrlsArray,
