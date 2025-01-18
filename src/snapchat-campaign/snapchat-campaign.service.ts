@@ -252,6 +252,13 @@ export class SnapchatCampaignService {
       const geos = countryCodes.map((code) => ({
         country_code: code,
       }));
+      let devices = [];
+      if (osType === "iOS" || osType === "ANDROID") {
+        devices.push({ os_type: osType });
+       } else {
+        devices.push({ os_type: "IOS" }, { os_type: "ANDROID" });
+      }
+
       const payload = {
         adsquads: [
           {
@@ -269,11 +276,7 @@ export class SnapchatCampaignService {
                 },
               ],
               geos: geos,
-              devices: [
-                {
-                  os_type: osType,
-                },
-              ],
+              devices:devices
             },
             bid_micro: (budget / 10) * 1000000,
             lifetime_budget_micro: budget * 1000000,
