@@ -521,8 +521,8 @@ export class SnapchatCampaignService {
         languages,
         osType,
       );
-      const adSquadId = adSquadResponse.adsquads[0].adsquad.id;
       this.logger.log(JSON.stringify(adSquadResponse));
+      const adSquadId = adSquadResponse.adsquads[0].adsquad.id;
       this.logger.log(`Ad squad created with ID: ${adSquadId}`);
       // Step 6: Create ad
       this.logger.log('Creating ad...');
