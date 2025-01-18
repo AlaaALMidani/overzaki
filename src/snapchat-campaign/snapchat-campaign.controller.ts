@@ -76,25 +76,25 @@ export class SnapchatCampaignController {
       file
     } = body;
 
-    if (
-      !name ||
-      !minAge ||
-      !countryCodes ||
-      !budget ||
-      !startTime ||
-      !endTime ||
-      !brandName ||
-      !headline
-    ) {
-      throw new HttpException(
-        'Missing required fields. Please check your input.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    // if (
+    //   !name ||
+    //   !minAge ||
+    //   !countryCodes ||
+    //   !budget ||
+    //   !startTime ||
+    //   !endTime ||
+    //   !brandName ||
+    //   !headline
+    // ) {
+    //   throw new HttpException(
+    //     'Missing required fields. Please check your input.',
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
 
-    if (!file) {
-      throw new HttpException('Video file is required', HttpStatus.BAD_REQUEST);
-    }
+    // if (!file) {
+    //   throw new HttpException('Video file is required', HttpStatus.BAD_REQUEST);
+    // }
 
     const countryCodesArray = this.ensureArray(countryCodes);
     const languagesArray = this.ensureArray(languages);
