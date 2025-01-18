@@ -255,10 +255,24 @@ export class SnapchatCampaignService {
       let devices = [];
       if (osType === "iOS" || osType === "ANDROID") {
         devices.push({ os_type: osType });
-       } else {
-        devices.push({ os_type: "iOS" }, { os_type: "ANDROID" },{ os_type: "WEB" });
+      } else {
+        devices.push({ os_type: "iOS" }, { os_type: "ANDROID" }, { os_type: "WEB" });
       }
-
+      let demographics = []
+      if (gender === "MALE" || gender === "FEMALE") {
+        demographics.push({
+          gender: gender,
+          min_age: minAge,
+          max_age: maxAge,
+          languages: languages,
+        });
+      } else {
+        demographics.push({
+          gender: "MALE", min_age: minAge,
+          max_age: maxAge,
+          languages: languages,
+        }, { gender: "FEMALE" }, { gender: "OTHER" });
+      }
       const payload = {
         adsquads: [
           {
@@ -267,16 +281,9 @@ export class SnapchatCampaignService {
             campaign_id: campaignId,
             type: type,
             targeting: {
-              demographics: [
-                {
-                  min_age: minAge,
-                  max_age: maxAge,
-                  gender: gender,
-                  languages: languages,
-                },
-              ],
+              demographics: demographics,
               geos: geos,
-              devices:devices
+              devices: devices
             },
             bid_micro: (budget / 10) * 1000000,
             lifetime_budget_micro: budget * 1000000,
@@ -779,7 +786,7 @@ export class SnapchatCampaignService {
     }
   }
 
-  
+
 
 
 }
