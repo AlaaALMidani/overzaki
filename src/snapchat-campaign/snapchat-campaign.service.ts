@@ -210,7 +210,7 @@ export class SnapchatCampaignService {
             ad_account_id: adAccountId,
             status: 'PAUSED',
             start_time: startTime,
-            objective,
+            objective_v2:objective,
           },
         ],
       };
