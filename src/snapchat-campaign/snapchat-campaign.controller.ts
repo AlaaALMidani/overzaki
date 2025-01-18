@@ -236,21 +236,24 @@ export class SnapchatCampaignController {
     }
   }
 
-  /**
-   * Helper function to ensure the input is an array.
-   * @param input - The input value (string, array, or undefined).
-   * @returns An array of strings.
-   */
-  ensureArray(input: string | string[] | undefined): string[] {
-    if (!input) {
-      return [];
-    }
-    if (Array.isArray(input)) {
-      return input;
-    }
-    if (typeof input === 'string') {
-      return input.split(',').map((item) => item.trim());
-    }
-    return [input];
+ /**
+ * Helper function to ensure the input is an array.
+ * @param input - The input value (string, array, or undefined).
+ * @returns An array of strings.
+ */
+ensureArray(input: string | string[] | undefined): string[] {
+  if (!input) {
+    return [];
   }
+  if (Array.isArray(input)) {
+    // If it's already an array, return it directly
+    return input;
+  }
+  if (typeof input === 'string') {
+    // Handle comma-separated strings like "ar,us"
+    return input.split(',').map((item) => item.trim());
+  }
+  // Fallback for unexpected types
+  return [input];
+}
 }
