@@ -488,6 +488,7 @@ export class SnapchatCampaignService {
         headline,
         profileId,
       );
+      this.logger.log(JSON.stringify(creativeResponse));
       const creativeId = creativeResponse.creatives[0].creative.id;
       this.logger.log(`Creative created with ID: ${creativeId}`);
 
