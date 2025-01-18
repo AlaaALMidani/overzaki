@@ -26,6 +26,13 @@ export class YouTubeCampaignController {
     @Body('squareImage') squareImage: string,
     @Body('landscapeImage') landscapeImage: string,
     @Body('biddingStrategy') biddingStrategy: string,
+    @Body('languages') languages: string[],
+    @Body('keywords')
+    keywords: {
+      keyword: string;
+      type: string;
+    }[],
+    @Body('locations') locations: string[],
   ) {
     try {
       const result = await this.youtubeCampaignService.createYouTubeCampaign(
@@ -40,7 +47,9 @@ export class YouTubeCampaignController {
         businessName,
         headlines,
         descriptions,
-        biddingStrategy,
+        languages,
+        keywords,
+        locations,
       );
       return result;
     } catch (error) {

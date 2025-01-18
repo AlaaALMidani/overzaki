@@ -240,7 +240,7 @@ export class GoogleCampaignService {
     }
   }
 
-  private async addKeywordsToAdGroup(adGroupResourceName: string, keywords: {
+  public async addKeywordsToAdGroup(adGroupResourceName: string, keywords: {
     keyword: string;
     type: string;
   }[]) {
@@ -418,7 +418,7 @@ export class GoogleCampaignService {
       );
     }
   }
-  private async addLanguageTargeting(campaignResourceName: string, languages: any[]) {
+  public async addLanguageTargeting(campaignResourceName: string, languages: any[]) {
     console.log('Adding language targeting...');
 
     // Map the languages to valid ICampaignCriterion objects
@@ -533,7 +533,7 @@ export class GoogleCampaignService {
   //   }
   // }
 
-  private async addGeoTargeting(campaignResourceName: string,locations:string []): Promise<void> {
+  public async addGeoTargeting(campaignResourceName: string,locations:string []): Promise<void> {
     console.log('Adding geo-targeting to campaign:', campaignResourceName);
 
     // Prepare the campaign criteria

@@ -1,3 +1,4 @@
+import { GoogleCampaignService } from './../google-campaign/google-campaign.service';
 /* eslint-disable prettier/prettier */
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { GoogleAdsApi, Customer } from 'google-ads-api';
@@ -9,6 +10,7 @@ dotenv.config();
 @Injectable()
 export class YouTubeCampaignService {
   private readonly googleAdsClient: Customer;
+  private readonly googleCampaignService: GoogleCampaignService;
 
   constructor() {
     this.validateEnvVariables();
@@ -56,7 +58,13 @@ export class YouTubeCampaignService {
     businessName: string,
     headlines: string[],
     descriptions: string[],
-    biddingStrategy: string, // Use 'TARGET_CPA' or 'MANUAL_CPV'
+    languages: string[],
+    keywords: {
+      keyword: string;
+      type: string;
+    }[],
+    locations:string[],
+
   ): Promise<{
     message: string;
     campaign: string;
@@ -71,8 +79,10 @@ export class YouTubeCampaignService {
       const budgetResourceName = await this.createCampaignBudget(name, budgetAmountMicros);
       const biddingStrategy = await this.createBiddingStrategy(name, budgetAmountMicros)
       const campaignResourceName = await this.createCampaign(name, budgetResourceName, startDate, endDate, biddingStrategy);
+      await this.googleCampaignService.addLanguageTargeting(campaignResourceName, languages)
+      await this.googleCampaignService.addGeoTargeting(campaignResourceName,locations)
       const adGroupResourceName = await this.createAdGroup(name, campaignResourceName);
-      // const adResourceName = await this.createAdGroupAd(adGroupResourceName, 'customers/5522941096/assets/194392630367');
+      await this.googleCampaignService.addKeywordsToAdGroup(adGroupResourceName, keywords)
       const adResourceName = await this.createDiscoveryAd(
         adGroupResourceName, // Ad group resource name
         businessName, // Business name
@@ -180,7 +190,7 @@ export class YouTubeCampaignService {
     }
     console.log('Campaign budget created:', resourceName);
     return resourceName;
-    }
+  }
   private async createCampaign(
     name: string,
     budgetResourceName: string,
@@ -218,7 +228,7 @@ export class YouTubeCampaignService {
         },
         HttpStatus.BAD_REQUEST,
       );
-    } 
+    }
   }
   private async createAdGroup(
     name: string,
@@ -230,7 +240,7 @@ export class YouTubeCampaignService {
         {
           name: `${name}_AdGroup`,
           campaign: campaignResourceName,
-          type:'DISPLAY_STANDARD',
+          type: 'DISPLAY_STANDARD',
           status: 'ENABLED',
         },
       ]);
@@ -265,9 +275,9 @@ export class YouTubeCampaignService {
   ): Promise<string> {
     try {
       console.log('Creating Discovery Ad...');
-      const x ={
+      const x = {
         ad: {
-          name: 'YouTube Video Ad', 
+          name: 'YouTube Video Ad',
           final_urls: [finalUrl], // Landing page URL
           responsive_display_ad: {
             business_name: businessName, // Business name
@@ -275,20 +285,20 @@ export class YouTubeCampaignService {
             square_marketing_images: [{ asset: squareMarketingImageUrl }], // Square image
             headlines: headlines.map((text) => ({ text })), // Headlines
             descriptions: descriptions.map((text) => ({ text })), // Descriptions
-            
+
             youtube_videos: [
               { asset: videoAssetResourceName },
             ],
           },
         },
       }
-      console.log(JSON.stringify(x,null,2))
+      console.log(JSON.stringify(x, null, 2))
       const response = await this.googleAdsClient.adGroupAds.create([
         {
           ad_group: adGroupResourceName,
           ad: {
-            name: 'YouTube Video Ad',  
-           type:'RESPONSIVE_DISPLAY_AD',
+            name: 'YouTube Video Ad',
+            type: 'RESPONSIVE_DISPLAY_AD',
             final_urls: [finalUrl], // Landing page URL
             responsive_display_ad: {
               business_name: businessName, // Business name
@@ -299,8 +309,9 @@ export class YouTubeCampaignService {
               youtube_videos: [
                 { asset: videoAssetResourceName },
               ],
-              long_headline:{text:headlines[0]},
-              square_logo_images:[{ asset: squareMarketingImageUrl }]
+              long_headline: { text: headlines[0] },
+              square_logo_images: [{ asset: squareMarketingImageUrl }],
+              call_to_action_text: 'Book Now'
             },
           },
           status: 'ENABLED',
