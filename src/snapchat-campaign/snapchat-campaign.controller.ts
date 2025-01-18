@@ -56,6 +56,7 @@ export class SnapchatCampaignController {
     @Body() body: any,
     @Req() req: any,
   ) {
+    console.log(body)
     const {
       name,
       objective,
