@@ -106,18 +106,16 @@ export class SnapchatCampaignService {
   }
 
   async uploadFile(
-    file: string,
+    fileBuffer: Buffer,
     accessToken: string,
     mediaId: string,
+    fileName: string,
   ): Promise<any> {
     const endpoint = `https://adsapi.snapchat.com/v1/media/${mediaId}/upload`;
-    const base64Data = file.split(';base64,').pop();
-    if (!base64Data) {
-      throw new Error('Invalid base64 file data');
-    }
-    const fileBuffer = Buffer.from(base64Data, 'base64');
+
     const formData = new FormData();
-    formData.append('file', fileBuffer, { filename:'uploaded' });
+    formData.append('file', fileBuffer, { filename: fileName });
+
     try {
       const response = await axios.post(endpoint, formData, {
         headers: {
@@ -216,7 +214,7 @@ export class SnapchatCampaignService {
             ad_account_id: adAccountId,
             status: 'PAUSED',
             start_time: startTime,
-            objective_v2:objective,
+            objective_v2: objective,
           },
         ],
       };
@@ -428,6 +426,7 @@ export class SnapchatCampaignService {
       );
     }
   }
+
   async createSnapAd(
     userId: string,
     walletId: string,
@@ -444,28 +443,38 @@ export class SnapchatCampaignService {
     headline: string,
     languages: string[],
     osType: string,
-    file:string,
+    file: string, // Only base64-encoded string
   ) {
     try {
       this.logger.log('Refreshing access token...');
       const accessToken = await this.refreshAccessToken();
-      this.logger.log('Access token refreshed successfully.' + accessToken);
+      this.logger.log('Access token refreshed successfully: ' + accessToken);
+
       const adAccountId = '993c271d-05ce-4c6a-aeeb-13b62b657ae6';
       const profileId = 'aca22c35-6fee-4912-a3ad-9ddc20fd21b7';
+
+      // Extract file type and buffer from the base64 string
+      const base64Data = file.split(';base64,').pop(); // Remove the data URL prefix
+      if (!base64Data) {
+        throw new Error('Invalid base64 file data');
+      }
+
+      const fileBuffer = Buffer.from(base64Data, 'base64');
       const fileType = file.startsWith('data:image') ? 'IMAGE' : 'VIDEO';
-      this.logger.log(fileType)
-      
+      const fileName = `uploaded_file_${Date.now()}.${fileType === 'IMAGE' ? 'jpg' : 'mp4'}`;
+
+      this.logger.log(`File type: ${fileType}`);
+
       // Step 1: Create media
       this.logger.log('Creating media...');
       const mediaResponse = await this.createMedia(accessToken, name, adAccountId, fileType);
       const mediaId = mediaResponse.media[0].media.id;
-
       this.logger.log(`Media created with ID: ${mediaId}`);
 
-      // Step 2: Upload fille
+      // Step 2: Upload file
       this.logger.log('Uploading file...');
-      const UploadedFile = await this.uploadFile(file, accessToken, mediaId);
-      this.logger.log('file uploaded successfully.');
+      const uploadedFile = await this.uploadFile(fileBuffer, accessToken, mediaId, fileName);
+      this.logger.log('File uploaded successfully.');
 
       // Step 3: Create creative
       this.logger.log('Creating creative...');
@@ -479,8 +488,6 @@ export class SnapchatCampaignService {
         headline,
         profileId,
       );
-
-
       const creativeId = creativeResponse.creatives[0].creative.id;
       this.logger.log(`Creative created with ID: ${creativeId}`);
 
@@ -502,7 +509,7 @@ export class SnapchatCampaignService {
         accessToken,
         name,
         campaignId,
-        "SNAP_ADS",
+        'SNAP_ADS',
         minAge,
         maxAge,
         gender,
@@ -513,12 +520,12 @@ export class SnapchatCampaignService {
         languages,
         osType,
       );
-
       const adSquadId = adSquadResponse.adsquads[0].adsquad.id;
       this.logger.log(`Ad squad created with ID: ${adSquadId}`);
 
-      this.logger.log('Creating ad ...');
-      const payload = {
+      // Step 6: Create ad
+      this.logger.log('Creating ad...');
+      const adPayload = {
         ads: [
           {
             ad_squad_id: adSquadId,
@@ -530,17 +537,15 @@ export class SnapchatCampaignService {
         ],
       };
       const endpoint = `https://adsapi.snapchat.com/v1/adsquads/${adSquadId}/ads`;
-      const response = await axios.post(
-        `https://adsapi.snapchat.com/v1/adsquads/${adSquadId}/ads`,
-        payload,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-          },
+      const response = await axios.post(endpoint, adPayload, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
         },
-      );
-      const ad = response.data
-      this.logger.log(' ad created'+ad.ads[0].ad.id);
+      });
+      const ad = response.data;
+      this.logger.log(`Ad created with ID: ${ad.ads[0].ad.id}`);
+
+      // Step 7: Create order
       // const order = await this.orderService.createOrderWithTransaction(
       //   userId,
       //   walletId,
@@ -549,22 +554,23 @@ export class SnapchatCampaignService {
       //   {
       //     base: {
       //       campaign_id: campaignId,
-      //       campaing_name: campaignResponse.campaigns[0].campaign.name,
+      //       campaign_name: campaignResponse.campaigns[0].campaign.name,
       //       create_time: campaignResponse.campaigns[0].campaign.created_at,
       //       schedule_start_time: adSquadResponse.adsquads[0].adsquad.start_time,
       //       schedule_end_time: adSquadResponse.adsquads[0].adsquad.end_time,
       //       budget: budget,
-      //       video: UploadedFile
+      //       video: uploadedFile,
       //     },
       //     campaignResponse,
       //     mediaResponse,
-      //     UploadedFile,
+      //     uploadedFile,
       //     creativeResponse,
       //     adSquadResponse,
-      //     ad
-      //   }
-      // )
-      // Step 7: Return success
+      //     ad,
+      //   },
+      // );
+
+      // Step 8: Return success
       return ad;
     } catch (error) {
       this.logger.error('Error during Snap Ad creation:', error.message);
@@ -573,8 +579,6 @@ export class SnapchatCampaignService {
   }
 
   async createCollectionAd(
-    // userId: string,
-    // walletId: string,
     objective: string,
     name: string,
     minAge: string,
@@ -588,163 +592,187 @@ export class SnapchatCampaignService {
     headline: string,
     languages: string[],
     osType: string,
-    callToActoin,
-    mainFile: string,
-    product1: string,
-    product2: string,
-    product3: string,
-    product4: string,
+    callToActoin: string,
+    mainFile: string, // Base64-encoded string
+    product1: string, // Base64-encoded string
+    product2: string, // Base64-encoded string
+    product3: string, // Base64-encoded string
+    product4: string, // Base64-encoded string
     interactionType: string,
     mainUrl: string,
     productUrls: string[]
   ) {
-    this.logger.log('Refreshing access token...');
-    const accessToken = await this.refreshAccessToken();
-    this.logger.log('Access token refreshed successfully: ' + accessToken);
+    try {
+      this.logger.log('Refreshing access token...');
+      const accessToken = await this.refreshAccessToken();
+      this.logger.log('Access token refreshed successfully: ' + accessToken);
 
-    const adAccountId = "993c271d-05ce-4c6a-aeeb-13b62b657ae6";
-    const profileId = "aca22c35-6fee-4912-a3ad-9ddc20fd21b7";
+      const adAccountId = "993c271d-05ce-4c6a-aeeb-13b62b657ae6";
+      const profileId = "aca22c35-6fee-4912-a3ad-9ddc20fd21b7";
 
-    const mediaIds: string[] = [];
+      const mediaIds: string[] = [];
 
-    const productFiles = [product1, product2, product3, product4];
+      const productFiles = [product1, product2, product3, product4];
 
-    // Step 1: Create media and upload files for all products
-    for (let i = 0; i < productFiles.length; i++) {
-      const productFile = productFiles[i];
-      if (!productFile) {
-        this.logger.warn(`Product ${i + 1} file is missing. Skipping...`);
-        continue;
+      // Step 1: Create media and upload files for all products
+      for (let i = 0; i < productFiles.length; i++) {
+        const productFile = productFiles[i];
+        if (!productFile) {
+          this.logger.warn(`Product ${i + 1} file is missing. Skipping...`);
+          continue;
+        }
+
+        // Extract file type and buffer from the base64 string
+        const base64Data = productFile.split(';base64,').pop(); // Remove the data URL prefix
+        if (!base64Data) {
+          throw new Error(`Invalid base64 file data for product ${i + 1}`);
+        }
+
+        const fileBuffer = Buffer.from(base64Data, 'base64');
+        const fileType = productFile.startsWith('data:image') ? 'IMAGE' : 'VIDEO';
+        const fileName = `product_${i + 1}_${Date.now()}.${fileType === 'IMAGE' ? 'jpg' : 'mp4'}`;
+
+        this.logger.log(`Processing product ${i + 1} with file type: ${fileType}`);
+
+        // Create media
+        this.logger.log(`Creating media for product ${i + 1}...`);
+        const mediaResponse = await this.createMedia(accessToken, name, adAccountId, fileType);
+        const mediaId = mediaResponse.media[0].media.id;
+        this.logger.log(`Media created for product ${i + 1} with ID: ${mediaId}`);
+
+        // Upload file
+        this.logger.log(`Uploading file for product ${i + 1}...`);
+        await this.uploadFile(fileBuffer, accessToken, mediaId, fileName);
+        this.logger.log(`File uploaded successfully for product ${i + 1}.`);
+
+        mediaIds.push(mediaId);
       }
 
-      const fileType = productFile.startsWith('data:image') ? 'IMAGE' : 'VIDEO';
-      this.logger.log(`Processing product ${i + 1} with file type: ${fileType}`);
+      this.logger.log('All media IDs:', mediaIds);
 
-      this.logger.log(`Creating media for product ${i + 1}...`);
-      const mediaResponse = await this.createMedia(accessToken, name, adAccountId, fileType);
-      const mediaId = mediaResponse.media[0].media.id;
-      this.logger.log(`Media created for product ${i + 1} with ID: ${mediaId}`);
+      // Step 2: Create Creative Elements
+      this.logger.log(`Creating Creative Elements...`);
+      const creativeElementsResponse = await this.createCreativeElements(
+        accessToken,
+        adAccountId,
+        name,
+        interactionType,
+        mediaIds,
+        productUrls,
+        name
+      );
+      this.logger.log(JSON.stringify(creativeElementsResponse));
 
-      this.logger.log(`Uploading file for product ${i + 1}...`);
-      await this.uploadFile(productFile, accessToken, mediaId);
-      this.logger.log(`File uploaded successfully for product ${i + 1}.`);
+      // Step 3: Extract Creative Element IDs
+      const creativeElementsIds = creativeElementsResponse.creative_elements.map(
+        (element) => element.creative_element.id
+      );
+      this.logger.log('All Creative Element IDs:', creativeElementsIds);
 
-      mediaIds.push(mediaId);
+      // Step 4: Create an Interaction Zone
+      this.logger.log(`Creating Interaction Zone...`);
+      const interactionZoneResponse = await this.createInteraction(
+        accessToken,
+        adAccountId,
+        name,
+        callToActoin,
+        creativeElementsIds
+      );
+      this.logger.log(JSON.stringify(interactionZoneResponse));
+      const interactionZoneId = interactionZoneResponse.interaction_zones[0].interaction_zone.id;
+      this.logger.log(`Interaction zone created with ID: ${interactionZoneId}`);
+
+      // Step 5: Handle main file
+      const mainFileBase64Data = mainFile.split(';base64,').pop(); // Remove the data URL prefix
+      if (!mainFileBase64Data) {
+        throw new Error('Invalid base64 file data for main file');
+      }
+
+      const mainFileBuffer = Buffer.from(mainFileBase64Data, 'base64');
+      const mainFileType = mainFile.startsWith('data:image') ? 'IMAGE' : 'VIDEO';
+      const mainFileName = `main_file_${Date.now()}.${mainFileType === 'IMAGE' ? 'jpg' : 'mp4'}`;
+
+      this.logger.log(`Main file type: ${mainFileType}`);
+
+      // Step 6: Create media for main file
+      this.logger.log('Creating media for main file...');
+      const mainMediaResponse = await this.createMedia(accessToken, name, adAccountId, mainFileType);
+      const mainMediaId = mainMediaResponse.media[0].media.id;
+      this.logger.log(`Media created for main file with ID: ${mainMediaId}`);
+
+      // Step 7: Upload main file
+      this.logger.log('Uploading main file...');
+      const uploadedMainFile = await this.uploadFile(mainFileBuffer, accessToken, mainMediaId, mainFileName);
+      this.logger.log('Main file uploaded successfully.');
+
+      // Step 8: Create creative
+      this.logger.log('Creating creative...');
+      const creativeResponse = await this.createCreative(
+        accessToken,
+        adAccountId,
+        mainMediaId,
+        name,
+        "COLLECTION",
+        brandName,
+        headline,
+        profileId,
+        interactionZoneId,
+        interactionType,
+        mainUrl
+      );
+      const creativeId = creativeResponse.creatives[0].creative.id;
+      this.logger.log(`Creative created with ID: ${creativeId}`);
+
+      // Step 9: Create campaign
+      this.logger.log('Creating campaign...');
+      const campaignResponse = await this.createCampaign(
+        accessToken,
+        name,
+        adAccountId,
+        startTime,
+        objective,
+      );
+      const campaignId = campaignResponse.campaigns[0].campaign.id;
+      this.logger.log(`Campaign created with ID: ${campaignId}`);
+
+      // Step 10: Create ad squad
+      this.logger.log('Creating ad squad...');
+      const adSquadResponse = await this.createAdSquad(
+        accessToken,
+        name,
+        campaignId,
+        "SNAP_ADS",
+        minAge,
+        maxAge,
+        gender,
+        countryCodes,
+        budget,
+        startTime,
+        endTime,
+        languages,
+        osType
+      );
+      this.logger.log(JSON.stringify(adSquadResponse));
+      const adSquadId = adSquadResponse.adsquads[0].adsquad.id;
+      this.logger.log(`Ad squad created with ID: ${adSquadId}`);
+
+      // Step 11: Create ad
+      this.logger.log('Creating ad...');
+      const adResponse = await this.createAd(
+        accessToken,
+        adSquadId,
+        creativeId,
+        name,
+        "COLLECTION",
+        "PAUSED"
+      );
+      this.logger.log('Ad created with ID: ' + adResponse.ads[0].ad.id);
+
+      return adResponse;
+    } catch (error) {
+      this.logger.error('Error during Collection Ad creation:', error.message);
+      throw error;
     }
-
-    this.logger.log('All media IDs:', mediaIds);
-
-    // Step 2: Create Creative Elements
-    this.logger.log(`Creating Creative Elements...`);
-    const creativeElementsResponse = await this.createCreativeElements(
-      accessToken,
-      adAccountId,
-      name,
-      interactionType,
-      mediaIds,
-      productUrls,
-      name
-    );
-    this.logger.log(JSON.stringify( creativeElementsResponse))
-    // Step 3: Extract Creative Element IDs
-    const creativeElementsIds = creativeElementsResponse.creative_elements.map(
-      (element) => element.creative_element.id
-    );
-
-    this.logger.log('All Creative Element IDs:', creativeElementsIds);
-
-    // Step 4: Create an Interaction Zone
-    this.logger.log(`Creating Interaction Zone...`);
-    const interactionZoneResponse = await this.createInteraction(
-      accessToken,
-      adAccountId,
-      name,
-      callToActoin,
-      creativeElementsIds
-    );
-    this.logger.log(JSON.stringify( interactionZoneResponse))
-    const interactionZoneId = interactionZoneResponse.interaction_zones[0].interaction_zone.id;
-   
-    this.logger.log(`Interaction zone created with ID: ${interactionZoneId}`);
-
-    const fileType = mainFile.startsWith('video') ? 'VIDEO' : 'IMAGE';
-    this.logger.log(fileType)
-
-    // Step 5: Create media
-    this.logger.log('Creating media for main file...');
-    const mediaResponse = await this.createMedia(accessToken, name, adAccountId, fileType);
-    const mediaId = mediaResponse.media[0].media.id;
-
-    this.logger.log(`Media created with ID: ${mediaId}`);
-
-    // Step 6: Upload fille
-    this.logger.log('Uploading file...');
-    const UploadedFile = await this.uploadFile(mainFile, accessToken, mediaId);
-    this.logger.log('file uploaded successfully.');
-
-    // Step 7: Create creative
-    this.logger.log('Creating creative...');
-    const creativeResponse = await this.createCreative(
-      accessToken,
-      adAccountId,
-      mediaId,
-      name,
-      "COLLECTION",
-      brandName,
-      headline,
-      profileId,
-      interactionZoneId,
-      interactionType,
-      mainUrl
-    );
-    const creativeId = creativeResponse.creatives[0].creative.id;
-    this.logger.log(`Creative created with ID: ${creativeId}`);
-
-    // Step 8: Create campaign
-    this.logger.log('Creating campaign...');
-    const campaignResponse = await this.createCampaign(
-      accessToken,
-      name,
-      adAccountId,
-      startTime,
-      objective,
-    );
-    const campaignId = campaignResponse.campaigns[0].campaign.id;
-    this.logger.log(`Campaign created with ID: ${campaignId}`);
-
-    // Step 9: Create ad squad
-    this.logger.log('Creating ad squad...');
-    const adSquadResponse = await this.createAdSquad(
-      accessToken,
-      name,
-      campaignId,
-      "SNAP_ADS",
-      minAge,
-      maxAge,
-      gender,
-      countryCodes,
-      budget,
-      startTime,
-      endTime,
-      languages,
-      osType
-    );
-    this.logger.log(JSON.stringify( adSquadResponse))
-    const adSquadId = adSquadResponse.adsquads[0].adsquad.id;
-    this.logger.log(`Ad squad created with ID: ${adSquadId}`);
-
-    this.logger.log('Creating ad...')
-    const adResponse = await this.createAd(
-      accessToken,
-      adSquadId,
-      creativeId,
-      name,
-      "COLLECTION",
-      "PAUSED"
-    )
-    this.logger.log(' ad created' + adResponse.ads[0].ad.id);
-
-    return adResponse;
   }
 
 
