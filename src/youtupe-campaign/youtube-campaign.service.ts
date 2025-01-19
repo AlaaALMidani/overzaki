@@ -3,8 +3,6 @@ import { GoogleCampaignService } from './../google-campaign/google-campaign.serv
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { GoogleAdsApi, Customer } from 'google-ads-api';
 import * as dotenv from 'dotenv';
-import * as fs from 'fs';
-import * as path from 'path';
 dotenv.config();
 
 @Injectable()
@@ -54,8 +52,8 @@ export class YouTubeCampaignService {
     videoId: string,
     startDate: string,
     endDate: string,
-    squareImage: string[], // Square image file
-    landscapeImage: string[], // Landscape image file
+    squareImages: string[], // Square image file
+    landscapeImages: string[], // Landscape image file
     square_logo_images: string[],
     finalUrl: string,
     businessName: string,
@@ -67,7 +65,8 @@ export class YouTubeCampaignService {
       type: string;
     }[],
     locations: string[],
-
+    gender: string,
+    ageRanges: string[],
   ): Promise<{
     message: string;
     campaign: string;
@@ -75,21 +74,55 @@ export class YouTubeCampaignService {
     ad: string;
   }> {
     try {
+      // Log all parameters
+      console.log('=== Parameters for createYouTubeCampaign ===');
+      console.log('name:', name);
+      console.log('budgetAmountMicros:', budgetAmountMicros);
+      console.log('videoId:', videoId);
+      console.log('startDate:', startDate);
+      console.log('endDate:', endDate);
+      console.log('squareImages:', squareImages);
+      console.log('landscapeImages:', landscapeImages);
+      console.log('square_logo_images:', square_logo_images);
+      console.log('finalUrl:', finalUrl);
+      console.log('businessName:', businessName);
+      console.log('headlines:', headlines);
+      console.log('descriptions:', descriptions);
+      console.log('languages:', languages);
+      console.log('keywords:', keywords);
+      console.log('locations:', locations);
+      console.log('gender:', gender);
+      console.log('ageRanges:', ageRanges);
       console.log('=== Starting YouTube campaign creation process ===');
+  
+      // Create assets
       const videoAssetResourceName = await this.createVideoAsset(name, videoId);
-
-
-      const squareImagesAssetResourceNames = await this.createImageAsset(squareImage, `${name}_square`)
-      const landscapeImagesAssetResourceNames = await this.createImageAsset(landscapeImage, `${name}_logo`)
-      const logoImagesAssetResourceNames = await this.createImageAsset(square_logo_images, `${name}_landscape`)
-
+      const squareImagesAssetResourceNames = await this.createImageAsset(squareImages, `${name}_square`);
+      const landscapeImagesAssetResourceNames = await this.createImageAsset(landscapeImages, `${name}_logo`);
+      const logoImagesAssetResourceNames = await this.createImageAsset(square_logo_images, `${name}_landscape`);
+  
+      // Create campaign budget
       const budgetResourceName = await this.createCampaignBudget(name, budgetAmountMicros);
-      const biddingStrategy = await this.createBiddingStrategy(name, budgetAmountMicros)
+  
+      // Create bidding strategy
+      const biddingStrategy = await this.createBiddingStrategy(name, budgetAmountMicros);
+  
+      // Create campaign
       const campaignResourceName = await this.createCampaign(name, budgetResourceName, startDate, endDate, biddingStrategy);
-      await this.googleCampaignService.addLanguageTargeting(campaignResourceName, languages)
-      await this.googleCampaignService.addGeoTargeting(campaignResourceName, locations)
+  
+      // Add language targeting
+      await this.googleCampaignService.addLanguageTargeting(campaignResourceName, languages);
+  
+      // Add geo targeting
+      await this.googleCampaignService.addGeoTargeting(campaignResourceName, locations);
+  
+      // Create ad group
       const adGroupResourceName = await this.createAdGroup(name, campaignResourceName);
-      await this.googleCampaignService.addKeywordsToAdGroup(adGroupResourceName, keywords)
+  
+      // Add keywords to ad group
+      await this.googleCampaignService.addKeywordsToAdGroup(adGroupResourceName, keywords);
+  
+      // Create discovery ad
       const adResourceName = await this.createDiscoveryAd(
         adGroupResourceName,
         businessName,
@@ -98,22 +131,21 @@ export class YouTubeCampaignService {
         landscapeImagesAssetResourceNames,
         squareImagesAssetResourceNames,
         logoImagesAssetResourceNames,
-        finalUrl, // Landing page URL
-        videoAssetResourceName
+        finalUrl,
+        videoAssetResourceName,
       );
+  
       console.log('=== YouTube campaign creation completed successfully ===');
-
+  
       return {
         message: 'YouTube campaign created successfully',
         campaign: campaignResourceName,
         adGroup: adGroupResourceName,
         ad: adResourceName,
       };
-
     } catch (error) {
-      console.log(error)
+      console.error('Error creating YouTube campaign:', error);
       throw error;
-      //this.handleGoogleAdsError(error);
     }
   }
   private validateVideoId(videoId: string): string {
@@ -347,38 +379,6 @@ export class YouTubeCampaignService {
       );
     }
   }
-  // private async createImageAsset(file: string, assetName: string): Promise<string> {
-  //   try {
-  //     console.log('Uploading image asset...');
-  //     const absoluteImagePath = path.join(__dirname, file);
-
-  //     // Read the image file and encode it to base64
-  //     const image = fs.readFileSync(absoluteImagePath, { encoding: 'base64' });
-
-  //     const response = await this.googleAdsClient.assets.create([
-  //       {
-  //         name: assetName,
-  //         type: 'IMAGE', // Asset type is IMAGE
-  //         image_asset: {
-  //           data: image, // Convert file buffer to Base64
-  //         },
-  //       },
-  //     ]);
-
-  //     const resourceName = response.results[0]?.resource_name;
-
-  //     console.log('Image asset created:', resourceName);
-  //     return resourceName;
-  //   } catch (error) {
-  //     throw new HttpException(
-  //       {
-  //         message: 'Failed to upload image asset.',
-  //         details: error,
-  //       },
-  //       HttpStatus.BAD_REQUEST,
-  //     );
-  //   }
-  // }
   private async createImageAsset(images: string[], assetName: string): Promise<string[]> {
     try {
       let images: string[];
@@ -408,3 +408,36 @@ export class YouTubeCampaignService {
     }
   }
 }
+
+      // private async createImageAsset(file: string, assetName: string): Promise<string> {
+      //   try {
+      //     console.log('Uploading image asset...');
+      //     const absoluteImagePath = path.join(__dirname, file);
+    
+      //     // Read the image file and encode it to base64
+      //     const image = fs.readFileSync(absoluteImagePath, { encoding: 'base64' });
+    
+      //     const response = await this.googleAdsClient.assets.create([
+      //       {
+      //         name: assetName,
+      //         type: 'IMAGE', // Asset type is IMAGE
+      //         image_asset: {
+      //           data: image, // Convert file buffer to Base64
+      //         },
+      //       },
+      //     ]);
+    
+      //     const resourceName = response.results[0]?.resource_name;
+    
+      //     console.log('Image asset created:', resourceName);
+      //     return resourceName;
+      //   } catch (error) {
+      //     throw new HttpException(
+      //       {
+      //         message: 'Failed to upload image asset.',
+      //         details: error,
+      //       },
+      //       HttpStatus.BAD_REQUEST,
+      //     );
+      //   }
+      // }

@@ -34,6 +34,8 @@ export class YouTubeCampaignController {
       type: string;
     }[],
     @Body('locations') locations: string[],
+    @Body('gender') gender: string,
+    @Body('ageRanges') ageRanges: string[],
   ) {
     try {
       const result = await this.youtubeCampaignService.createYouTubeCampaign(
@@ -52,6 +54,8 @@ export class YouTubeCampaignController {
         languages,
         keywords,
         locations,
+        gender,
+        ageRanges,
       );
       return result;
     } catch (error) {
