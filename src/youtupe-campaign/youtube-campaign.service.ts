@@ -323,9 +323,9 @@ export class YouTubeCampaignService {
         final_urls: [finalUrl], // Landing page URL
         responsive_display_ad: {
           business_name: businessName, // Business name
-          marketing_images: marketingImages.map((image) => ({ asset: image })),
-          square_marketing_images: squareMarketingImages.map((image) => ({ asset: image })),
-          square_logo_images: logoImages.map((image) => ({ asset: image })),
+          marketing_images: marketingImages.map((image) => ({ asset:this.cleanBase64(image)  })),
+          square_marketing_images: squareMarketingImages.map((image) => ({ asset:this.cleanBase64(image)  })),
+          square_logo_images: logoImages.map((image) => ({ asset:this.cleanBase64(image)  })),
           headlines: headlines.map((text) => ({ text })), // Headlines
           descriptions: descriptions.map((text) => ({ text })), // Descriptions
           youtube_videos: [
@@ -379,6 +379,9 @@ export class YouTubeCampaignService {
       );
     }
   }
+  private  cleanBase64(base64: string): string {
+    return base64.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
+  }
   private async createImageAsset(images: string[], assetName: string): Promise<string[]> {
     try {
       let result: string[];
@@ -413,10 +416,8 @@ export class YouTubeCampaignService {
       // private async createImageAsset(file: string, assetName: string): Promise<string> {
       //   try {
       //     console.log('Uploading image asset...');
-      //     const absoluteImagePath = path.join(__dirname, file);
-    
-      //     // Read the image file and encode it to base64
-      //     const image = fs.readFileSync(absoluteImagePath, { encoding: 'base64' });
+          // const absoluteImagePath = path.join(__dirname, file);
+          // const image = fs.readFileSync(absoluteImagePath, { encoding: 'base64' });
     
       //     const response = await this.googleAdsClient.assets.create([
       //       {
