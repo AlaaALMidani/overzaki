@@ -582,11 +582,12 @@ export class SnapchatCampaignService {
             budget: budget,
             uploadedFile
           },
-          campaignResponse,
-          mediaResponse,
-          creativeResponse,
-          adSquadResponse,
-          ad,
+          campaign:campaignResponse.campaigns[0],
+          media:mediaResponse,
+          creative: creativeResponse,
+          file:uploadedFile,
+          adSquadResponse:adSquadResponse,
+          ad:ad,
         },
       );
       this.logger.log('Order created successfully:', order);
@@ -811,10 +812,14 @@ export class SnapchatCampaignService {
             main_media_id: mainMediaId,
             product_media_ids: mediaIds,
           },
-          campaignResponse,
-          adSquadResponse,
-          creativeResponse,
-          adResponse,
+          campaign: campaignResponse.campaigns[0],
+          adSquad: adSquadResponse.adsquads[0],
+          ad: adResponse.ads[0],
+          media: mainMediaResponse,
+          creative: creativeResponse,
+          file: uploadedMainFile,
+          interactionZone: interactionZoneResponse.interaction_zones[0],
+          creativeElements: creativeElementsResponse.creative_elements,
         },
       );
       this.logger.log('Order created successfully:', order);
