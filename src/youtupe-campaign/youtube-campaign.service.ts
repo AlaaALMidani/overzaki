@@ -323,9 +323,9 @@ export class YouTubeCampaignService {
         final_urls: [finalUrl], // Landing page URL
         responsive_display_ad: {
           business_name: businessName, // Business name
-          marketing_images: marketingImages.map((image) => ({ asset:this.cleanBase64(image)  })),
-          square_marketing_images: squareMarketingImages.map((image) => ({ asset:this.cleanBase64(image)  })),
-          square_logo_images: logoImages.map((image) => ({ asset:this.cleanBase64(image)  })),
+          marketing_images: marketingImages.map((image) => ({ asset:image  })),
+          square_marketing_images: squareMarketingImages.map((image) => ({ asset:image  })),
+          square_logo_images: logoImages.map((image) => ({ asset:image  })),
           headlines: headlines.map((text) => ({ text })), // Headlines
           descriptions: descriptions.map((text) => ({ text })), // Descriptions
           youtube_videos: [
@@ -392,7 +392,7 @@ export class YouTubeCampaignService {
             name: assetName + index,
             type: 'IMAGE',
             image_asset: {
-              data: image,
+              data: this.cleanBase64(image),
             },
           },
         ]);
