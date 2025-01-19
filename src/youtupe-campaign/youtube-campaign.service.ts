@@ -105,7 +105,7 @@ export class YouTubeCampaignService {
       const budgetResourceName = await this.createCampaignBudget(name, budgetAmountMicros);
   
       // Create bidding strategy
-      const biddingStrategy = await this.createBiddingStrategy(name, budgetAmountMicros);
+      const biddingStrategy = await this.createBiddingStrategy(name);
   
       // Create campaign
       const campaignResourceName = await this.createCampaign(name, budgetResourceName, startDate, endDate, biddingStrategy);
