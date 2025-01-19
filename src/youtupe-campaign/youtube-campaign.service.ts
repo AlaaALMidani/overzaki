@@ -178,7 +178,7 @@ export class YouTubeCampaignService {
     console.log('Video asset created:', resourceName);
     return resourceName;
   }
-  private async createBiddingStrategy(name: string, amountMicros: number): Promise<string> {
+  private async createBiddingStrategy(name: string,): Promise<string> {
     try {
       console.log('Creating Target CPA bidding strategy...');
 
