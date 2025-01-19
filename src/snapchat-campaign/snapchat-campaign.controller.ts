@@ -236,24 +236,44 @@ export class SnapchatCampaignController {
     }
   }
 
- /**
- * Helper function to ensure the input is an array.
- * @param input - The input value (string, array, or undefined).
- * @returns An array of strings.
- */
-ensureArray(input: string | string[] | undefined): string[] {
-  if (!input) {
-    return [];
+  @Get('campaign-report')
+  async getCampaignReport(
+    @Query('campaignId') campaignId: string,
+    @Query('startTime') startTime: string,
+    @Query('granularity') granularity: string,
+    @Req() req: any,
+  ) {
+    try {
+      const report = await this.campaignService.generateCampaignReport(
+        campaignId,
+      );
+      return {
+        message: 'Campaign report fetched successfully!',
+        data: report,
+      };
+    } catch (error) {
+      this.logger.error('Error fetching campaign report:', error.message);
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
-  if (Array.isArray(input)) {
-    // If it's already an array, return it directly
-    return input;
+  /**
+  * Helper function to ensure the input is an array.
+  * @param input - The input value (string, array, or undefined).
+  * @returns An array of strings.
+  */
+  ensureArray(input: string | string[] | undefined): string[] {
+    if (!input) {
+      return [];
+    }
+    if (Array.isArray(input)) {
+      // If it's already an array, return it directly
+      return input;
+    }
+    if (typeof input === 'string') {
+      // Handle comma-separated strings like "ar,us"
+      return input.split(',').map((item) => item.trim());
+    }
+    // Fallback for unexpected types
+    return [input];
   }
-  if (typeof input === 'string') {
-    // Handle comma-separated strings like "ar,us"
-    return input.split(',').map((item) => item.trim());
-  }
-  // Fallback for unexpected types
-  return [input];
-}
 }
