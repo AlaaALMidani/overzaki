@@ -283,4 +283,5 @@ export class SnapchatCampaignController {
     // Fallback for unexpected types
     return [input];
   }
+  
 }
