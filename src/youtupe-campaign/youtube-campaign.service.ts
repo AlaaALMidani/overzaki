@@ -381,7 +381,7 @@ export class YouTubeCampaignService {
   }
   private async createImageAsset(images: string[], assetName: string): Promise<string[]> {
     try {
-      let images: string[];
+      let result: string[];
       images.forEach(async (image, index) => {
         console.log('Uploading image asset...');
         const response = await this.googleAdsClient.assets.create([
@@ -394,9 +394,10 @@ export class YouTubeCampaignService {
           },
         ]);
         const resourceName = response.results[0]?.resource_name;
+        result.push(resourceName)
         console.log('Image asset created:', resourceName);
       })
-      return images;
+      return result;
     } catch (error) {
       throw new HttpException(
         {
