@@ -567,33 +567,38 @@ export class SnapchatCampaignService {
       const ad = response.data;
       this.logger.log(`Ad created with ID: ${ad.ads[0].ad.id}`);
 
-      // Step 7: Create order
-      // const order = await this.orderService.createOrderWithTransaction(
-      //   userId,
-      //   walletId,
-      //   'Snapchat snap',
-      //   budget,
-      //   {
-      //     base: {
-      //       campaign_id: campaignId,
-      //       campaign_name: campaignResponse.campaigns[0].campaign.name,
-      //       create_time: campaignResponse.campaigns[0].campaign.created_at,
-      //       schedule_start_time: adSquadResponse.adsquads[0].adsquad.start_time,
-      //       schedule_end_time: adSquadResponse.adsquads[0].adsquad.end_time,
-      //       budget: budget,
-      //       video: uploadedFile,
-      //     },
-      //     campaignResponse,
-      //     mediaResponse,
-      //     uploadedFile,
-      //     creativeResponse,
-      //     adSquadResponse,
-      //     ad,
-      //   },
-      // );
+      const order = await this.orderService.createOrderWithTransaction(
+        userId,
+        walletId,
+        'Snapchat Snap Ad',
+        budget,
+        {
+          base: {
+            campaign_id: campaignId,
+            campaign_name: campaignResponse.campaigns[0].campaign.name,
+            create_time: campaignResponse.campaigns[0].campaign.created_at,
+            schedule_start_time: adSquadResponse.adsquads[0].adsquad.start_time,
+            schedule_end_time: adSquadResponse.adsquads[0].adsquad.end_time,
+            budget: budget,
+            media_id: mediaId,
+            file_name: fileName,
+            file_type: fileType,
+          },
+          campaignResponse,
+          mediaResponse,
+          creativeResponse,
+          adSquadResponse,
+          ad,
+        },
+      );
+      this.logger.log('Order created successfully:', order);
 
       // Step 8: Return success
-      return ad;
+      return {
+        ...ad,
+        order,
+      };
+
     } catch (error) {
       this.logger.error('Error during Snap Ad creation:', error.message);
       throw error;
@@ -601,6 +606,8 @@ export class SnapchatCampaignService {
   }
 
   async createCollectionAd(
+    userId: string,
+    walletId: string,
     objective: string,
     name: string,
     minAge: string,
@@ -789,7 +796,35 @@ export class SnapchatCampaignService {
         "PAUSED"
       );
       this.logger.log('Ad created with ID: ' + adResponse.ads[0].ad.id);
+      this.logger.log('Creating order...');
+      const order = await this.orderService.createOrderWithTransaction(
+        userId,
+        walletId,
+        'Snapchat Collection Ad',
+        budget,
+        {
+          base: {
+            campaign_id: campaignId,
+            campaign_name: campaignResponse.campaigns[0].campaign.name,
+            create_time: campaignResponse.campaigns[0].campaign.created_at,
+            schedule_start_time: adSquadResponse.adsquads[0].adsquad.start_time,
+            schedule_end_time: adSquadResponse.adsquads[0].adsquad.end_time,
+            budget: budget,
+            main_media_id: mainMediaId,
+            product_media_ids: mediaIds,
+          },
+          campaignResponse,
+          adSquadResponse,
+          creativeResponse,
+          adResponse,
+        },
+      );
+      this.logger.log('Order created successfully:', order);
 
+      return {
+        ...adResponse,
+        order,
+      };
       return adResponse;
     } catch (error) {
       this.logger.error('Error during Collection Ad creation:', error.message);
@@ -878,6 +913,7 @@ export class SnapchatCampaignService {
 
   async generateCampaignReport(
     campaignId: string,
+    orderId: string
   ) {
     try {
       this.logger.log('Refreshing access token...');
@@ -897,16 +933,18 @@ export class SnapchatCampaignService {
         campaignDetails.startTime,
         "DAY",
       );
-
+      const order = await this.orderService.getOrderById(orderId);
       // Structure the report
       const report = {
         campaignId: campaignId,
         campaignName: campaignDetails.name,
-        status: campaignDetails.status,
+        CampaignStatus: campaignDetails.status,
         startTime: campaignDetails.startTime,
         endTime: new Date().toISOString(),
         objective: campaignDetails.objective,
         stats: campaignStats,
+        details: order.details,
+        status: order.status
       };
 
       return report;

@@ -76,25 +76,25 @@ export class SnapchatCampaignController {
       file
     } = body;
 
-    // if (
-    //   !name ||
-    //   !minAge ||
-    //   !countryCodes ||
-    //   !budget ||
-    //   !startTime ||
-    //   !endTime ||
-    //   !brandName ||
-    //   !headline
-    // ) {
-    //   throw new HttpException(
-    //     'Missing required fields. Please check your input.',
-    //     HttpStatus.BAD_REQUEST,
-    //   );
-    // }
+    if (
+      !name ||
+      !minAge ||
+      !countryCodes ||
+      !budget ||
+      !startTime ||
+      !endTime ||
+      !brandName ||
+      !headline
+    ) {
+      throw new HttpException(
+        'Missing required fields. Please check your input.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
-    // if (!file) {
-    //   throw new HttpException('Video file is required', HttpStatus.BAD_REQUEST);
-    // }
+    if (!file) {
+      throw new HttpException('Video file is required', HttpStatus.BAD_REQUEST);
+    }
 
     const countryCodesArray = this.ensureArray(countryCodes);
     const languagesArray = this.ensureArray(languages);
@@ -202,6 +202,8 @@ export class SnapchatCampaignController {
     try {
       this.logger.log('Initiating Collection Ad creation...');
       const result = await this.campaignService.createCollectionAd(
+        req.user.id,
+        req.user.walletId,
         objective,
         name,
         minAge,
@@ -238,24 +240,29 @@ export class SnapchatCampaignController {
 
   @Get('campaign-report')
   async getCampaignReport(
-    @Query('campaignId') campaignId: string,
-    @Query('startTime') startTime: string,
-    @Query('granularity') granularity: string,
-    @Req() req: any,
+    @Body()
+    body: {
+      campaignId: string;
+      orderId: string;
+    },
   ) {
     try {
+      const {campaignId,orderId}=body
       const report = await this.campaignService.generateCampaignReport(
         campaignId,
+        orderId,
       );
       return {
-        message: 'Campaign report fetched successfully!',
-        data: report,
+        message: 'Report fetched successfully',
+        details: report,
+        status: report.status,
       };
     } catch (error) {
       this.logger.error('Error fetching campaign report:', error.message);
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
+
   /**
   * Helper function to ensure the input is an array.
   * @param input - The input value (string, array, or undefined).
