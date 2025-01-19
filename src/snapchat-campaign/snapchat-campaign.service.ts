@@ -580,9 +580,7 @@ export class SnapchatCampaignService {
             schedule_start_time: adSquadResponse.adsquads[0].adsquad.start_time,
             schedule_end_time: adSquadResponse.adsquads[0].adsquad.end_time,
             budget: budget,
-            media_id: mediaId,
-            file_name: fileName,
-            file_type: fileType,
+            uploadedFile
           },
           campaignResponse,
           mediaResponse,
@@ -891,7 +889,8 @@ export class SnapchatCampaignService {
     }
   }
 
-  async getCampaignDetails(accessToken: string, campaignId: string) {
+  async getCampaignDetails(
+    accessToken: string, campaignId: string) {
     const endpoint = `https://adsapi.snapchat.com/v1/campaigns/${campaignId}`;
 
     try {
