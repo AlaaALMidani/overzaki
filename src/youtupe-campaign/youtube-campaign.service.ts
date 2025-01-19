@@ -52,8 +52,8 @@ export class YouTubeCampaignService {
     videoId: string,
     startDate: string,
     endDate: string,
-    squareImages: string[], // Square image file
-    landscapeImages: string[], // Landscape image file
+    squareImages: string[],
+    landscapeImages: string[],
     square_logo_images: string[],
     finalUrl: string,
     businessName: string,
@@ -67,6 +67,8 @@ export class YouTubeCampaignService {
     locations: string[],
     gender: string,
     ageRanges: string[],
+    longHeadline:string,
+    callToAction:string,
   ): Promise<{
     message: string;
     campaign: string;
@@ -92,7 +94,8 @@ export class YouTubeCampaignService {
       console.log('keywords:', keywords);
       console.log('locations:', locations);
       console.log('gender:', gender);
-      console.log('ageRanges:', ageRanges);
+      console.log('longheadline:', longHeadline);
+      console.log('calltoaction:', callToAction);
       console.log('=== Starting YouTube campaign creation process ===');
   
       // Create assets
@@ -133,6 +136,8 @@ export class YouTubeCampaignService {
         logoImagesAssetResourceNames,
         finalUrl,
         videoAssetResourceName,
+        longHeadline,
+        callToAction,
       );
   
       console.log('=== YouTube campaign creation completed successfully ===');
@@ -306,15 +311,18 @@ export class YouTubeCampaignService {
 
   private async createDiscoveryAd(
     adGroupResourceName: string,
-    businessName: string, // Business name
-    headlines: string[], // Headlines for the ad
-    descriptions: string[], // Descriptions for the ad
-    marketingImages: string[], // Landscape image URL
-    squareMarketingImages: string[], // Square image URL
+    businessName: string, 
+    headlines: string[], 
+    descriptions: string[], 
+    marketingImages: string[],
+    squareMarketingImages: string[], 
     logoImages: string[],
-    finalUrl: string, // Landing page URL
+    finalUrl: string,
     videoAssetResourceName: string,
+    longHeadline:string,
+    callToAction:string,
   ): Promise<string> {
+
     try {
       console.log('Creating Discovery Ad...');
       const payload = {
@@ -331,9 +339,8 @@ export class YouTubeCampaignService {
           youtube_videos: [
             { asset: videoAssetResourceName },
           ],
-          long_headline: { text: headlines[0] },
-          call_to_action_text: 'Book Now'
-
+          long_headline: { text: longHeadline },
+          call_to_action_text: callToAction
         }
       }
       console.log(JSON.stringify(payload, null, 2))
@@ -412,34 +419,3 @@ export class YouTubeCampaignService {
     }
   }
 }
-
-      // private async createImageAsset(file: string, assetName: string): Promise<string> {
-      //   try {
-      //     console.log('Uploading image asset...');
-          // const absoluteImagePath = path.join(__dirname, file);
-          // const image = fs.readFileSync(absoluteImagePath, { encoding: 'base64' });
-    
-      //     const response = await this.googleAdsClient.assets.create([
-      //       {
-      //         name: assetName,
-      //         type: 'IMAGE', // Asset type is IMAGE
-      //         image_asset: {
-      //           data: image, // Convert file buffer to Base64
-      //         },
-      //       },
-      //     ]);
-    
-      //     const resourceName = response.results[0]?.resource_name;
-    
-      //     console.log('Image asset created:', resourceName);
-      //     return resourceName;
-      //   } catch (error) {
-      //     throw new HttpException(
-      //       {
-      //         message: 'Failed to upload image asset.',
-      //         details: error,
-      //       },
-      //       HttpStatus.BAD_REQUEST,
-      //     );
-      //   }
-      // }

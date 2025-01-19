@@ -36,6 +36,8 @@ export class YouTubeCampaignController {
     @Body('locations') locations: string[],
     @Body('gender') gender: string,
     @Body('ageRanges') ageRanges: string[],
+    @Body('long_headline') longHeadline: string,
+    @Body('callToAction') callToAction: string,
   ) {
     try {
       const result = await this.youtubeCampaignService.createYouTubeCampaign(
@@ -56,6 +58,8 @@ export class YouTubeCampaignController {
         locations,
         gender,
         ageRanges,
+        longHeadline,
+        callToAction,
       );
       return result;
     } catch (error) {
