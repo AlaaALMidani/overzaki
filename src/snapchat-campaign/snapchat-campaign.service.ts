@@ -268,10 +268,21 @@ export class SnapchatCampaignService {
         });
       } else {
         demographics.push({
-          gender: "MALE", min_age: minAge,
+          gender: "MALE",
+          min_age: minAge,
           max_age: maxAge,
           languages: languages,
-        }, { gender: "FEMALE" }, { gender: "OTHER" });
+        }, {
+          gender: "FEMALE",
+          min_age: minAge,
+          max_age: maxAge,
+          languages: languages,
+        }, {
+          gender: "OTHER",
+          min_age: minAge,
+          max_age: maxAge,
+          languages: languages,
+        });
       }
       const payload = {
         adsquads: [
@@ -786,7 +797,124 @@ export class SnapchatCampaignService {
     }
   }
 
+  async getCampaignStats(
+    accessToken: string,
+    campaignId: string,
+    startTime: string,
+    granularity: string,
+  ) {
+    const endpoint = `https://adsapi.snapchat.com/v1/campaigns/${campaignId}/stats`;
 
+    const fields = [
+      'impressions',
+      'spend',
+      'swipes',
+      'reach',
+      'video_views',
+      'conversions',
+      'frequency',
+      'quartile_1',
+      'quartile_2',
+      'quartile_3',
+      'view_completion',
+      'screen_time_millis',
+      'unique_swipes',
+      'unique_impressions',
+      'clickthrough_swipes',
+      'shares',
+      'saves',
+      'story_opens',
+      'taps_forward',
+      'taps_back',
+    ];
+
+    // Set endTime to the current date and time
+    const endTime = new Date().toISOString(); // ISO 8601 format
+
+    const params = {
+      start_time: startTime,
+      end_time: endTime,
+      granularity: granularity,
+      fields: fields.join(','),
+    };
+
+    try {
+      const response = await axios.get(endpoint, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        params: params,
+      });
+      return response.data;
+    } catch (error) {
+      this.logger.error('Error fetching campaign stats:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+      throw new Error('Failed to fetch campaign stats');
+    }
+  }
+
+  async getCampaignDetails(accessToken: string, campaignId: string) {
+    const endpoint = `https://adsapi.snapchat.com/v1/campaigns/${campaignId}`;
+
+    try {
+      const response = await axios.get(endpoint, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      return response.data.campaigns[0].campaign;
+    } catch (error) {
+      this.logger.error('Error fetching campaign details:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message,
+      });
+      throw new Error('Failed to fetch campaign details');
+    }
+  }
+
+  async generateCampaignReport(
+    campaignId: string,
+  ) {
+    try {
+      this.logger.log('Refreshing access token...');
+      const accessToken = await this.refreshAccessToken();
+      this.logger.log('Access token refreshed successfully: ' + accessToken);
+
+      const adAccountId = "993c271d-05ce-4c6a-aeeb-13b62b657ae6";
+      const profileId = "aca22c35-6fee-4912-a3ad-9ddc20fd21b7";
+
+      // Fetch campaign details
+      const campaignDetails = await this.getCampaignDetails(accessToken, campaignId);
+
+      // Fetch campaign stats
+      const campaignStats = await this.getCampaignStats(
+        accessToken,
+        campaignId,
+        campaignDetails.startTime,
+        "DAY",
+      );
+
+      // Structure the report
+      const report = {
+        campaignId: campaignId,
+        campaignName: campaignDetails.name,
+        status: campaignDetails.status,
+        startTime: campaignDetails.startTime,
+        endTime: new Date().toISOString(),
+        objective: campaignDetails.objective,
+        stats: campaignStats,
+      };
+
+      return report;
+    } catch (error) {
+      this.logger.error('Error generating campaign report:', error.message);
+      throw new Error('Failed to generate campaign report');
+    }
+  }
 
 
 }
