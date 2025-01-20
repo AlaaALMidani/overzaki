@@ -190,7 +190,7 @@ export class SnapchatCampaignController {
       !product4
     ) {
       throw new HttpException(
-        'At least one product file is required',
+        'At least 4 product file is required',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -247,7 +247,7 @@ export class SnapchatCampaignController {
     },
   ) {
     try {
-      const {campaignId,orderId}=body
+      const { campaignId, orderId } = body
       const report = await this.campaignService.generateCampaignReport(
         campaignId,
         orderId,
@@ -283,5 +283,5 @@ export class SnapchatCampaignController {
     // Fallback for unexpected types
     return [input];
   }
-  
+
 }
