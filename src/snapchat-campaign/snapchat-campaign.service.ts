@@ -466,6 +466,8 @@ export class SnapchatCampaignService {
     headline: string,
     languages: string[],
     osType: string,
+    url: string,
+    callToAction: string,
     file: string, // Only base64-encoded string
   ) {
     try {
@@ -582,14 +584,17 @@ export class SnapchatCampaignService {
             schedule_start_time: adSquadResponse.adsquads[0].adsquad.start_time,
             schedule_end_time: adSquadResponse.adsquads[0].adsquad.end_time,
             budget: budget,
-            uploadedFile
+            finalUrl: url,
+            maxAge,
+            minAge,
+            mainMediaFile: uploadedFile.result.download_link
           },
-          campaign: campaignResponse.campaigns[0],
-          media: mediaResponse,
-          creative: creativeResponse,
-          file: uploadedFile,
-          adSquadResponse: adSquadResponse,
-          ad: ad,
+          campaign: campaignResponse.campaigns[0].campaign,
+          media: mediaResponse.media[0].media,
+          creative: creativeResponse.creatives[0].creative,
+          file: uploadedFile.result,
+          adSquadResponse: adSquadResponse.adsquads[0].adsquad,
+          ad: ad.ads[0].ad,
         },
       );
       this.logger.log('Order created successfully:', order._id, " ", campaignId);
@@ -625,7 +630,7 @@ export class SnapchatCampaignService {
     interactionType: string,
     mainUrl: string,
     productUrls: string[],
-    callToActoin: string,
+    callToAction: string,
     mainFile: string, // Base64-encoded string
     product1: string, // Base64-encoded string
     product2: string, // Base64-encoded string
@@ -633,7 +638,7 @@ export class SnapchatCampaignService {
     product4: string, // Base64-encoded string
   ) {
     try {
-      console.log(callToActoin)
+      console.log(callToAction)
       this.logger.log('Refreshing access token...');
       const accessToken = await this.refreshAccessToken();
       this.logger.log('Access token refreshed successfully: ' + accessToken);
@@ -642,7 +647,7 @@ export class SnapchatCampaignService {
       const profileId = "aca22c35-6fee-4912-a3ad-9ddc20fd21b7";
 
       const mediaIds: string[] = [];
-
+      const productsMedia: string[] = [];
       const productFiles = [product1, product2, product3, product4];
 
       // Step 1: Create media and upload files for all products
@@ -654,7 +659,7 @@ export class SnapchatCampaignService {
         }
 
         // Extract file type and buffer from the base64 string
-        const base64Data = productFile.split(';base64,').pop(); // Remove the data URL prefix
+        const base64Data = productFile.split(';base64,').pop();
         if (!base64Data) {
           throw new Error(`Invalid base64 file data for product ${i + 1}`);
         }
@@ -673,10 +678,11 @@ export class SnapchatCampaignService {
 
         // Upload file
         this.logger.log(`Uploading file for product ${i + 1}...`);
-        await this.uploadFile(fileBuffer, accessToken, mediaId, fileName);
+        const uploadProduct=await this.uploadFile(fileBuffer, accessToken, mediaId, fileName);
         this.logger.log(`File uploaded successfully for product ${i + 1}.`);
 
         mediaIds.push(mediaId);
+        productsMedia.push(`product${i+1}`+uploadProduct.result.download_link)
       }
 
       this.logger.log('All media IDs:', mediaIds);
@@ -703,13 +709,13 @@ export class SnapchatCampaignService {
 
       // Step 4: Create an Interaction Zone
       this.logger.log(`Creating Interaction Zone...`);
-      console.log(callToActoin)
-      this.logger.log(callToActoin)
+      console.log(callToAction)
+      this.logger.log(callToAction)
       const interactionZoneResponse = await this.createInteraction(
         accessToken,
         adAccountId,
         name,
-        callToActoin,
+        callToAction,
         creativeElementsIds
       );
       console.log(interactionZoneResponse)
@@ -817,17 +823,20 @@ export class SnapchatCampaignService {
             schedule_start_time: adSquadResponse.adsquads[0].adsquad.start_time,
             schedule_end_time: adSquadResponse.adsquads[0].adsquad.end_time,
             budget: budget,
-            main_media_id: mainMediaId,
-            product_media_ids: mediaIds,
+            finalUrl: mainUrl,
+            maxAge,
+            minAge,
+            mainMediaFile: uploadedMainFile.result.download_link,
+            productsMedia
           },
-          campaign: campaignResponse.campaigns[0],
-          adSquad: adSquadResponse.adsquads[0],
-          ad: adResponse.ads[0],
-          media: mainMediaResponse,
-          creative: creativeResponse,
-          file: uploadedMainFile,
+          campaign: campaignResponse.campaigns[0].campaign,
+          media: mainMediaResponse.media[0].media,
+          creative: creativeResponse.creatives[0].creative,
+          file: uploadedMainFile.result,
+          adSquadResponse: adSquadResponse.adsquads[0].adsquad,
+          ad: adResponse.ads[0].ad,
           interactionZone: interactionZoneResponse.interaction_zones[0],
-          creativeElements: creativeElementsResponse.creative_elements,
+          creativeElements: creativeElementsResponse.creative_elements[0],
         },
       );
       this.logger.log('Order created successfully:', order);
@@ -935,7 +944,7 @@ export class SnapchatCampaignService {
 
       // Structure the report
       const report = {
-        stats: campaignStats.total_stats,
+        stats: campaignStats.total_stats.stats,
         details: order.details,
         status: order.status,
         CampaignStatus: campaignDetails.status

@@ -117,6 +117,8 @@ export class SnapchatCampaignController {
         headline,
         languagesArray,
         osType,
+        url,
+        callToAction,
         file,
       );
 
