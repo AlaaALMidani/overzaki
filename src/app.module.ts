@@ -53,6 +53,8 @@ export class AppModule implements OnModuleInit {
         { path: 'user/wallet', method: RequestMethod.GET },
         { path: 'user/orders', method: RequestMethod.GET },
         { path: 'google-campaign/create', method: RequestMethod.POST },
+        { path: 'youtube-campaign/create', method: RequestMethod.POST },
+
         { path: 'tiktok-campaign/FeedAd', method: RequestMethod.POST },
         { path: 'tiktok-campaign/SparkAd', method: RequestMethod.POST },
         { path: 'snapchat-campaign/SnapAd', method: RequestMethod.POST },

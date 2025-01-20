@@ -61,6 +61,7 @@ export class GoogleCampaignService {
       
       const {
         userId,
+        
         campaignName,
         budgetAmount,
         startDate,
