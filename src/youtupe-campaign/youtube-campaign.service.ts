@@ -3,15 +3,15 @@ import { GoogleCampaignService } from './../google-campaign/google-campaign.serv
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { GoogleAdsApi, Customer } from 'google-ads-api';
 import * as dotenv from 'dotenv';
+import { OrderService } from '../order/order.service';
 dotenv.config();
 
 @Injectable()
 export class YouTubeCampaignService {
   private readonly googleAdsClient: Customer;
-
-
   constructor(
     private readonly googleCampaignService: GoogleCampaignService,
+    private readonly orderService: OrderService,
   ) {
     this.validateEnvVariables();
 
@@ -47,6 +47,8 @@ export class YouTubeCampaignService {
 
 
   async createYouTubeCampaign(
+    userId: string,
+    walletId: string,
     name: string,
     budgetAmountMicros: number,
     videoId: string,
@@ -67,8 +69,8 @@ export class YouTubeCampaignService {
     locations: string[],
     gender: string,
     ageRanges: string[],
-    longHeadline:string,
-    callToAction:string,
+    longHeadline: string,
+    callToAction: string,
   ): Promise<{
     message: string;
     campaign: string;
@@ -97,34 +99,35 @@ export class YouTubeCampaignService {
       console.log('longheadline:', longHeadline);
       console.log('calltoaction:', callToAction);
       console.log('=== Starting YouTube campaign creation process ===');
-  
+      await this.orderService.checkPayAbility(userId, budgetAmountMicros, 25, 10000);
+
       // Create assets
       const videoAssetResourceName = await this.createVideoAsset(name, videoId);
       const squareImagesAssetResourceNames = await this.createImageAsset(squareImages, `${name}_square`);
       const landscapeImagesAssetResourceNames = await this.createImageAsset(landscapeImages, `${name}_logo`);
       const logoImagesAssetResourceNames = await this.createImageAsset(square_logo_images, `${name}_landscape`);
-  
+
       // Create campaign budget
       const budgetResourceName = await this.createCampaignBudget(name, budgetAmountMicros);
-  
+
       // Create bidding strategy
       const biddingStrategy = await this.createBiddingStrategy(name);
-  
+
       // Create campaign
       const campaignResourceName = await this.createCampaign(name, budgetResourceName, startDate, endDate, biddingStrategy);
-  
+
       // Add language targeting
       await this.googleCampaignService.addLanguageTargeting(campaignResourceName, languages);
-  
+
       // Add geo targeting
       await this.googleCampaignService.addGeoTargeting(campaignResourceName, locations);
-  
+
       // Create ad group
       const adGroupResourceName = await this.createAdGroup(name, campaignResourceName);
-  
+
       // Add keywords to ad group
       await this.googleCampaignService.addKeywordsToAdGroup(adGroupResourceName, keywords);
-  
+
       // Create discovery ad
       const adResourceName = await this.createDiscoveryAd(
         adGroupResourceName,
@@ -139,9 +142,46 @@ export class YouTubeCampaignService {
         longHeadline,
         callToAction,
       );
-  
+
       console.log('=== YouTube campaign creation completed successfully ===');
-  
+
+      const order = await this.orderService.createOrderWithTransaction(
+        userId,
+        walletId,
+        'Youtube Ad',
+        budgetAmountMicros,
+        {
+          base: {
+            campaign_id: campaignResourceName,
+            campaign_name: name,
+            schedule_start_time: startDate,
+            schedule_end_time: endDate,
+            budget: budgetAmountMicros,
+            squareImages,
+            landscapeImages,
+            square_logo_images,
+            videoId,
+            finalUrl,
+            businessName,
+            headlines,
+            descriptions,
+            languages,
+            keywords,
+            locations,
+            gender,
+            ageRanges,
+            longHeadline,
+            callToAction,
+          },
+          campaign: campaignResourceName,
+          adGroup: adGroupResourceName,
+          ad: adResourceName,
+        },
+      );
+      return {
+        ...order,
+        details: order.details.base,
+      };
       return {
         message: 'YouTube campaign created successfully',
         campaign: campaignResourceName,
@@ -224,7 +264,7 @@ export class YouTubeCampaignService {
     const response = await this.googleAdsClient.campaignBudgets.create([
       {
         name: `${name}_Budget`,
-        amount_micros: amountMicros*1000000,
+        amount_micros: amountMicros * 1000000,
         delivery_method: 'STANDARD',
         explicitly_shared: false, // Ensure the budget is not shared
       },
@@ -311,16 +351,16 @@ export class YouTubeCampaignService {
 
   private async createDiscoveryAd(
     adGroupResourceName: string,
-    businessName: string, 
-    headlines: string[], 
-    descriptions: string[], 
+    businessName: string,
+    headlines: string[],
+    descriptions: string[],
     marketingImages: string[],
-    squareMarketingImages: string[], 
+    squareMarketingImages: string[],
     logoImages: string[],
     finalUrl: string,
     videoAssetResourceName: string,
-    longHeadline:string,
-    callToAction:string,
+    longHeadline: string,
+    callToAction: string,
   ): Promise<string> {
 
     try {
@@ -331,9 +371,9 @@ export class YouTubeCampaignService {
         final_urls: [finalUrl], // Landing page URL
         responsive_display_ad: {
           business_name: businessName, // Business name
-          marketing_images: marketingImages.map((image) => ({ asset:image  })),
-          square_marketing_images: squareMarketingImages.map((image) => ({ asset:image  })),
-          square_logo_images: logoImages.map((image) => ({ asset:image  })),
+          marketing_images: marketingImages.map((image) => ({ asset: image })),
+          square_marketing_images: squareMarketingImages.map((image) => ({ asset: image })),
+          square_logo_images: logoImages.map((image) => ({ asset: image })),
           headlines: headlines.map((text) => ({ text })), // Headlines
           descriptions: descriptions.map((text) => ({ text })), // Descriptions
           youtube_videos: [
@@ -386,12 +426,12 @@ export class YouTubeCampaignService {
       );
     }
   }
-  private  cleanBase64(base64: string): string {
+  private cleanBase64(base64: string): string {
     return base64.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
   }
   private async createImageAsset(images: string[], assetName: string): Promise<string[]> {
     try {
-      let result =[];
+      let result = [];
       images.forEach(async (image, index) => {
         console.log('Uploading image asset...');
         const response = await this.googleAdsClient.assets.create([

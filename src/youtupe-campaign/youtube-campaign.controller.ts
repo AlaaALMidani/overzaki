@@ -4,6 +4,7 @@ import {
   Body,
   HttpException,
   HttpStatus,
+  Req,
 } from '@nestjs/common';
 import { YouTubeCampaignService } from './youtube-campaign.service';
 @Controller('youtube-campaign')
@@ -38,9 +39,12 @@ export class YouTubeCampaignController {
     @Body('ageRanges') ageRanges: string[],
     @Body('long_headline') longHeadline: string,
     @Body('callToAction') callToAction: string,
+    @Req() req: any,
   ) {
     try {
       const result = await this.youtubeCampaignService.createYouTubeCampaign(
+        req.user.id,
+        req.user.walletId,
         name,
         budgetAmountMicros,
         videoId,

@@ -1,15 +1,18 @@
 /* eslint-disable prettier/prettier */
 import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
-import { GoogleAdsApi, Customer, ResourceNames } from 'google-ads-api';
+import { GoogleAdsApi, Customer } from 'google-ads-api';
 
 import { enums } from 'google-ads-api';
+import { OrderService } from '../order/order.service';
 @Injectable()
 export class GoogleCampaignService {
   private readonly googleAdsClient: Customer;
   private readonly googleAdsApi: GoogleAdsApi;
   private readonly logger = new Logger(GoogleCampaignService.name);
 
-  constructor() {
+  constructor(
+        private readonly orderService: OrderService,
+  ) {
     this.validateEnvVariables();
 
     this.googleAdsApi = new GoogleAdsApi({
@@ -27,6 +30,8 @@ export class GoogleCampaignService {
 
 
   async createFullSearchAd(params: {
+    userId: string;
+    walletId: string;
     campaignName: string;
     budgetAmount: number;
     startDate: string;
@@ -51,9 +56,11 @@ export class GoogleCampaignService {
 
   }): Promise<any> {
     try {
+     
       console.log('Creating Full Search Ad with params:', params);
-
+      
       const {
+        userId,
         campaignName,
         budgetAmount,
         startDate,
@@ -64,12 +71,13 @@ export class GoogleCampaignService {
         path1 = '',
         path2 = '',
         ageRanges,
-       // genders = [],
-       locations=[],
+        // genders = [],
+        locations=[],
         languages = [],
         keywords,
       } = params;
-
+      await this.orderService.checkPayAbility(userId, budgetAmount, 25, 10000);
+      
       const budgetResourceName = await this.createCampaignBudget(campaignName, budgetAmount);
       console.log('Campaign budget created:', budgetResourceName);
 
@@ -167,7 +175,6 @@ export class GoogleCampaignService {
     if (!campaignResourceName) throw new Error('Failed to create campaign.');
     return campaignResourceName;
   }
-
   async getAvailableLocations(keyword: string): Promise<any> {
     try {
       console.log(keyword)
@@ -208,7 +215,6 @@ export class GoogleCampaignService {
       );
     }
   }
-
   async addGenderTargeting(campaignResourceName: string): Promise<void> {
     try {
       const genders = [
@@ -239,7 +245,6 @@ export class GoogleCampaignService {
       );
     }
   }
-
   public async addKeywordsToAdGroup(adGroupResourceName: string, keywords: {
     keyword: string;
     type: string;
@@ -262,7 +267,6 @@ export class GoogleCampaignService {
       throw error;
     }
   }
-
   private async createAdGroup(campaignName: string, campaignResourceName: string): Promise<string> {
     console.log('Creating ad group...');
     const response = await this.googleAdsClient.adGroups.create([
@@ -279,7 +283,6 @@ export class GoogleCampaignService {
     if (!adGroupResourceName) throw new Error('Failed to create ad group.');
     return adGroupResourceName;
   }
-
   private async createAd(
     adGroupResourceName: string,
     finalUrl: string,
@@ -310,7 +313,6 @@ export class GoogleCampaignService {
     await this.googleAdsClient.adGroupAds.create([adData]);
     console.log('Ad creation completed.');
   }
-
   // private async addAgeTargeting(campaignResourceName: string, ageRanges: string[]) {
   //   console.log('إضافة استهداف الفئات العمرية...');
 
@@ -347,7 +349,6 @@ export class GoogleCampaignService {
   //     throw error;
   //   }
   // }
-
   async addAgeTargeting(campaignResourceName: string): Promise<void> {
     try {
       const ageRanges = [
@@ -439,7 +440,6 @@ export class GoogleCampaignService {
       throw error;
     }
   }
-
   private getLanguageId(language: string): string {
   
       const languageMap: Record<string, string> = {
