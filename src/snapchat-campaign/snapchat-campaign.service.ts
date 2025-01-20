@@ -582,12 +582,12 @@ export class SnapchatCampaignService {
             budget: budget,
             uploadedFile
           },
-          campaign:campaignResponse.campaigns[0],
-          media:mediaResponse,
+          campaign: campaignResponse.campaigns[0],
+          media: mediaResponse,
           creative: creativeResponse,
-          file:uploadedFile,
-          adSquadResponse:adSquadResponse,
-          ad:ad,
+          file: uploadedFile,
+          adSquadResponse: adSquadResponse,
+          ad: ad,
         },
       );
       this.logger.log('Order created successfully:', order);
@@ -828,7 +828,6 @@ export class SnapchatCampaignService {
         ...adResponse,
         order,
       };
-      return adResponse;
     } catch (error) {
       this.logger.error('Error during Collection Ad creation:', error.message);
       throw error;
@@ -866,8 +865,7 @@ export class SnapchatCampaignService {
       'taps_back',
     ];
 
-    // Set endTime to the current date and time
-    const endTime = new Date().toISOString(); // ISO 8601 format
+    const endTime = new Date().toISOString();
 
     const params = {
       start_time: startTime,
@@ -883,6 +881,7 @@ export class SnapchatCampaignService {
         },
         params: params,
       });
+      this.logger.log(JSON.stringify(response))
       return response.data;
     } catch (error) {
       this.logger.error('Error fetching campaign stats:', {
@@ -895,7 +894,9 @@ export class SnapchatCampaignService {
   }
 
   async getCampaignDetails(
-    accessToken: string, campaignId: string) {
+    accessToken: string,
+    campaignId: string
+  ) {
     const endpoint = `https://adsapi.snapchat.com/v1/campaigns/${campaignId}`;
 
     try {
@@ -904,6 +905,7 @@ export class SnapchatCampaignService {
           Authorization: `Bearer ${accessToken}`,
         },
       });
+       this.logger.log(JSON.stringify(response))
       return response.data.campaigns[0].campaign;
     } catch (error) {
       this.logger.error('Error fetching campaign details:', {
@@ -924,13 +926,8 @@ export class SnapchatCampaignService {
       const accessToken = await this.refreshAccessToken();
       this.logger.log('Access token refreshed successfully: ' + accessToken);
 
-      const adAccountId = "993c271d-05ce-4c6a-aeeb-13b62b657ae6";
-      const profileId = "aca22c35-6fee-4912-a3ad-9ddc20fd21b7";
-
-      // Fetch campaign details
       const campaignDetails = await this.getCampaignDetails(accessToken, campaignId);
-
-      // Fetch campaign stats
+      
       const campaignStats = await this.getCampaignStats(
         accessToken,
         campaignId,
