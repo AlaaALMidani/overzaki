@@ -7,7 +7,7 @@ export class GoogleCampaignController {
   constructor(private readonly googleCampaignService: GoogleCampaignService) { }
 
   @Post('create-search-ad')
-  async createSearchAd(@Body() body: any ,  @Req() req: any,) {
+  async createSearchAd(@Body() body: any, @Req() req: any,) {
     try {
       // Validate budget amount
       if (!body.budgetAmount || body.budgetAmount <= 0) {
@@ -18,8 +18,8 @@ export class GoogleCampaignController {
       }
 
       const response = await this.googleCampaignService.createFullSearchAd({
-       userId: req.user.id,
-       walletId: req.user.walletId,
+        userId: req.user.id,
+        walletId: req.user.walletId,
         campaignName: body.campaignName,
         budgetAmount: body.budgetAmount,
         startDate: body.startDate,
@@ -49,7 +49,6 @@ export class GoogleCampaignController {
       throw error
     }
   }
-
   @Get('available-locations') async getAvailableLocations(
     @Query('keyword') keyword: string,
   ) {
@@ -72,7 +71,7 @@ export class GoogleCampaignController {
     @Body('language') language: string,
   ) {
 
-    const suggestions = await this.googleCampaignService.getKeywordSuggestions(keyword, geoTargetConstants , language);
+    const suggestions = await this.googleCampaignService.getKeywordSuggestions(keyword, geoTargetConstants, language);
     return {
       message: 'Keyword suggestions fetched successfully',
       data: suggestions,
@@ -80,5 +79,30 @@ export class GoogleCampaignController {
 
   }
 
+  @Get('report')
+  async getAdReport(
+    @Query('campaignId') campaignId: string,
+    @Query('orderId') orderId: string,
+  ) {
+    try {
+      if (!campaignId) {
+        throw new HttpException('Campaign ID is required', HttpStatus.BAD_REQUEST);
+      }
+
+      const report = await this.googleCampaignService.getAdReport(campaignId , orderId);
+      return {
+        message: 'Ad report fetched successfully',
+        report,
+      };
+    } catch (error) {
+      throw new HttpException(
+        {
+          message: 'Failed to fetch ad report',
+          error: error?.message || 'Unknown error',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 
 }
