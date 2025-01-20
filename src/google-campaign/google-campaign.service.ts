@@ -592,11 +592,14 @@ export class GoogleCampaignService {
         campaign.id,
         campaign.name,
         metrics.impressions,
-        metrics.clicks,   
+        metrics.clicks,
         metrics.ctr,
         metrics.average_cpc,
         metrics.cost_micros,
-        metrics.conversions
+        metrics.conversions,
+        metrics.all_conversions,
+        metrics.cost_per_all_conversions,
+        metrics.view_through_conversions
       FROM
         campaign
       WHERE
