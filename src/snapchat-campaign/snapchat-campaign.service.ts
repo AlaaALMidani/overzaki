@@ -594,8 +594,8 @@ export class SnapchatCampaignService {
 
       // Step 8: Return success
       return {
-        ...ad,
-        order,
+        orderID: order._id,
+        order
       };
 
     } catch (error) {

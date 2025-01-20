@@ -238,7 +238,7 @@ export class SnapchatCampaignController {
     }
   }
 
-  @Get('campaign-report')
+  @Post('campaignReport')
   async getCampaignReport(
     @Body()
     body: {
