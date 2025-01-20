@@ -633,6 +633,7 @@ export class SnapchatCampaignService {
     productUrls: string[]
   ) {
     try {
+      console.log(callToActoin)
       this.logger.log('Refreshing access token...');
       const accessToken = await this.refreshAccessToken();
       this.logger.log('Access token refreshed successfully: ' + accessToken);
@@ -702,6 +703,7 @@ export class SnapchatCampaignService {
 
       // Step 4: Create an Interaction Zone
       this.logger.log(`Creating Interaction Zone...`);
+      console.log(callToActoin)
       const interactionZoneResponse = await this.createInteraction(
         accessToken,
         adAccountId,
