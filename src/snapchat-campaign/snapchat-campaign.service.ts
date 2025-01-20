@@ -590,7 +590,7 @@ export class SnapchatCampaignService {
           ad: ad,
         },
       );
-      this.logger.log('Order created successfully:', order._id," ",campaignId);
+      this.logger.log('Order created successfully:', order._id, " ", campaignId);
 
       // Step 8: Return success
       return {
@@ -846,31 +846,19 @@ export class SnapchatCampaignService {
       'impressions',
       'spend',
       'swipes',
-      'reach',
       'video_views',
-      'conversions',
       'frequency',
       'quartile_1',
       'quartile_2',
       'quartile_3',
       'view_completion',
       'screen_time_millis',
-      'unique_swipes',
-      'unique_impressions',
-      'clickthrough_swipes',
       'shares',
       'saves',
-      'story_opens',
-      'taps_forward',
-      'taps_back',
+      'story_opens'
     ];
 
-    const endTime = new Date().toISOString();
-
     const params = {
-      start_time: startTime,
-      end_time: endTime,
-      granularity: granularity,
       fields: fields.join(','),
     };
 
@@ -879,9 +867,9 @@ export class SnapchatCampaignService {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
-        params: params,
+        params
       });
-      this.logger.log(JSON.stringify(response))
+      console.log(response.data)
       return response.data;
     } catch (error) {
       this.logger.error('Error fetching campaign stats:', {
@@ -905,7 +893,7 @@ export class SnapchatCampaignService {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-       this.logger.log(JSON.stringify(response))
+
       return response.data.campaigns[0].campaign;
     } catch (error) {
       this.logger.error('Error fetching campaign details:', {
@@ -927,25 +915,22 @@ export class SnapchatCampaignService {
       this.logger.log('Access token refreshed successfully: ' + accessToken);
 
       const campaignDetails = await this.getCampaignDetails(accessToken, campaignId);
-      
+
       const campaignStats = await this.getCampaignStats(
         accessToken,
         campaignId,
-        campaignDetails.startTime,
+        campaignDetails.start_time,
         "DAY",
       );
+
       const order = await this.orderService.getOrderById(orderId);
+
       // Structure the report
       const report = {
-        campaignId: campaignId,
-        campaignName: campaignDetails.name,
-        CampaignStatus: campaignDetails.status,
-        startTime: campaignDetails.startTime,
-        endTime: new Date().toISOString(),
-        objective: campaignDetails.objective,
-        stats: campaignStats,
-        details: order.details,
-        status: order.status
+        stats: campaignStats.total_stats,
+        details: order,
+        status: order.status,
+        CampaignStatus: campaignDetails.status
       };
 
       return report;
