@@ -590,7 +590,7 @@ export class SnapchatCampaignService {
           ad: ad,
         },
       );
-      this.logger.log('Order created successfully:', order);
+      this.logger.log('Order created successfully:', order._id," ",campaignId);
 
       // Step 8: Return success
       return {
