@@ -187,7 +187,7 @@ export class YouTubeCampaignService {
       //   campaign: campaignResourceName,
       //   adGroup: adGroupResourceName,
       //   ad: adResourceName,
-      // }; 
+      // };   
     } catch (error) {
       console.error('Error creating YouTube campaign:', error);
       throw error;

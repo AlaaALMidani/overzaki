@@ -52,7 +52,10 @@ export class AppModule implements OnModuleInit {
       .forRoutes(
         { path: 'user/wallet', method: RequestMethod.GET },
         { path: 'user/orders', method: RequestMethod.GET },
-        { path: 'google-campaign/create', method: RequestMethod.POST },
+        {
+          path: 'google-campaign/create-search-ad',
+          method: RequestMethod.POST,
+        },
         { path: 'youtube-campaign/create', method: RequestMethod.POST },
 
         { path: 'tiktok-campaign/FeedAd', method: RequestMethod.POST },
