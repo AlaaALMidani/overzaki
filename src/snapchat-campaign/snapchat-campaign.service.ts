@@ -689,6 +689,7 @@ export class SnapchatCampaignService {
         productUrls,
         name
       );
+      console.log(creativeElementsResponse)
       this.logger.log(JSON.stringify(creativeElementsResponse));
 
       // Step 3: Extract Creative Element IDs
@@ -706,6 +707,7 @@ export class SnapchatCampaignService {
         callToActoin,
         creativeElementsIds
       );
+      console.log(interactionZoneResponse)
       this.logger.log(JSON.stringify(interactionZoneResponse));
       const interactionZoneId = interactionZoneResponse.interaction_zones[0].interaction_zone.id;
       this.logger.log(`Interaction zone created with ID: ${interactionZoneId}`);
@@ -748,6 +750,7 @@ export class SnapchatCampaignService {
         interactionType,
         mainUrl
       );
+      console.log(creativeResponse)
       const creativeId = creativeResponse.creatives[0].creative.id;
       this.logger.log(`Creative created with ID: ${creativeId}`);
 
