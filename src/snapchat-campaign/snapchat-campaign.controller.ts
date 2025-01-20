@@ -172,7 +172,8 @@ export class SnapchatCampaignController {
       !headline ||
       !interactionType ||
       !mainUrl ||
-      !productUrls
+      !productUrls||
+      !callToActoin
     ) {
       throw new HttpException(
         'Missing required fields. Please check your input.',

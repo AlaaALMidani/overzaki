@@ -704,6 +704,7 @@ export class SnapchatCampaignService {
       // Step 4: Create an Interaction Zone
       this.logger.log(`Creating Interaction Zone...`);
       console.log(callToActoin)
+      this.logger.log(callToActoin)
       const interactionZoneResponse = await this.createInteraction(
         accessToken,
         adAccountId,
@@ -717,7 +718,7 @@ export class SnapchatCampaignService {
       this.logger.log(`Interaction zone created with ID: ${interactionZoneId}`);
 
       // Step 5: Handle main file
-      const mainFileBase64Data = mainFile.split(';base64,').pop(); // Remove the data URL prefix
+      const mainFileBase64Data = mainFile.split(';base64,').pop();
       if (!mainFileBase64Data) {
         throw new Error('Invalid base64 file data for main file');
       }
