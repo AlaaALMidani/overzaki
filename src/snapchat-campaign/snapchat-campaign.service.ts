@@ -609,28 +609,28 @@ export class SnapchatCampaignService {
   async createCollectionAd(
     userId: string,
     walletId: string,
-    objective: string,
     name: string,
+    objective: string,
     minAge: string,
     maxAge: string,
     gender: string,
+    languages: string[],
     countryCodes: string[],
+    osType: string,
     budget: number,
     startTime: string,
     endTime: string,
     brandName: string,
     headline: string,
-    languages: string[],
-    osType: string,
+    interactionType: string,
+    mainUrl: string,
+    productUrls: string[],
     callToActoin: string,
     mainFile: string, // Base64-encoded string
     product1: string, // Base64-encoded string
     product2: string, // Base64-encoded string
     product3: string, // Base64-encoded string
     product4: string, // Base64-encoded string
-    interactionType: string,
-    mainUrl: string,
-    productUrls: string[]
   ) {
     try {
       console.log(callToActoin)
