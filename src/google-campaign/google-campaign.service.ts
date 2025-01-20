@@ -617,6 +617,9 @@ export class GoogleCampaignService {
         averageCpc: row.metrics.average_cpc,
         costMicros: row.metrics.cost_micros,
         conversions: row.metrics.conversions,
+        allConversions: row.metrics.all_conversions,
+        costPerAllConversions: row.metrics.cost_per_all_conversions,
+        viewThroughConversions: row.metrics.view_through_conversions,
       }));
       console.log(report)
       const order = await this.orderService.getOrderById(orderId);
