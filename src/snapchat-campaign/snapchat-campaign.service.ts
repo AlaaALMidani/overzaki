@@ -423,6 +423,7 @@ export class SnapchatCampaignService {
     creativeElementsIds: string[]
   ) {
     try {
+      console.log(headline)
       const payload = {
         interaction_zones: [
           {
@@ -432,6 +433,7 @@ export class SnapchatCampaignService {
           }
         ]
       }
+      console.log(headline)
       const endpoint = `https://adsapi.snapchat.com/v1/adaccounts/${adAccountId}/interaction_zones`; const response = await axios.post(
         endpoint, payload, {
         headers: {
@@ -931,7 +933,7 @@ export class SnapchatCampaignService {
       // Structure the report
       const report = {
         stats: campaignStats.total_stats,
-        details: order,
+        details: order.details,
         status: order.status,
         CampaignStatus: campaignDetails.status
       };
