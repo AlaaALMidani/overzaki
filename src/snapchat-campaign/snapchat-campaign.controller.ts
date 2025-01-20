@@ -153,7 +153,7 @@ export class SnapchatCampaignController {
       interactionType,
       mainUrl,
       productUrls,
-      callToActoin,
+      callToAction,
       mainFile,
       product1,
       product2,
@@ -164,6 +164,7 @@ export class SnapchatCampaignController {
     if (
       !name ||
       !minAge ||
+      !maxAge ||
       !countryCodes ||
       !budget ||
       !startTime ||
@@ -173,7 +174,7 @@ export class SnapchatCampaignController {
       !interactionType ||
       !mainUrl ||
       !productUrls||
-      !callToActoin
+      !callToAction
     ) {
       throw new HttpException(
         'Missing required fields. Please check your input.',
@@ -222,7 +223,7 @@ export class SnapchatCampaignController {
         interactionType,
         mainUrl,
         productUrlsArray,
-        callToActoin,
+        callToAction,
         mainFile,
         product1,
         product2,
