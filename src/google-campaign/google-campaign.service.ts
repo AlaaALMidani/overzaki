@@ -624,7 +624,7 @@ export class GoogleCampaignService {
       console.log(report)
       const order = await this.orderService.getOrderById(orderId);
       console.log(order);
-      return { ...report['0'], details: order.details, status: order.status };
+      return { ...report[0], details: order.details, status: order.status };
       return report;
     } catch (error: any) {
       console.log('Error fetching ad report:', error);
