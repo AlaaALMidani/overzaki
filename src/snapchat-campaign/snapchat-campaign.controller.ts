@@ -142,7 +142,7 @@ export class SnapchatCampaignController {
       interactionType,
       mainUrl,
       productUrls,
-      callToActoin,
+      callToAction,
       mainFile,
       product1,
       product2,
@@ -153,6 +153,7 @@ export class SnapchatCampaignController {
     if (
       !name ||
       !minAge ||
+      !maxAge ||
       !countryCodes ||
       !budget ||
       !startTime ||
@@ -161,7 +162,8 @@ export class SnapchatCampaignController {
       !headline ||
       !interactionType ||
       !mainUrl ||
-      !productUrls
+      !productUrls||
+      !callToAction
     ) {
       throw new HttpException(
         'Missing required fields. Please check your input.',
@@ -189,28 +191,28 @@ export class SnapchatCampaignController {
       const result = await this.campaignService.createCollectionAd(
         req.user.id,
         req.user.walletId,
-        objective,
         name,
+        objective,
         minAge,
         maxAge,
         gender,
+        languagesArray,
         countryCodesArray,
+        osType,
         parseFloat(budget),
         startTime,
         endTime,
         brandName,
         headline,
-        languagesArray,
-        osType,
-        callToActoin,
+        interactionType,
+        mainUrl,
+        productUrlsArray,
+        callToAction,
         mainFile,
         product1,
         product2,
         product3,
-        product4,
-        interactionType,
-        mainUrl,
-        productUrlsArray,
+        product4
       );
 
       return {

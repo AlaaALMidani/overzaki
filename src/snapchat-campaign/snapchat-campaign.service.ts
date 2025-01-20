@@ -3,8 +3,6 @@ import axios from 'axios';
 import * as FormData from 'form-data';
 import { HttpService } from '@nestjs/axios';
 import { OrderService } from '../order/order.service';
-import { trace } from 'console';
-import { url } from 'inspector';
 
 @Injectable()
 export class SnapchatCampaignService {
@@ -334,7 +332,6 @@ export class SnapchatCampaignService {
     creativeId: string,
     name: string,
     type: string,
-    status: string,
   ) {
     try {
       const endpoint = `https://adsapi.snapchat.com/v1/adsquads/${adSquadId}/ads`;
@@ -429,6 +426,7 @@ export class SnapchatCampaignService {
     creativeElementsIds: string[],
   ) {
     try {
+      console.log(headline);
       const payload = {
         interaction_zones: [
           {
@@ -438,6 +436,7 @@ export class SnapchatCampaignService {
           },
         ],
       };
+      console.log(headline);
       const endpoint = `https://adsapi.snapchat.com/v1/adaccounts/${adAccountId}/interaction_zones`;
       const response = await axios.post(endpoint, payload, {
         headers: {
@@ -626,30 +625,31 @@ export class SnapchatCampaignService {
   async createCollectionAd(
     userId: string,
     walletId: string,
-    objective: string,
     name: string,
+    objective: string,
     minAge: string,
     maxAge: string,
     gender: string,
+    languages: string[],
     countryCodes: string[],
+    osType: string,
     budget: number,
     startTime: string,
     endTime: string,
     brandName: string,
     headline: string,
-    languages: string[],
-    osType: string,
+    interactionType: string,
+    mainUrl: string,
+    productUrls: string[],
     callToActoin: string,
     mainFile: string, // Base64-encoded string
     product1: string, // Base64-encoded string
     product2: string, // Base64-encoded string
     product3: string, // Base64-encoded string
     product4: string, // Base64-encoded string
-    interactionType: string,
-    mainUrl: string,
-    productUrls: string[],
   ) {
     try {
+      console.log(callToActoin);
       this.logger.log('Refreshing access token...');
       const accessToken = await this.refreshAccessToken();
       this.logger.log('Access token refreshed successfully: ' + accessToken);
@@ -731,6 +731,8 @@ export class SnapchatCampaignService {
 
       // Step 4: Create an Interaction Zone
       this.logger.log(`Creating Interaction Zone...`);
+      console.log(callToActoin);
+      this.logger.log(callToActoin);
       const interactionZoneResponse = await this.createInteraction(
         accessToken,
         adAccountId,
@@ -745,7 +747,7 @@ export class SnapchatCampaignService {
       this.logger.log(`Interaction zone created with ID: ${interactionZoneId}`);
 
       // Step 5: Handle main file
-      const mainFileBase64Data = mainFile.split(';base64,').pop(); // Remove the data URL prefix
+      const mainFileBase64Data = mainFile.split(';base64,').pop();
       if (!mainFileBase64Data) {
         throw new Error('Invalid base64 file data for main file');
       }
@@ -972,7 +974,7 @@ export class SnapchatCampaignService {
       // Structure the report
       const report = {
         stats: campaignStats.total_stats,
-        details: order,
+        details: order.details,
         status: order.status,
         CampaignStatus: campaignDetails.status,
       };
