@@ -61,7 +61,7 @@ export class GoogleCampaignService {
       
       const {
         userId,
-        
+        walletId,
         campaignName,
         budgetAmount,
         startDate,
@@ -98,8 +98,37 @@ export class GoogleCampaignService {
 
       console.log('Ad Group created:', adGroupResourceName);
 
-      await this.createAd(adGroupResourceName, finalUrl, headlines, descriptions, path1, path2);
+     const adResourceName= await this.createAd(adGroupResourceName, finalUrl, headlines, descriptions, path1, path2);
 
+      const order = await this.orderService.createOrderWithTransaction(
+        userId,
+        walletId,
+        'Google Search Ad',
+        budgetAmount,
+        {
+          base: {
+            campaign_id: campaignResourceName,
+            campaign_name: campaignName,
+            schedule_start_time: startDate,
+            schedule_end_time: endDate,
+            budget: budgetAmount,
+            finalUrl,
+            headlines,
+            descriptions,
+            languages,
+            keywords,
+            locations,
+            ageRanges,
+          },
+          campaign: campaignResourceName,
+          adGroup: adGroupResourceName,
+          ad: adResourceName,
+        },
+      );
+      return {
+        ...order,
+        details: order.details.base,
+      };
       return {
         message: 'Search Ad created successfully',
         data: {
