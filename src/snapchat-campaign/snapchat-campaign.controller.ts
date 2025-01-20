@@ -8,18 +8,15 @@ import {
   HttpException,
   HttpStatus,
   Logger,
-  UseInterceptors,
-  UploadedFiles,
   Req,
 } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { SnapchatCampaignService } from './snapchat-campaign.service';
 
 @Controller('snapchat-campaign')
 export class SnapchatCampaignController {
   private readonly logger = new Logger(SnapchatCampaignController.name);
 
-  constructor(private readonly campaignService: SnapchatCampaignService) { }
+  constructor(private readonly campaignService: SnapchatCampaignService) {}
 
   @Get('login')
   @Redirect()
@@ -52,11 +49,8 @@ export class SnapchatCampaignController {
   }
 
   @Post('SnapAd')
-  async createSnapAd(
-    @Body() body: any,
-    @Req() req: any,
-  ) {
-    console.log(body)
+  async createSnapAd(@Body() body: any, @Req() req: any) {
+    console.log(body);
     const {
       name,
       objective,
@@ -71,9 +65,7 @@ export class SnapchatCampaignController {
       endTime,
       brandName,
       headline,
-      callToAction,
-      url,
-      file
+      file,
     } = body;
 
     if (
@@ -133,11 +125,8 @@ export class SnapchatCampaignController {
   }
 
   @Post('CollectionAd')
-  async createCollectionAd(
-    @Body() body: any,
-    @Req() req: any,
-  ) {
-    console.log(body)
+  async createCollectionAd(@Body() body: any, @Req() req: any) {
+    console.log(body);
     const {
       name,
       objective,
@@ -188,12 +177,7 @@ export class SnapchatCampaignController {
       throw new HttpException('Main file is required', HttpStatus.BAD_REQUEST);
     }
 
-    if (
-      !product1 &&
-      !product2 &&
-      !product3 &&
-      !product4
-    ) {
+    if (!product1 && !product2 && !product3 && !product4) {
       throw new HttpException(
         'At least 4 product file is required',
         HttpStatus.BAD_REQUEST,
@@ -252,7 +236,7 @@ export class SnapchatCampaignController {
     },
   ) {
     try {
-      const { campaignId, orderId } = body
+      const { campaignId, orderId } = body;
       const report = await this.campaignService.generateCampaignReport(
         campaignId,
         orderId,
@@ -269,10 +253,10 @@ export class SnapchatCampaignController {
   }
 
   /**
-  * Helper function to ensure the input is an array.
-  * @param input - The input value (string, array, or undefined).
-  * @returns An array of strings.
-  */
+   * Helper function to ensure the input is an array.
+   * @param input - The input value (string, array, or undefined).
+   * @returns An array of strings.
+   */
   ensureArray(input: string | string[] | undefined): string[] {
     if (!input) {
       return [];
@@ -288,5 +272,4 @@ export class SnapchatCampaignController {
     // Fallback for unexpected types
     return [input];
   }
-
 }

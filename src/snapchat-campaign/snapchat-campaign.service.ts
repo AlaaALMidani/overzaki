@@ -3,8 +3,6 @@ import axios from 'axios';
 import * as FormData from 'form-data';
 import { HttpService } from '@nestjs/axios';
 import { OrderService } from '../order/order.service';
-import { trace } from 'console';
-import { url } from 'inspector';
 
 @Injectable()
 export class SnapchatCampaignService {
@@ -12,7 +10,7 @@ export class SnapchatCampaignService {
   constructor(
     private readonly httpService: HttpService,
     private readonly orderService: OrderService,
-  ) { }
+  ) {}
 
   getAuthUrl() {
     return `https://accounts.snapchat.com/accounts/oauth2/auth?response_type=code&client_id=${process.env.SNAPCHAT_CLEINT_ID}redirect_uri=https://postman-echo.com/get&scope=snapchat-marketing-api&state=unique_state_value`;
@@ -50,14 +48,12 @@ export class SnapchatCampaignService {
       grant_type: 'refresh_token',
     };
 
-
     try {
       const response = await axios.post(endpoint, payload, {
         headers: {
           'Content-Type': 'application/x-www-form-urlencoded',
         },
       });
-
 
       const newAccessToken = response.data.access_token;
       const newRefreshToken = response.data.refresh_token;
@@ -77,7 +73,7 @@ export class SnapchatCampaignService {
     accessToken: string,
     name: string,
     adAccountId: string,
-    type: string
+    type: string,
   ) {
     try {
       const payload = {
@@ -141,9 +137,9 @@ export class SnapchatCampaignService {
     profileId: string,
     interactionZoneId?: string,
     interactionType?: string,
-    url?: string
+    url?: string,
   ): Promise<any> {
-    let payload: any = {
+    const payload: any = {
       creatives: [
         {
           ad_account_id: adAccountId,
@@ -159,16 +155,18 @@ export class SnapchatCampaignService {
         },
       ],
     };
-    if (type == "COLLECTION") {
+    if (type == 'COLLECTION') {
       payload.creatives[0].collection_properties = {
         interaction_zone_id: interactionZoneId,
-        default_fallback_interaction_type: interactionType
-      }
+        default_fallback_interaction_type: interactionType,
+      };
       switch (interactionType) {
-        case "WEB_VIEW":
-          payload.creatives[0].collection_properties.web_view_properties = { url: url };
+        case 'WEB_VIEW':
+          payload.creatives[0].collection_properties.web_view_properties = {
+            url: url,
+          };
           break;
-        case "DEEP_LINK":
+        case 'DEEP_LINK':
           payload.creatives[0].collection_properties.deep_link_properties = {
             deep_link_uri: url,
             app_name: name,
@@ -176,7 +174,9 @@ export class SnapchatCampaignService {
           };
           break;
         default:
-          throw new Error("Unsupported interaction type. Use 'WEB_VIEW' or 'DEEP_LINK'.");
+          throw new Error(
+            "Unsupported interaction type. Use 'WEB_VIEW' or 'DEEP_LINK'.",
+          );
       }
     }
 
@@ -252,14 +252,18 @@ export class SnapchatCampaignService {
       const geos = countryCodes.map((code) => ({
         country_code: code,
       }));
-      let devices = [];
-      if (osType === "iOS" || osType === "ANDROID") {
+      const devices = [];
+      if (osType === 'iOS' || osType === 'ANDROID') {
         devices.push({ os_type: osType });
       } else {
-        devices.push({ os_type: "iOS" }, { os_type: "ANDROID" }, { os_type: "WEB" });
+        devices.push(
+          { os_type: 'iOS' },
+          { os_type: 'ANDROID' },
+          { os_type: 'WEB' },
+        );
       }
-      let demographics = []
-      if (gender === "MALE" || gender === "FEMALE") {
+      const demographics = [];
+      if (gender === 'MALE' || gender === 'FEMALE') {
         demographics.push({
           gender: gender,
           min_age: minAge,
@@ -267,22 +271,26 @@ export class SnapchatCampaignService {
           languages: languages,
         });
       } else {
-        demographics.push({
-          gender: "MALE",
-          min_age: minAge,
-          max_age: maxAge,
-          languages: languages,
-        }, {
-          gender: "FEMALE",
-          min_age: minAge,
-          max_age: maxAge,
-          languages: languages,
-        }, {
-          gender: "OTHER",
-          min_age: minAge,
-          max_age: maxAge,
-          languages: languages,
-        });
+        demographics.push(
+          {
+            gender: 'MALE',
+            min_age: minAge,
+            max_age: maxAge,
+            languages: languages,
+          },
+          {
+            gender: 'FEMALE',
+            min_age: minAge,
+            max_age: maxAge,
+            languages: languages,
+          },
+          {
+            gender: 'OTHER',
+            min_age: minAge,
+            max_age: maxAge,
+            languages: languages,
+          },
+        );
       }
       const payload = {
         adsquads: [
@@ -294,7 +302,7 @@ export class SnapchatCampaignService {
             targeting: {
               demographics: demographics,
               geos: geos,
-              devices: devices
+              devices: devices,
             },
             bid_micro: (budget / 10) * 1000000,
             lifetime_budget_micro: budget * 1000000,
@@ -304,13 +312,11 @@ export class SnapchatCampaignService {
         ],
       };
       const endpoint = `https://adsapi.snapchat.com/v1/campaigns/${campaignId}/adsquads`;
-      const response = await axios.post(
-        endpoint, payload, {
+      const response = await axios.post(endpoint, payload, {
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
-      },
-      );
+      });
       return response.data;
     } catch (error) {
       console.log(' Error', error.response?.data?.message);
@@ -326,10 +332,9 @@ export class SnapchatCampaignService {
     creativeId: string,
     name: string,
     type: string,
-    status: string
   ) {
     try {
-      const endpoint = `https://adsapi.snapchat.com/v1/adsquads/${adSquadId}/ads`
+      const endpoint = `https://adsapi.snapchat.com/v1/adsquads/${adSquadId}/ads`;
       const payload = {
         ads: [
           {
@@ -337,25 +342,19 @@ export class SnapchatCampaignService {
             creative_id: creativeId,
             name: name,
             type: type,
-            status: "PAUSED"
-          }
-        ]
-      };
-      const response = await axios.post(
-        endpoint,
-        payload,
-        {
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
+            status: 'PAUSED',
           },
+        ],
+      };
+      const response = await axios.post(endpoint, payload, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
         },
-      );
+      });
       return response.data;
     } catch (error) {
       console.log(' Error', error.response?.data?.message);
-      throw new Error(
-        error.response?.data?.message || 'Ad creation failed',
-      );
+      throw new Error(error.response?.data?.message || 'Ad creation failed');
     }
   }
 
@@ -370,22 +369,22 @@ export class SnapchatCampaignService {
   ) {
     const endpoint = `https://adsapi.snapchat.com/v1/adaccounts/${adAccountId}/creative_elements`;
     if (mediaIds.length !== urls.length) {
-      throw new Error("The number of media IDs must match the number of URLs.");
+      throw new Error('The number of media IDs must match the number of URLs.');
     }
     const creativeElements = mediaIds.map((mediaId, index) => {
-      let element: any = {
+      const element: any = {
         name: `${baseName} ${index + 1}`,
-        type: "BUTTON",
+        type: 'BUTTON',
         interaction_type: interactionType,
         button_properties: {
           button_overlay_media_id: mediaId,
         },
       };
       switch (interactionType) {
-        case "WEB_VIEW":
+        case 'WEB_VIEW':
           element.web_view_properties = { url: urls[index] };
           break;
-        case "DEEP_LINK":
+        case 'DEEP_LINK':
           element.deep_link_properties = {
             deep_link_uri: urls[index],
             app_name: appName,
@@ -393,7 +392,9 @@ export class SnapchatCampaignService {
           };
           break;
         default:
-          throw new Error("Unsupported interaction type. Use 'WEB_VIEW' or 'DEEP_LINK'.");
+          throw new Error(
+            "Unsupported interaction type. Use 'WEB_VIEW' or 'DEEP_LINK'.",
+          );
       }
       return element;
     });
@@ -404,13 +405,15 @@ export class SnapchatCampaignService {
       const response = await axios.post(endpoint, payload, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
       });
       return response.data;
     } catch (error) {
       const errorMessage =
-        error.response?.data?.message || error.message || "Failed to create creative elements";
+        error.response?.data?.message ||
+        error.message ||
+        'Failed to create creative elements';
       throw new Error(`Error creating creative elements: ${errorMessage}`);
     }
   }
@@ -420,27 +423,26 @@ export class SnapchatCampaignService {
     adAccountId: string,
     name: string,
     headline: string,
-    creativeElementsIds: string[]
+    creativeElementsIds: string[],
   ) {
     try {
-      console.log(headline)
+      console.log(headline);
       const payload = {
         interaction_zones: [
           {
             name: name,
             creative_element_ids: creativeElementsIds,
-            headline: headline
-          }
-        ]
-      }
-      console.log(headline)
-      const endpoint = `https://adsapi.snapchat.com/v1/adaccounts/${adAccountId}/interaction_zones`; const response = await axios.post(
-        endpoint, payload, {
+            headline: headline,
+          },
+        ],
+      };
+      console.log(headline);
+      const endpoint = `https://adsapi.snapchat.com/v1/adaccounts/${adAccountId}/interaction_zones`;
+      const response = await axios.post(endpoint, payload, {
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
+          Authorization: `Bearer ${accessToken}`,
         },
-      },
-      );
+      });
       return response.data;
     } catch (error) {
       console.log(' Error', error.response?.data?.message);
@@ -492,13 +494,23 @@ export class SnapchatCampaignService {
 
       // Step 1: Create media
       this.logger.log('Creating media...');
-      const mediaResponse = await this.createMedia(accessToken, name, adAccountId, fileType);
+      const mediaResponse = await this.createMedia(
+        accessToken,
+        name,
+        adAccountId,
+        fileType,
+      );
       const mediaId = mediaResponse.media[0].media.id;
       this.logger.log(`Media created with ID: ${mediaId}`);
 
       // Step 2: Upload file
       this.logger.log('Uploading file...');
-      const uploadedFile = await this.uploadFile(fileBuffer, accessToken, mediaId, fileName);
+      const uploadedFile = await this.uploadFile(
+        fileBuffer,
+        accessToken,
+        mediaId,
+        fileName,
+      );
       this.logger.log('File uploaded successfully.');
 
       // Step 3: Create creative
@@ -597,14 +609,18 @@ export class SnapchatCampaignService {
           ad: ad.ads[0].ad,
         },
       );
-      this.logger.log('Order created successfully:', order._id, " ", campaignId);
+      this.logger.log(
+        'Order created successfully:',
+        order._id,
+        ' ',
+        campaignId,
+      );
 
       // Step 8: Return success
       return {
         orderID: order._id,
-        order
+        order,
       };
-
     } catch (error) {
       this.logger.error('Error during Snap Ad creation:', error.message);
       throw error;
@@ -643,8 +659,8 @@ export class SnapchatCampaignService {
       const accessToken = await this.refreshAccessToken();
       this.logger.log('Access token refreshed successfully: ' + accessToken);
 
-      const adAccountId = "993c271d-05ce-4c6a-aeeb-13b62b657ae6";
-      const profileId = "aca22c35-6fee-4912-a3ad-9ddc20fd21b7";
+      const adAccountId = '993c271d-05ce-4c6a-aeeb-13b62b657ae6';
+      const profileId = 'aca22c35-6fee-4912-a3ad-9ddc20fd21b7';
 
       const mediaIds: string[] = [];
       const productsMedia: string[] = [];
@@ -665,16 +681,27 @@ export class SnapchatCampaignService {
         }
 
         const fileBuffer = Buffer.from(base64Data, 'base64');
-        const fileType = productFile.startsWith('data:image') ? 'IMAGE' : 'VIDEO';
+        const fileType = productFile.startsWith('data:image')
+          ? 'IMAGE'
+          : 'VIDEO';
         const fileName = `product_${i + 1}_${Date.now()}.${fileType === 'IMAGE' ? 'jpg' : 'mp4'}`;
 
-        this.logger.log(`Processing product ${i + 1} with file type: ${fileType}`);
+        this.logger.log(
+          `Processing product ${i + 1} with file type: ${fileType}`,
+        );
 
         // Create media
         this.logger.log(`Creating media for product ${i + 1}...`);
-        const mediaResponse = await this.createMedia(accessToken, name, adAccountId, fileType);
+        const mediaResponse = await this.createMedia(
+          accessToken,
+          name,
+          adAccountId,
+          fileType,
+        );
         const mediaId = mediaResponse.media[0].media.id;
-        this.logger.log(`Media created for product ${i + 1} with ID: ${mediaId}`);
+        this.logger.log(
+          `Media created for product ${i + 1} with ID: ${mediaId}`,
+        );
 
         // Upload file
         this.logger.log(`Uploading file for product ${i + 1}...`);
@@ -696,15 +723,16 @@ export class SnapchatCampaignService {
         interactionType,
         mediaIds,
         productUrls,
-        name
+        name,
       );
-      console.log(creativeElementsResponse)
+      console.log(creativeElementsResponse);
       this.logger.log(JSON.stringify(creativeElementsResponse));
 
       // Step 3: Extract Creative Element IDs
-      const creativeElementsIds = creativeElementsResponse.creative_elements.map(
-        (element) => element.creative_element.id
-      );
+      const creativeElementsIds =
+        creativeElementsResponse.creative_elements.map(
+          (element) => element.creative_element.id,
+        );
       this.logger.log('All Creative Element IDs:', creativeElementsIds);
 
       // Step 4: Create an Interaction Zone
@@ -718,9 +746,10 @@ export class SnapchatCampaignService {
         callToAction,
         creativeElementsIds
       );
-      console.log(interactionZoneResponse)
+      console.log(interactionZoneResponse);
       this.logger.log(JSON.stringify(interactionZoneResponse));
-      const interactionZoneId = interactionZoneResponse.interaction_zones[0].interaction_zone.id;
+      const interactionZoneId =
+        interactionZoneResponse.interaction_zones[0].interaction_zone.id;
       this.logger.log(`Interaction zone created with ID: ${interactionZoneId}`);
 
       // Step 5: Handle main file
@@ -730,20 +759,32 @@ export class SnapchatCampaignService {
       }
 
       const mainFileBuffer = Buffer.from(mainFileBase64Data, 'base64');
-      const mainFileType = mainFile.startsWith('data:image') ? 'IMAGE' : 'VIDEO';
+      const mainFileType = mainFile.startsWith('data:image')
+        ? 'IMAGE'
+        : 'VIDEO';
       const mainFileName = `main_file_${Date.now()}.${mainFileType === 'IMAGE' ? 'jpg' : 'mp4'}`;
 
       this.logger.log(`Main file type: ${mainFileType}`);
 
       // Step 6: Create media for main file
       this.logger.log('Creating media for main file...');
-      const mainMediaResponse = await this.createMedia(accessToken, name, adAccountId, mainFileType);
+      const mainMediaResponse = await this.createMedia(
+        accessToken,
+        name,
+        adAccountId,
+        mainFileType,
+      );
       const mainMediaId = mainMediaResponse.media[0].media.id;
       this.logger.log(`Media created for main file with ID: ${mainMediaId}`);
 
       // Step 7: Upload main file
       this.logger.log('Uploading main file...');
-      const uploadedMainFile = await this.uploadFile(mainFileBuffer, accessToken, mainMediaId, mainFileName);
+      const uploadedMainFile = await this.uploadFile(
+        mainFileBuffer,
+        accessToken,
+        mainMediaId,
+        mainFileName,
+      );
       this.logger.log('Main file uploaded successfully.');
 
       // Step 8: Create creative
@@ -753,15 +794,15 @@ export class SnapchatCampaignService {
         adAccountId,
         mainMediaId,
         name,
-        "COLLECTION",
+        'COLLECTION',
         brandName,
         headline,
         profileId,
         interactionZoneId,
         interactionType,
-        mainUrl
+        mainUrl,
       );
-      console.log(creativeResponse)
+      console.log(creativeResponse);
       const creativeId = creativeResponse.creatives[0].creative.id;
       this.logger.log(`Creative created with ID: ${creativeId}`);
 
@@ -783,7 +824,7 @@ export class SnapchatCampaignService {
         accessToken,
         name,
         campaignId,
-        "SNAP_ADS",
+        'SNAP_ADS',
         minAge,
         maxAge,
         gender,
@@ -792,7 +833,7 @@ export class SnapchatCampaignService {
         startTime,
         endTime,
         languages,
-        osType
+        osType,
       );
       this.logger.log(JSON.stringify(adSquadResponse));
       const adSquadId = adSquadResponse.adsquads[0].adsquad.id;
@@ -805,8 +846,7 @@ export class SnapchatCampaignService {
         adSquadId,
         creativeId,
         name,
-        "COLLECTION",
-        "PAUSED"
+        'COLLECTION',
       );
       this.logger.log('Ad created with ID: ' + adResponse.ads[0].ad.id);
       this.logger.log('Creating order...');
@@ -872,7 +912,7 @@ export class SnapchatCampaignService {
       'screen_time_millis',
       'shares',
       'saves',
-      'story_opens'
+      'story_opens',
     ];
 
     const params = {
@@ -884,9 +924,9 @@ export class SnapchatCampaignService {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
-        params
+        params,
       });
-      console.log(response.data)
+      console.log(response.data);
       return response.data;
     } catch (error) {
       this.logger.error('Error fetching campaign stats:', {
@@ -898,10 +938,7 @@ export class SnapchatCampaignService {
     }
   }
 
-  async getCampaignDetails(
-    accessToken: string,
-    campaignId: string
-  ) {
+  async getCampaignDetails(accessToken: string, campaignId: string) {
     const endpoint = `https://adsapi.snapchat.com/v1/campaigns/${campaignId}`;
 
     try {
@@ -922,22 +959,22 @@ export class SnapchatCampaignService {
     }
   }
 
-  async generateCampaignReport(
-    campaignId: string,
-    orderId: string
-  ) {
+  async generateCampaignReport(campaignId: string, orderId: string) {
     try {
       this.logger.log('Refreshing access token...');
       const accessToken = await this.refreshAccessToken();
       this.logger.log('Access token refreshed successfully: ' + accessToken);
 
-      const campaignDetails = await this.getCampaignDetails(accessToken, campaignId);
+      const campaignDetails = await this.getCampaignDetails(
+        accessToken,
+        campaignId,
+      );
 
       const campaignStats = await this.getCampaignStats(
         accessToken,
         campaignId,
         campaignDetails.start_time,
-        "DAY",
+        'DAY',
       );
 
       const order = await this.orderService.getOrderById(orderId);
@@ -947,7 +984,7 @@ export class SnapchatCampaignService {
         stats: campaignStats.total_stats.stats,
         details: order.details,
         status: order.status,
-        CampaignStatus: campaignDetails.status
+        CampaignStatus: campaignDetails.status,
       };
 
       return report;
@@ -956,6 +993,4 @@ export class SnapchatCampaignService {
       throw new Error('Failed to generate campaign report');
     }
   }
-
-
 }

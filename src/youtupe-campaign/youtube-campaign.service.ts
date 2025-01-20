@@ -44,8 +44,7 @@ export class YouTubeCampaignService {
       }
     }
   }
-
-
+  
   async createYouTubeCampaign(
     userId: string,
     walletId: string,
@@ -181,13 +180,12 @@ export class YouTubeCampaignService {
       return {
         ...order,
         details: order.details.base,
+        message: 'YouTube campaign created successfully',
+        campaign: campaignResourceName,
+        adGroup: adGroupResourceName,
+        ad: adResourceName,
       };
-      // return {
-      //   message: 'YouTube campaign created successfully',
-      //   campaign: campaignResourceName,
-      //   adGroup: adGroupResourceName,
-      //   ad: adResourceName,
-      // };   
+
     } catch (error) {
       console.error('Error creating YouTube campaign:', error);
       throw error;
