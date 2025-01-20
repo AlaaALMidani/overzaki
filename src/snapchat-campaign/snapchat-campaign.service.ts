@@ -841,7 +841,6 @@ export class SnapchatCampaignService {
         creativeId,
         name,
         'COLLECTION',
-        'PAUSED',
       );
       this.logger.log('Ad created with ID: ' + adResponse.ads[0].ad.id);
       this.logger.log('Creating order...');
