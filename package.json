@@ -43,6 +43,7 @@
     "google-ads-api": "^17.1.0-rest-beta",
     "google-auth-library": "^9.15.0",
     "google-play-scraper": "^10.0.1",
+    "googleapi": "^1.0.2",
     "googleapis": "^144.0.0",
     "mongoose": "^8.9.2",
     "multer": "^1.4.5-lts.1",
