@@ -8,15 +8,18 @@ import {
   HttpException,
   HttpStatus,
   Logger,
+  UseInterceptors,
+  UploadedFiles,
   Req,
 } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { SnapchatCampaignService } from './snapchat-campaign.service';
 
 @Controller('snapchat-campaign')
 export class SnapchatCampaignController {
   private readonly logger = new Logger(SnapchatCampaignController.name);
 
-  constructor(private readonly campaignService: SnapchatCampaignService) {}
+  constructor(private readonly campaignService: SnapchatCampaignService) { }
 
   @Get('login')
   @Redirect()
@@ -49,8 +52,11 @@ export class SnapchatCampaignController {
   }
 
   @Post('SnapAd')
-  async createSnapAd(@Body() body: any, @Req() req: any) {
-    console.log(body);
+  async createSnapAd(
+    @Body() body: any,
+    @Req() req: any,
+  ) {
+    console.log(body)
     const {
       name,
       objective,
@@ -65,7 +71,9 @@ export class SnapchatCampaignController {
       endTime,
       brandName,
       headline,
-      file,
+      callToAction,
+      url,
+      file
     } = body;
 
     if (
@@ -109,6 +117,8 @@ export class SnapchatCampaignController {
         headline,
         languagesArray,
         osType,
+        url,
+        callToAction,
         file,
       );
 
@@ -123,8 +133,11 @@ export class SnapchatCampaignController {
   }
 
   @Post('CollectionAd')
-  async createCollectionAd(@Body() body: any, @Req() req: any) {
-    console.log(body);
+  async createCollectionAd(
+    @Body() body: any,
+    @Req() req: any,
+  ) {
+    console.log(body)
     const {
       name,
       objective,
@@ -175,7 +188,12 @@ export class SnapchatCampaignController {
       throw new HttpException('Main file is required', HttpStatus.BAD_REQUEST);
     }
 
-    if (!product1 && !product2 && !product3 && !product4) {
+    if (
+      !product1 &&
+      !product2 &&
+      !product3 &&
+      !product4
+    ) {
       throw new HttpException(
         'At least 4 product file is required',
         HttpStatus.BAD_REQUEST,
@@ -234,7 +252,7 @@ export class SnapchatCampaignController {
     },
   ) {
     try {
-      const { campaignId, orderId } = body;
+      const { campaignId, orderId } = body
       const report = await this.campaignService.generateCampaignReport(
         campaignId,
         orderId,
@@ -250,11 +268,46 @@ export class SnapchatCampaignController {
     }
   }
 
+  @Get('app-id')
+  async getAppId(
+    @Query('appName') appName: string,
+    @Query('store') store: 'google' | 'apple',
+  ) {
+    this.logger.log(`Fetching app ID for app: ${appName} from store: ${store}`);
+  
+    // Validate query parameters
+    if (!appName || !store) {
+      throw new HttpException(
+        'Both appName and store query parameters are required.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  
+    // Validate the store parameter
+    if (store !== 'google' && store !== 'apple') {
+      throw new HttpException(
+        'Invalid store parameter. Use "google" or "apple".',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  
+    try {
+      const appId = await this.campaignService.getAppId(appName, store);
+      return { appId };
+    } catch (error) {
+      this.logger.error('Error fetching app ID:', error.message);
+      throw new HttpException(
+        error.message || 'Failed to fetch app ID',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   /**
-   * Helper function to ensure the input is an array.
-   * @param input - The input value (string, array, or undefined).
-   * @returns An array of strings.
-   */
+  * Helper function to ensure the input is an array.
+  * @param input - The input value (string, array, or undefined).
+  * @returns An array of strings.
+  */
   ensureArray(input: string | string[] | undefined): string[] {
     if (!input) {
       return [];
@@ -270,4 +323,5 @@ export class SnapchatCampaignController {
     // Fallback for unexpected types
     return [input];
   }
+
 }
