@@ -162,7 +162,7 @@ export class SnapchatCampaignController {
       !headline ||
       !interactionType ||
       !mainUrl ||
-      !productUrls||
+      !productUrls ||
       !callToAction
     ) {
       throw new HttpException(
@@ -212,7 +212,7 @@ export class SnapchatCampaignController {
         product1,
         product2,
         product3,
-        product4
+        product4,
       );
 
       return {
