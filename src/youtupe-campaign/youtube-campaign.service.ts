@@ -254,7 +254,6 @@ export class YouTubeCampaignService {
       );
     }
   }
-
   private async createCampaignBudget(
     name: string,
     amountMicros: number,
@@ -347,7 +346,6 @@ export class YouTubeCampaignService {
       );
     }
   }
-
   private async createDiscoveryAd(
     adGroupResourceName: string,
     businessName: string,
@@ -457,7 +455,6 @@ export class YouTubeCampaignService {
       );
     }
   }
-
   public async getYoutubeVideosSuggestions(
     query: string,
     maxResults: number = 10,
