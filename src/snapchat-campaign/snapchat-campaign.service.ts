@@ -3,14 +3,15 @@ import axios from 'axios';
 import * as FormData from 'form-data';
 import { HttpService } from '@nestjs/axios';
 import { OrderService } from '../order/order.service';
-
+import * as gplay from 'google-play-scraper';
+import * as appStoreScraper from 'app-store-scraper';
 @Injectable()
 export class SnapchatCampaignService {
   private readonly logger = new Logger(SnapchatCampaignService.name);
   constructor(
     private readonly httpService: HttpService,
     private readonly orderService: OrderService,
-  ) {}
+  ) { }
 
   getAuthUrl() {
     return `https://accounts.snapchat.com/accounts/oauth2/auth?response_type=code&client_id=${process.env.SNAPCHAT_CLEINT_ID}redirect_uri=https://postman-echo.com/get&scope=snapchat-marketing-api&state=unique_state_value`;
@@ -366,11 +367,14 @@ export class SnapchatCampaignService {
     mediaIds: string[],
     urls: string[],
     appName?: string,
-  ) {
+    iosAppId?: string, // Optional iOS App ID
+    androidAppUrl?: string, // Optional Android App URL
+  ): Promise<any> {
     const endpoint = `https://adsapi.snapchat.com/v1/adaccounts/${adAccountId}/creative_elements`;
     if (mediaIds.length !== urls.length) {
       throw new Error('The number of media IDs must match the number of URLs.');
     }
+
     const creativeElements = mediaIds.map((mediaId, index) => {
       const element: any = {
         name: `${baseName} ${index + 1}`,
@@ -380,6 +384,7 @@ export class SnapchatCampaignService {
           button_overlay_media_id: mediaId,
         },
       };
+
       switch (interactionType) {
         case 'WEB_VIEW':
           element.web_view_properties = { url: urls[index] };
@@ -390,17 +395,31 @@ export class SnapchatCampaignService {
             app_name: appName,
             icon_media_id: mediaId,
           };
+
+          // Add iOS App ID if provided
+          if (iosAppId) {
+            element.deep_link_properties.ios_app_id = iosAppId;
+          }
+
+          // Add Android App URL if provided
+          if (androidAppUrl) {
+            element.deep_link_properties.android_app_url = androidAppUrl;
+          }
+
           break;
         default:
           throw new Error(
             "Unsupported interaction type. Use 'WEB_VIEW' or 'DEEP_LINK'.",
           );
       }
+
       return element;
     });
+
     const payload = {
       creative_elements: creativeElements,
     };
+
     try {
       const response = await axios.post(endpoint, payload, {
         headers: {
@@ -417,7 +436,6 @@ export class SnapchatCampaignService {
       throw new Error(`Error creating creative elements: ${errorMessage}`);
     }
   }
-
   async createInteraction(
     accessToken: string,
     adAccountId: string,
@@ -468,7 +486,9 @@ export class SnapchatCampaignService {
     headline: string,
     languages: string[],
     osType: string,
-    file: string, // Only base64-encoded string
+    url: string,
+    callToAction: string,
+    file: string,
   ) {
     try {
       this.logger.log('Refreshing access token...');
@@ -594,14 +614,17 @@ export class SnapchatCampaignService {
             schedule_start_time: adSquadResponse.adsquads[0].adsquad.start_time,
             schedule_end_time: adSquadResponse.adsquads[0].adsquad.end_time,
             budget: budget,
-            uploadedFile,
+            finalUrl: url,
+            maxAge,
+            minAge,
+            mainMediaFile: uploadedFile.result.download_link
           },
-          campaign: campaignResponse.campaigns[0],
-          media: mediaResponse,
-          creative: creativeResponse,
-          file: uploadedFile,
-          adSquadResponse: adSquadResponse,
-          ad: ad,
+          campaign: campaignResponse.campaigns[0].campaign,
+          media: mediaResponse.media[0].media,
+          creative: creativeResponse.creatives[0].creative,
+          file: uploadedFile.result,
+          adSquadResponse: adSquadResponse.adsquads[0].adsquad,
+          ad: ad.ads[0].ad,
         },
       );
       this.logger.log(
@@ -641,15 +664,17 @@ export class SnapchatCampaignService {
     interactionType: string,
     mainUrl: string,
     productUrls: string[],
-    callToActoin: string,
+    callToAction: string,
     mainFile: string, // Base64-encoded string
     product1: string, // Base64-encoded string
     product2: string, // Base64-encoded string
     product3: string, // Base64-encoded string
-    product4: string, // Base64-encoded string
+    product4: string,
+    iosAppId?: string, // Optional iOS App ID
+    androidAppUrl?: string,
   ) {
     try {
-      console.log(callToActoin);
+      console.log(callToAction)
       this.logger.log('Refreshing access token...');
       const accessToken = await this.refreshAccessToken();
       this.logger.log('Access token refreshed successfully: ' + accessToken);
@@ -658,7 +683,7 @@ export class SnapchatCampaignService {
       const profileId = 'aca22c35-6fee-4912-a3ad-9ddc20fd21b7';
 
       const mediaIds: string[] = [];
-
+      const productsMedia: string[] = [];
       const productFiles = [product1, product2, product3, product4];
 
       // Step 1: Create media and upload files for all products
@@ -670,7 +695,7 @@ export class SnapchatCampaignService {
         }
 
         // Extract file type and buffer from the base64 string
-        const base64Data = productFile.split(';base64,').pop(); // Remove the data URL prefix
+        const base64Data = productFile.split(';base64,').pop();
         if (!base64Data) {
           throw new Error(`Invalid base64 file data for product ${i + 1}`);
         }
@@ -700,10 +725,11 @@ export class SnapchatCampaignService {
 
         // Upload file
         this.logger.log(`Uploading file for product ${i + 1}...`);
-        await this.uploadFile(fileBuffer, accessToken, mediaId, fileName);
+        const uploadProduct = await this.uploadFile(fileBuffer, accessToken, mediaId, fileName);
         this.logger.log(`File uploaded successfully for product ${i + 1}.`);
 
         mediaIds.push(mediaId);
+        productsMedia.push(`product${i + 1}` + uploadProduct.result.download_link)
       }
 
       this.logger.log('All media IDs:', mediaIds);
@@ -718,6 +744,8 @@ export class SnapchatCampaignService {
         mediaIds,
         productUrls,
         name,
+        iosAppId,
+        androidAppUrl
       );
       console.log(creativeElementsResponse);
       this.logger.log(JSON.stringify(creativeElementsResponse));
@@ -731,14 +759,14 @@ export class SnapchatCampaignService {
 
       // Step 4: Create an Interaction Zone
       this.logger.log(`Creating Interaction Zone...`);
-      console.log(callToActoin);
-      this.logger.log(callToActoin);
+      console.log(callToAction)
+      this.logger.log(callToAction)
       const interactionZoneResponse = await this.createInteraction(
         accessToken,
         adAccountId,
         name,
-        callToActoin,
-        creativeElementsIds,
+        callToAction,
+        creativeElementsIds
       );
       console.log(interactionZoneResponse);
       this.logger.log(JSON.stringify(interactionZoneResponse));
@@ -857,17 +885,20 @@ export class SnapchatCampaignService {
             schedule_start_time: adSquadResponse.adsquads[0].adsquad.start_time,
             schedule_end_time: adSquadResponse.adsquads[0].adsquad.end_time,
             budget: budget,
-            main_media_id: mainMediaId,
-            product_media_ids: mediaIds,
+            finalUrl: mainUrl,
+            maxAge,
+            minAge,
+            mainMediaFile: uploadedMainFile.result.download_link,
+            productsMedia
           },
-          campaign: campaignResponse.campaigns[0],
-          adSquad: adSquadResponse.adsquads[0],
-          ad: adResponse.ads[0],
-          media: mainMediaResponse,
-          creative: creativeResponse,
-          file: uploadedMainFile,
+          campaign: campaignResponse.campaigns[0].campaign,
+          media: mainMediaResponse.media[0].media,
+          creative: creativeResponse.creatives[0].creative,
+          file: uploadedMainFile.result,
+          adSquadResponse: adSquadResponse.adsquads[0].adsquad,
+          ad: adResponse.ads[0].ad,
           interactionZone: interactionZoneResponse.interaction_zones[0],
-          creativeElements: creativeElementsResponse.creative_elements,
+          creativeElements: creativeElementsResponse.creative_elements[0],
         },
       );
       this.logger.log('Order created successfully:', order);
@@ -972,7 +1003,7 @@ export class SnapchatCampaignService {
 
       // Structure the report
       const report = {
-        stats: campaignStats.total_stats,
+        stats: campaignStats.total_stats.stats,
         details: order.details,
         status: order.status,
         CampaignStatus: campaignDetails.status,
@@ -984,4 +1015,75 @@ export class SnapchatCampaignService {
       throw new Error('Failed to generate campaign report');
     }
   }
+
+  private async getAppleAppStoreId(appName: string): Promise<Array<{ appId: string; title: string; icon: string }> | null> {
+    try {
+      const results = await appStoreScraper.search({
+        term: appName,
+      });
+
+      const apps = [];
+
+      if (results.length > 0) {
+        for (let i = 0; i < results.length; i++) {
+          apps.push({
+            appId: results[i].id,
+            title: results[i].title,
+            icon: results[i].icon,
+          });
+        }
+        return apps;
+      } else {
+        this.logger.warn(`No results found for app name: ${appName} in Apple App Store`);
+        return null;
+      }
+    } catch (error) {
+      this.logger.error('Error fetching Apple App Store ID:', error.message);
+      throw new Error(`Failed to fetch Apple App Store ID: ${error.message}`);
+    }
+  }
+
+  private async getGooglePlayAppId(appName: string): Promise<Array<{ appId: string; title: string; icon: string }> | null> {
+    try {
+      const results = await gplay.search({
+        term: appName,
+      });
+
+      const apps = [];
+
+      if (results.length > 0) {
+        for (let i = 0; i < results.length; i++) {
+          apps.push({
+            appId: results[i].appId,
+            title: results[i].title,
+            icon: results[i].icon,
+          });
+        }
+        return apps;
+      } else {
+        this.logger.warn(`No results found for app name: ${appName} in Google Play Store`);
+        return null;
+      }
+    } catch (error) {
+      this.logger.error('Error fetching Google Play app ID:', error.message);
+      throw new Error(`Failed to fetch Google Play app ID: ${error.message}`);
+    }
+  }
+
+  async getAppId(appName: string, store: 'google' | 'apple'): Promise<Array<{ appId: string; title: string; icon: string }> | null> {
+    try {
+      if (store === 'google') {
+        return await this.getGooglePlayAppId(appName);
+      } else if (store === 'apple') {
+        return await this.getAppleAppStoreId(appName);
+      } else {
+        throw new Error('Invalid store parameter. Use "google" or "apple".');
+      }
+    } catch (error) {
+      this.logger.error('Error fetching app ID:', error.message);
+      throw new Error(`Failed to fetch app ID: ${error.message}`);
+    }
+  }
+
+
 }
