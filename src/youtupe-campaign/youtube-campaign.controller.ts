@@ -5,6 +5,8 @@ import {
   HttpException,
   HttpStatus,
   Req,
+  Get,
+  Query,
 } from '@nestjs/common';
 import { YouTubeCampaignService } from './youtube-campaign.service';
 @Controller('youtube-campaign')
@@ -77,40 +79,40 @@ export class YouTubeCampaignController {
     }
   }
 
-  // @Get('search')
-  // async searchVideos(
-  //   @Query('query') query: string,
-  //   @Query('maxResults') maxResults: number = 10,
-  //   @Query('pageToken') pageToken?: string,
-  // ) {
-  //   if (!query) {
-  //     throw new HttpException(
-  //       'Query parameter is required',
-  //       HttpStatus.BAD_REQUEST,
-  //     );
-  //   }
+  @Get('search')
+  async searchVideos(
+    @Query('query') query: string,
+    @Query('maxResults') maxResults: number = 10,
+    @Query('pageToken') pageToken?: string,
+  ) {
+    if (!query) {
+      throw new HttpException(
+        'Query parameter is required',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
-  //   try {
-  //     const { videos, nextPageToken, prevPageToken } =
-  //       await this.youtubeCampaignService.getYoutubeVideosSuggestions(
-  //         query,
-  //         maxResults,
-  //         pageToken,
-  //       );
+    try {
+      const { videos, nextPageToken, prevPageToken } =
+        await this.youtubeCampaignService.getYoutubeVideosSuggestions(
+          query,
+          maxResults,
+          pageToken,
+        );
 
-  //     return {
-  //       message: 'Videos fetched successfully',
-  //       data: videos,
-  //       pagination: {
-  //         nextPageToken,
-  //         prevPageToken,
-  //       },
-  //     };
-  //   } catch (error) {
-  //     throw new HttpException(
-  //       error.message || 'Failed to fetch videos',
-  //       HttpStatus.INTERNAL_SERVER_ERROR,
-  //     );
-  //   }
-  // }
+      return {
+        message: 'Videos fetched successfully',
+        data: videos,
+        pagination: {
+          nextPageToken,
+          prevPageToken,
+        },
+      };
+    } catch (error) {
+      throw new HttpException(
+        error.message || 'Failed to fetch videos',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }

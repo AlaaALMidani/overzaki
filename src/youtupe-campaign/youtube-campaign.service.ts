@@ -457,6 +457,7 @@ export class YouTubeCampaignService {
       );
     }
   }
+
   public async getYoutubeVideosSuggestions(
     query: string,
     maxResults: number = 10,
