@@ -155,6 +155,8 @@ export class SnapchatCampaignController {
       product2,
       product3,
       product4,
+      iosAppId,
+      androidAppUrl,
     } = body;
 
     if (
@@ -182,9 +184,25 @@ export class SnapchatCampaignController {
       throw new HttpException('Main file is required', HttpStatus.BAD_REQUEST);
     }
 
+<<<<<<< HEAD
     if (!product1 && !product2 && !product3 && !product4) {
+=======
+    if (
+      !product1 ||
+      !product2 ||
+      !product3 ||
+      !product4
+    ) {
+>>>>>>> d028b7b1bd3e6136f0201b347b64961546c8ae8e
       throw new HttpException(
         'At least 4 product file is required',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (!iosAppId && !androidAppUrl){
+      throw new HttpException(
+        'At least one of iosAppId or androidAppUrl is required',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -220,6 +238,8 @@ export class SnapchatCampaignController {
         product2,
         product3,
         product4,
+        iosAppId,
+        androidAppUrl,
       );
 
       return {

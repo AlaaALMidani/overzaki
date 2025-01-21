@@ -1023,6 +1023,7 @@ export class SnapchatCampaignService {
     }
   }
 
+<<<<<<< HEAD
   // private async getAppleAppStoreId(
   //   appName: string,
   // ): Promise<Array<{ appId: string; title: string; icon: string }> | null> {
@@ -1030,6 +1031,16 @@ export class SnapchatCampaignService {
   //     const results = await appStoreScraper.search({
   //       term: appName,
   //     });
+=======
+  private async getAppleAppStoreId(
+    appName: string,
+  ): Promise<Array<{ appId: string; title: string; icon: string }> | null> {
+    try {
+      const results = await appStoreScraper.search({
+        term: appName,
+        num:10
+      });
+>>>>>>> d028b7b1bd3e6136f0201b347b64961546c8ae8e
 
   //     const apps = [];
 
@@ -1054,6 +1065,7 @@ export class SnapchatCampaignService {
   //   }
   // }
 
+<<<<<<< HEAD
   // private async getGooglePlayAppId(
   //   appName: string,
   // ): Promise<Array<{ appId: string; title: string; icon: string }> | null> {
@@ -1061,6 +1073,16 @@ export class SnapchatCampaignService {
   //     const results = await gplay.search({
   //       term: appName,
   //     });
+=======
+  private async getGooglePlayAppId(
+    appName: string,
+  ): Promise<Array<{ appId: string; title: string; icon: string }> | null> {
+    try {
+      const results = await gplay.search({
+        term: appName,
+        num:10
+      });
+>>>>>>> d028b7b1bd3e6136f0201b347b64961546c8ae8e
 
   //     const apps = [];
 
