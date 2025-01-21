@@ -1029,6 +1029,7 @@ export class SnapchatCampaignService {
     try {
       const results = await appStoreScraper.search({
         term: appName,
+        num:10
       });
 
       const apps = [];
@@ -1060,6 +1061,7 @@ export class SnapchatCampaignService {
     try {
       const results = await gplay.search({
         term: appName,
+        num:10
       });
 
       const apps = [];
