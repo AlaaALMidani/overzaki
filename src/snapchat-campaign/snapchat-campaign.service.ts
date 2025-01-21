@@ -11,7 +11,7 @@ export class SnapchatCampaignService {
   constructor(
     private readonly httpService: HttpService,
     private readonly orderService: OrderService,
-  ) { }
+  ) {}
 
   getAuthUrl() {
     return `https://accounts.snapchat.com/accounts/oauth2/auth?response_type=code&client_id=${process.env.SNAPCHAT_CLEINT_ID}redirect_uri=https://postman-echo.com/get&scope=snapchat-marketing-api&state=unique_state_value`;
@@ -617,7 +617,7 @@ export class SnapchatCampaignService {
             finalUrl: url,
             maxAge,
             minAge,
-            mainMediaFile: uploadedFile.result.download_link
+            mainMediaFile: uploadedFile.result.download_link,
           },
           campaign: campaignResponse.campaigns[0].campaign,
           media: mediaResponse.media[0].media,
@@ -674,7 +674,7 @@ export class SnapchatCampaignService {
     androidAppUrl?: string,
   ) {
     try {
-      console.log(callToAction)
+      console.log(callToAction);
       this.logger.log('Refreshing access token...');
       const accessToken = await this.refreshAccessToken();
       this.logger.log('Access token refreshed successfully: ' + accessToken);
@@ -725,11 +725,18 @@ export class SnapchatCampaignService {
 
         // Upload file
         this.logger.log(`Uploading file for product ${i + 1}...`);
-        const uploadProduct = await this.uploadFile(fileBuffer, accessToken, mediaId, fileName);
+        const uploadProduct = await this.uploadFile(
+          fileBuffer,
+          accessToken,
+          mediaId,
+          fileName,
+        );
         this.logger.log(`File uploaded successfully for product ${i + 1}.`);
 
         mediaIds.push(mediaId);
-        productsMedia.push(`product${i + 1}` + uploadProduct.result.download_link)
+        productsMedia.push(
+          `product${i + 1}` + uploadProduct.result.download_link,
+        );
       }
 
       this.logger.log('All media IDs:', mediaIds);
@@ -745,7 +752,7 @@ export class SnapchatCampaignService {
         productUrls,
         name,
         iosAppId,
-        androidAppUrl
+        androidAppUrl,
       );
       console.log(creativeElementsResponse);
       this.logger.log(JSON.stringify(creativeElementsResponse));
@@ -759,14 +766,14 @@ export class SnapchatCampaignService {
 
       // Step 4: Create an Interaction Zone
       this.logger.log(`Creating Interaction Zone...`);
-      console.log(callToAction)
-      this.logger.log(callToAction)
+      console.log(callToAction);
+      this.logger.log(callToAction);
       const interactionZoneResponse = await this.createInteraction(
         accessToken,
         adAccountId,
         name,
         callToAction,
-        creativeElementsIds
+        creativeElementsIds,
       );
       console.log(interactionZoneResponse);
       this.logger.log(JSON.stringify(interactionZoneResponse));
@@ -889,7 +896,7 @@ export class SnapchatCampaignService {
             maxAge,
             minAge,
             mainMediaFile: uploadedMainFile.result.download_link,
-            productsMedia
+            productsMedia,
           },
           campaign: campaignResponse.campaigns[0].campaign,
           media: mainMediaResponse.media[0].media,
@@ -1016,7 +1023,9 @@ export class SnapchatCampaignService {
     }
   }
 
-  private async getAppleAppStoreId(appName: string): Promise<Array<{ appId: string; title: string; icon: string }> | null> {
+  private async getAppleAppStoreId(
+    appName: string,
+  ): Promise<Array<{ appId: string; title: string; icon: string }> | null> {
     try {
       const results = await appStoreScraper.search({
         term: appName,
@@ -1034,7 +1043,9 @@ export class SnapchatCampaignService {
         }
         return apps;
       } else {
-        this.logger.warn(`No results found for app name: ${appName} in Apple App Store`);
+        this.logger.warn(
+          `No results found for app name: ${appName} in Apple App Store`,
+        );
         return null;
       }
     } catch (error) {
@@ -1043,7 +1054,9 @@ export class SnapchatCampaignService {
     }
   }
 
-  private async getGooglePlayAppId(appName: string): Promise<Array<{ appId: string; title: string; icon: string }> | null> {
+  private async getGooglePlayAppId(
+    appName: string,
+  ): Promise<Array<{ appId: string; title: string; icon: string }> | null> {
     try {
       const results = await gplay.search({
         term: appName,
@@ -1061,7 +1074,9 @@ export class SnapchatCampaignService {
         }
         return apps;
       } else {
-        this.logger.warn(`No results found for app name: ${appName} in Google Play Store`);
+        this.logger.warn(
+          `No results found for app name: ${appName} in Google Play Store`,
+        );
         return null;
       }
     } catch (error) {
@@ -1070,7 +1085,10 @@ export class SnapchatCampaignService {
     }
   }
 
-  async getAppId(appName: string, store: 'google' | 'apple'): Promise<Array<{ appId: string; title: string; icon: string }> | null> {
+  async getAppId(
+    appName: string,
+    store: 'google' | 'apple',
+  ): Promise<Array<{ appId: string; title: string; icon: string }> | null> {
     try {
       if (store === 'google') {
         return await this.getGooglePlayAppId(appName);
@@ -1084,6 +1102,4 @@ export class SnapchatCampaignService {
       throw new Error(`Failed to fetch app ID: ${error.message}`);
     }
   }
-
-
 }
