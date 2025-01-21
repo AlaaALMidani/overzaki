@@ -3,8 +3,8 @@ import axios from 'axios';
 import * as FormData from 'form-data';
 import { HttpService } from '@nestjs/axios';
 import { OrderService } from '../order/order.service';
-// import * as gplay from 'google-play-scraper';
-// import * as appStoreScraper from 'app-store-scraper';
+import * as gplay from 'google-play-scraper';
+import * as appStoreScraper from 'app-store-scraper';
 @Injectable()
 export class SnapchatCampaignService {
   private readonly logger = new Logger(SnapchatCampaignService.name);
@@ -13,7 +13,7 @@ export class SnapchatCampaignService {
     private readonly orderService: OrderService,
   ) {}
 
-  getAuthUrl() {  
+  getAuthUrl() {
     return `https://accounts.snapchat.com/accounts/oauth2/auth?response_type=code&client_id=${process.env.SNAPCHAT_CLEINT_ID}redirect_uri=https://postman-echo.com/get&scope=snapchat-marketing-api&state=unique_state_value`;
   }
 
@@ -1023,105 +1023,85 @@ export class SnapchatCampaignService {
     }
   }
 
-<<<<<<< HEAD
-  // private async getAppleAppStoreId(
-  //   appName: string,
-  // ): Promise<Array<{ appId: string; title: string; icon: string }> | null> {
-  //   try {
-  //     const results = await appStoreScraper.search({
-  //       term: appName,
-  //     });
-=======
   private async getAppleAppStoreId(
     appName: string,
   ): Promise<Array<{ appId: string; title: string; icon: string }> | null> {
     try {
       const results = await appStoreScraper.search({
         term: appName,
-        num:10
+        num: 10,
       });
->>>>>>> d028b7b1bd3e6136f0201b347b64961546c8ae8e
 
-  //     const apps = [];
+      const apps = [];
 
-  //     if (results.length > 0) {
-  //       for (let i = 0; i < results.length; i++) {
-  //         apps.push({
-  //           appId: results[i].id,
-  //           title: results[i].title,
-  //           icon: results[i].icon,
-  //         });
-  //       }
-  //       return apps;
-  //     } else {
-  //       this.logger.warn(
-  //         `No results found for app name: ${appName} in Apple App Store`,
-  //       );
-  //       return null;
-  //     }
-  //   } catch (error) {
-  //     this.logger.error('Error fetching Apple App Store ID:', error.message);
-  //     throw new Error(`Failed to fetch Apple App Store ID: ${error.message}`);
-  //   }
-  // }
+      if (results.length > 0) {
+        for (let i = 0; i < results.length; i++) {
+          apps.push({
+            appId: results[i].id,
+            title: results[i].title,
+            icon: results[i].icon,
+          });
+        }
+        return apps;
+      } else {
+        this.logger.warn(
+          `No results found for app name: ${appName} in Apple App Store`,
+        );
+        return null;
+      }
+    } catch (error) {
+      this.logger.error('Error fetching Apple App Store ID:', error.message);
+      throw new Error(`Failed to fetch Apple App Store ID: ${error.message}`);
+    }
+  }
 
-<<<<<<< HEAD
-  // private async getGooglePlayAppId(
-  //   appName: string,
-  // ): Promise<Array<{ appId: string; title: string; icon: string }> | null> {
-  //   try {
-  //     const results = await gplay.search({
-  //       term: appName,
-  //     });
-=======
   private async getGooglePlayAppId(
     appName: string,
   ): Promise<Array<{ appId: string; title: string; icon: string }> | null> {
     try {
       const results = await gplay.search({
         term: appName,
-        num:10
+        num: 10,
       });
->>>>>>> d028b7b1bd3e6136f0201b347b64961546c8ae8e
 
-  //     const apps = [];
+      const apps = [];
 
-  //     if (results.length > 0) {
-  //       for (let i = 0; i < results.length; i++) {
-  //         apps.push({
-  //           appId: results[i].appId,
-  //           title: results[i].title,
-  //           icon: results[i].icon,
-  //         });
-  //       }
-  //       return apps;
-  //     } else {
-  //       this.logger.warn(
-  //         `No results found for app name: ${appName} in Google Play Store`,
-  //       );
-  //       return null;
-  //     }
-  //   } catch (error) {
-  //     this.logger.error('Error fetching Google Play app ID:', error.message);
-  //     throw new Error(`Failed to fetch Google Play app ID: ${error.message}`);
-  //   }
-  // }
+      if (results.length > 0) {
+        for (let i = 0; i < results.length; i++) {
+          apps.push({
+            appId: results[i].appId,
+            title: results[i].title,
+            icon: results[i].icon,
+          });
+        }
+        return apps;
+      } else {
+        this.logger.warn(
+          `No results found for app name: ${appName} in Google Play Store`,
+        );
+        return null;
+      }
+    } catch (error) {
+      this.logger.error('Error fetching Google Play app ID:', error.message);
+      throw new Error(`Failed to fetch Google Play app ID: ${error.message}`);
+    }
+  }
 
-  // async getAppId(
-  //   appName: string,
-  //   store: 'google' | 'apple',
-  // ): Promise<Array<{ appId: string; title: string; icon: string }> | null> {
-  //   try {
-  //     if (store === 'google') {
-  //       return await this.getGooglePlayAppId(appName);
-  //     } else if (store === 'apple') {
-  //       return await this.getAppleAppStoreId(appName);
-  //     } else {
-  //       throw new Error('Invalid store parameter. Use "google" or "apple".');
-  //     }
-  //   } catch (error) {
-  //     this.logger.error('Error fetching app ID:', error.message);
-  //     throw new Error(`Failed to fetch app ID: ${error.message}`);
-  //   }
-  // }
+  async getAppId(
+    appName: string,
+    store: 'google' | 'apple',
+  ): Promise<Array<{ appId: string; title: string; icon: string }> | null> {
+    try {
+      if (store === 'google') {
+        return await this.getGooglePlayAppId(appName);
+      } else if (store === 'apple') {
+        return await this.getAppleAppStoreId(appName);
+      } else {
+        throw new Error('Invalid store parameter. Use "google" or "apple".');
+      }
+    } catch (error) {
+      this.logger.error('Error fetching app ID:', error.message);
+      throw new Error(`Failed to fetch app ID: ${error.message}`);
+    }
+  }
 }

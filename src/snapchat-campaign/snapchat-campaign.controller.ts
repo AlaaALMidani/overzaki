@@ -8,11 +8,8 @@ import {
   HttpException,
   HttpStatus,
   Logger,
-  UseInterceptors,
-  UploadedFiles,
   Req,
 } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { SnapchatCampaignService } from './snapchat-campaign.service';
 
 @Controller('snapchat-campaign')
@@ -184,23 +181,14 @@ export class SnapchatCampaignController {
       throw new HttpException('Main file is required', HttpStatus.BAD_REQUEST);
     }
 
-<<<<<<< HEAD
-    if (!product1 && !product2 && !product3 && !product4) {
-=======
-    if (
-      !product1 ||
-      !product2 ||
-      !product3 ||
-      !product4
-    ) {
->>>>>>> d028b7b1bd3e6136f0201b347b64961546c8ae8e
+    if (!product1 || !product2 || !product3 || !product4) {
       throw new HttpException(
         'At least 4 product file is required',
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    if (!iosAppId && !androidAppUrl){
+    if (!iosAppId && !androidAppUrl) {
       throw new HttpException(
         'At least one of iosAppId or androidAppUrl is required',
         HttpStatus.BAD_REQUEST,

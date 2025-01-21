@@ -5,6 +5,8 @@ import {
   HttpException,
   HttpStatus,
   Req,
+  Query,
+  Get,
 } from '@nestjs/common';
 import { YouTubeCampaignService } from './youtube-campaign.service';
 @Controller('youtube-campaign')
