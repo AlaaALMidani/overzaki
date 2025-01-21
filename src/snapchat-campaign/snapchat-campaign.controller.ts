@@ -265,40 +265,40 @@ export class SnapchatCampaignController {
     }
   }
 
-  // @Get('app-id')
-  // async getAppId(
-  //   @Query('appName') appName: string,
-  //   @Query('store') store: 'google' | 'apple',
-  // ) {
-  //   this.logger.log(`Fetching app ID for app: ${appName} from store: ${store}`);
+  @Get('app-id')
+  async getAppId(
+    @Query('appName') appName: string,
+    @Query('store') store: 'google' | 'apple',
+  ) {
+    this.logger.log(`Fetching app ID for app: ${appName} from store: ${store}`);
 
-  //   // Validate query parameters
-  //   if (!appName || !store) {
-  //     throw new HttpException(
-  //       'Both appName and store query parameters are required.',
-  //       HttpStatus.BAD_REQUEST,
-  //     );
-  //   }
+    // Validate query parameters
+    if (!appName || !store) {
+      throw new HttpException(
+        'Both appName and store query parameters are required.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
-  //   // Validate the store parameter
-  //   if (store !== 'google' && store !== 'apple') {
-  //     throw new HttpException(
-  //       'Invalid store parameter. Use "google" or "apple".',
-  //       HttpStatus.BAD_REQUEST,
-  //     );
-  //   }
+    // Validate the store parameter
+    if (store !== 'google' && store !== 'apple') {
+      throw new HttpException(
+        'Invalid store parameter. Use "google" or "apple".',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
-  //   try {
-  //     const appId = await this.campaignService.getAppId(appName, store);
-  //     return { appId };
-  //   } catch (error) {
-  //     this.logger.error('Error fetching app ID:', error.message);
-  //     throw new HttpException(
-  //       error.message || 'Failed to fetch app ID',
-  //       HttpStatus.INTERNAL_SERVER_ERROR,
-  //     );
-  //   }
-  // }
+    try {
+      const appId = await this.campaignService.getAppId(appName, store);
+      return { appId };
+    } catch (error) {
+      this.logger.error('Error fetching app ID:', error.message);
+      throw new HttpException(
+        error.message || 'Failed to fetch app ID',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 
   /**
    * Helper function to ensure the input is an array.
