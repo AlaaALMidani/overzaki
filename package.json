@@ -31,7 +31,7 @@
     "@nestjs/platform-socket.io": "^10.4.15",
     "@nestjs/websockets": "^10.4.15",
     "@types/passport-jwt": "^4.0.1",
-    "app-store-scraper": "^0.18.0",
+    "app-store-scraper": "^0.4.0",
     "axios": "^1.7.9",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",
