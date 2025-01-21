@@ -188,12 +188,12 @@ export class SnapchatCampaignController {
       );
     }
 
-    if (!iosAppId && !androidAppUrl) {
-      throw new HttpException(
-        'At least one of iosAppId or androidAppUrl is required',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+    // if (!iosAppId && !androidAppUrl) {
+    //   throw new HttpException(
+    //     'At least one of iosAppId or androidAppUrl is required',
+    //     HttpStatus.BAD_REQUEST,
+    //   );
+    // }
 
     const countryCodesArray = this.ensureArray(countryCodes);
     const languagesArray = this.ensureArray(languages);
