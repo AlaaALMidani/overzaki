@@ -623,16 +623,14 @@ export class GoogleCampaignService {
       }));
       console.log(report)
       const order = await this.orderService.getOrderById(orderId);
-      console.log(order);
       return { ...report[0], ...order._doc };
       return report;
     } catch (error: any) {
       console.log('Error fetching ad report:', error);
-      this.logger.error('Error fetching ad report:', error);
       throw new HttpException(
         {
           message: 'Failed to fetch ad report',
-          error: error?.errors || error?.message || 'Unknown error',
+          error
         },
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
