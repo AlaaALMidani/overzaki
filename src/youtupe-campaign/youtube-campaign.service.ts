@@ -10,8 +10,8 @@ dotenv.config();
 @Injectable()
 export class YouTubeCampaignService {
   private readonly googleAdsClient: Customer;
-  private readonly youtubeApiKey = process.env.YOUTUBE_API_KEY;
-  private readonly youtube = google.youtube('v3');
+  // private readonly youtubeApiKey = process.env.YOUTUBE_API_KEY;
+  // private readonly youtube = google.youtube('v3');
 
   constructor(
     private readonly googleCampaignService: GoogleCampaignService,
