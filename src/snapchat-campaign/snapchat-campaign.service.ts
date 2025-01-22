@@ -139,6 +139,8 @@ export class SnapchatCampaignService {
     interactionZoneId?: string,
     interactionType?: string,
     url?: string,
+    iosAppId?:string,
+    androidAppUrl?:string,
   ): Promise<any> {
     const payload: any = {
       creatives: [
@@ -156,11 +158,12 @@ export class SnapchatCampaignService {
         },
       ],
     };
-    if (type == 'COLLECTION') {
+    if (type === 'COLLECTION') {
       payload.creatives[0].collection_properties = {
         interaction_zone_id: interactionZoneId,
         default_fallback_interaction_type: interactionType,
       };
+    
       switch (interactionType) {
         case 'WEB_VIEW':
           payload.creatives[0].collection_properties.web_view_properties = {
@@ -168,16 +171,23 @@ export class SnapchatCampaignService {
           };
           break;
         case 'DEEP_LINK':
+          // Initialize deep_link_properties if it doesn't exist
           payload.creatives[0].collection_properties.deep_link_properties = {
             deep_link_uri: url,
             app_name: name,
             icon_media_id: mediaId,
           };
+    
+          // Now you can safely set ios_app_id and android_app_url
+          if (iosAppId) {
+            payload.creatives[0].collection_properties.deep_link_properties.ios_app_id = iosAppId;
+          }
+          if (androidAppUrl) {
+            payload.creatives[0].collection_properties.deep_link_properties.android_app_url = androidAppUrl;
+          }
           break;
         default:
-          throw new Error(
-            "Unsupported interaction type. Use 'WEB_VIEW' or 'DEEP_LINK'.",
-          );
+          throw new Error("Unsupported interaction type. Use 'WEB_VIEW' or 'DEEP_LINK'.");
       }
     }
 
@@ -436,6 +446,7 @@ export class SnapchatCampaignService {
       throw new Error(`Error creating creative elements: ${errorMessage}`);
     }
   }
+
   async createInteraction(
     accessToken: string,
     adAccountId: string,
@@ -506,7 +517,7 @@ export class SnapchatCampaignService {
 
       const fileBuffer = Buffer.from(base64Data, 'base64');
       const fileType = file.startsWith('data:image') ? 'IMAGE' : 'VIDEO';
-      const fileName = `uploaded_file_${Date.now()}.${fileType === 'IMAGE' ? 'jpg' : 'mp4'}`;
+      const fileName = `uploaded_file_${Date.now()}.${fileType === 'IMAGE' ? 'png' : 'mp4'}`;
 
       this.logger.log(`File type: ${fileType}`);
 
@@ -665,12 +676,12 @@ export class SnapchatCampaignService {
     mainUrl: string,
     productUrls: string[],
     callToAction: string,
-    mainFile: string, // Base64-encoded string
-    product1: string, // Base64-encoded string
-    product2: string, // Base64-encoded string
-    product3: string, // Base64-encoded string
+    mainFile: string, 
+    product1: string,
+    product2: string,
+    product3: string,
     product4: string,
-    iosAppId?: string, // Optional iOS App ID
+    iosAppId?: string,
     androidAppUrl?: string,
   ) {
     try {
@@ -704,7 +715,7 @@ export class SnapchatCampaignService {
         const fileType = productFile.startsWith('data:image')
           ? 'IMAGE'
           : 'VIDEO';
-        const fileName = `product_${i + 1}_${Date.now()}.${fileType === 'IMAGE' ? 'jpg' : 'mp4'}`;
+        const fileName = `product_${i + 1}_${Date.now()}.${fileType === 'IMAGE' ? 'png' : 'mp4'}`;
 
         this.logger.log(
           `Processing product ${i + 1} with file type: ${fileType}`,
@@ -791,7 +802,7 @@ export class SnapchatCampaignService {
       const mainFileType = mainFile.startsWith('data:image')
         ? 'IMAGE'
         : 'VIDEO';
-      const mainFileName = `main_file_${Date.now()}.${mainFileType === 'IMAGE' ? 'jpg' : 'mp4'}`;
+      const mainFileName = `main_file_${Date.now()}.${mainFileType === 'IMAGE' ? 'png' : 'mp4'}`;
 
       this.logger.log(`Main file type: ${mainFileType}`);
 
@@ -830,6 +841,8 @@ export class SnapchatCampaignService {
         interactionZoneId,
         interactionType,
         mainUrl,
+        iosAppId,
+        androidAppUrl,
       );
       console.log(creativeResponse);
       const creativeId = creativeResponse.creatives[0].creative.id;
@@ -912,7 +925,6 @@ export class SnapchatCampaignService {
 
       return {
         ...adResponse,
-        order,
       };
     } catch (error) {
       this.logger.error('Error during Collection Ad creation:', error.message);
