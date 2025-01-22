@@ -188,7 +188,7 @@ export class SnapchatCampaignController {
       );
     }
 
-    // Validate that at least one of iosAppId or androidAppUrl is provided for DEEP_LINK
+    
     if (interactionType === 'DEEP_LINK' && !iosAppId && !androidAppUrl) {
       throw new HttpException(
         'At least one of iosAppId or androidAppUrl is required for DEEP_LINK interaction type.',
