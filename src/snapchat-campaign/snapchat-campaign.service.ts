@@ -4,7 +4,7 @@ import * as FormData from 'form-data';
 import { HttpService } from '@nestjs/axios';
 import { OrderService } from '../order/order.service';
 import gplay from 'google-play-scraper';
- import * as appStoreScraper from 'app-store-scraper';
+import * as appStoreScraper from 'app-store-scraper';
 @Injectable()
 export class SnapchatCampaignService {
   private readonly logger = new Logger(SnapchatCampaignService.name);
