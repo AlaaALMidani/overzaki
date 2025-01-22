@@ -1,11 +1,6 @@
 /* eslint-disable prefer-const */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import {
-  BadRequestException,
-  ConsoleLogger,
-  Injectable,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 import axios from 'axios';
 import * as FormData from 'form-data';
 import * as crypto from 'crypto';
@@ -610,8 +605,8 @@ export class TiktokCampaignService {
           'Failed to retrieve required video or identity information.',
         );
       }
-      this.logger.log(identityId)
-      this.logger.log(itemId)
+      this.logger.log(identityId);
+      this.logger.log(itemId);
       const campaignDetails = {
         campaignName,
         objectiveType,

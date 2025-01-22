@@ -3,7 +3,7 @@ export interface CreateSearchAdCampaignDto {
     campaignName: string;
     budgetAmountMicros: number;
     status: string;
-    startDate: string;
+    startDate: string;  
     endDate: string;
     adGroupName: string;
     keywords: Array<{ text: string; matchType: string; bidAmount: number }>;

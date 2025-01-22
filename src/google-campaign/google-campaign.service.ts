@@ -1,15 +1,19 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, HttpException, HttpStatus, Logger } from '@nestjs/common';
-import { GoogleAdsApi, Customer, ResourceNames } from 'google-ads-api';
+import { Injectable, HttpException, HttpStatus, Logger, BadRequestException } from '@nestjs/common';
+import { GoogleAdsApi, Customer } from 'google-ads-api';
 
 import { enums } from 'google-ads-api';
+import { OrderService } from '../order/order.service';
+
 @Injectable()
 export class GoogleCampaignService {
   private readonly googleAdsClient: Customer;
   private readonly googleAdsApi: GoogleAdsApi;
   private readonly logger = new Logger(GoogleCampaignService.name);
 
-  constructor() {
+  constructor(
+    private readonly orderService: OrderService,
+  ) {
     this.validateEnvVariables();
 
     this.googleAdsApi = new GoogleAdsApi({
@@ -27,6 +31,8 @@ export class GoogleCampaignService {
 
 
   async createFullSearchAd(params: {
+    userId: string;
+    walletId: string;
     campaignName: string;
     budgetAmount: number;
     startDate: string;
@@ -44,16 +50,19 @@ export class GoogleCampaignService {
     sitelinks?: { text: string; finalUrl: string }[];
     callouts?: string[];
     phoneNumbers?: string[];
-    locations?:string[]
+    locations?: string[]
     promotions?: { discount: string; finalUrl: string }[];
     ageRanges?: string[];
     languages?: any[];
 
   }): Promise<any> {
     try {
+
       console.log('Creating Full Search Ad with params:', params);
 
       const {
+        userId,
+        walletId,
         campaignName,
         budgetAmount,
         startDate,
@@ -64,11 +73,12 @@ export class GoogleCampaignService {
         path1 = '',
         path2 = '',
         ageRanges,
-       // genders = [],
-       locations=[],
+        // genders = [],
+        locations = [],
         languages = [],
         keywords,
       } = params;
+      await this.orderService.checkPayAbility(userId, budgetAmount, 25, 10000);
 
       const budgetResourceName = await this.createCampaignBudget(campaignName, budgetAmount);
       console.log('Campaign budget created:', budgetResourceName);
@@ -77,7 +87,7 @@ export class GoogleCampaignService {
       console.log('Campaign created:', campaignResourceName);
 
       //await this.addCallExtension(campaignResourceName, params.phoneNumbers?.[0]);
-      await this.addGeoTargeting(campaignResourceName , locations);
+      await this.addGeoTargeting(campaignResourceName, locations);
       if (languages.length) {
         await this.addLanguageTargeting(campaignResourceName, languages);
       }
@@ -89,25 +99,54 @@ export class GoogleCampaignService {
 
       console.log('Ad Group created:', adGroupResourceName);
 
-      await this.createAd(adGroupResourceName, finalUrl, headlines, descriptions, path1, path2);
+      const adResourceName = await this.createAd(adGroupResourceName, finalUrl, headlines, descriptions, path1, path2);
 
-      return {
-        message: 'Search Ad created successfully',
-        data: {
-          campaignBudget: budgetResourceName,
+      const order = await this.orderService.createOrderWithTransaction(
+        userId,
+        walletId,
+        'Google Search Ad',
+        budgetAmount,
+        {
+          base: {
+            campaign_id: campaignResourceName,
+            campaign_name: campaignName,
+            schedule_start_time: startDate,
+            schedule_end_time: endDate,
+            budget: budgetAmount,
+            finalUrl,
+            headlines,
+            descriptions,
+            languages,
+            keywords,
+            locations,
+            ageRanges,
+          },
           campaign: campaignResourceName,
           adGroup: adGroupResourceName,
+          ad: adResourceName,
         },
+      );
+      return {
+        ...order,
+        details: order.details.base,
       };
+      // return {
+      //   message: 'Search Ad created successfully',
+      //   data: {
+      //     campaignBudget: budgetResourceName,
+      //     campaign: campaignResourceName,
+      //     adGroup: adGroupResourceName,
+      //   },
+      // };
     } catch (error: any) {
-      console.error('Error creating Search Ad:', error);
+      console.log('Error creating Search Ad:', error);
       this.logger.error('Error creating Search Ad:', error);
-      throw new HttpException(
+      throw new BadRequestException(
         {
           message: 'Failed to create Search Ad',
-          error: error?.errors || error?.message || 'Unknown error',
+          d: error?.errors || error?.message || 'Unknown error',
         },
-        HttpStatus.INTERNAL_SERVER_ERROR,
+      
       );
     }
   }
@@ -167,7 +206,6 @@ export class GoogleCampaignService {
     if (!campaignResourceName) throw new Error('Failed to create campaign.');
     return campaignResourceName;
   }
-
   async getAvailableLocations(keyword: string): Promise<any> {
     try {
       console.log(keyword)
@@ -208,7 +246,6 @@ export class GoogleCampaignService {
       );
     }
   }
-
   async addGenderTargeting(campaignResourceName: string): Promise<void> {
     try {
       const genders = [
@@ -221,7 +258,7 @@ export class GoogleCampaignService {
         create: {
           campaign: campaignResourceName,
           gender: gender,
-        } ,
+        },
       }));
 
       await this.googleAdsClient.campaignCriteria.create((operations as any));
@@ -239,8 +276,7 @@ export class GoogleCampaignService {
       );
     }
   }
-
-  private async addKeywordsToAdGroup(adGroupResourceName: string, keywords: {
+  public async addKeywordsToAdGroup(adGroupResourceName: string, keywords: {
     keyword: string;
     type: string;
   }[]) {
@@ -262,7 +298,6 @@ export class GoogleCampaignService {
       throw error;
     }
   }
-
   private async createAdGroup(campaignName: string, campaignResourceName: string): Promise<string> {
     console.log('Creating ad group...');
     const response = await this.googleAdsClient.adGroups.create([
@@ -279,7 +314,6 @@ export class GoogleCampaignService {
     if (!adGroupResourceName) throw new Error('Failed to create ad group.');
     return adGroupResourceName;
   }
-
   private async createAd(
     adGroupResourceName: string,
     finalUrl: string,
@@ -310,7 +344,6 @@ export class GoogleCampaignService {
     await this.googleAdsClient.adGroupAds.create([adData]);
     console.log('Ad creation completed.');
   }
-
   // private async addAgeTargeting(campaignResourceName: string, ageRanges: string[]) {
   //   console.log('إضافة استهداف الفئات العمرية...');
 
@@ -347,7 +380,6 @@ export class GoogleCampaignService {
   //     throw error;
   //   }
   // }
-
   async addAgeTargeting(campaignResourceName: string): Promise<void> {
     try {
       const ageRanges = [
@@ -364,7 +396,7 @@ export class GoogleCampaignService {
         age_range: ageRange,
       }));
 
-     await this.googleAdsClient.campaignCriteria.create((operations as any));
+      await this.googleAdsClient.campaignCriteria.create((operations as any));
 
       console.log('Age targeting added:', ageRanges);
     } catch (error: any) {
@@ -379,34 +411,34 @@ export class GoogleCampaignService {
       );
     }
   }
-  async getKeywordSuggestions(keyword: string, locations: string[]): Promise<any> {
-   console.log(locations)
+  async getKeywordSuggestions(keyword: string, locations: string[], language): Promise<any> {
+    console.log(locations)
     try {
       const response = await this.googleAdsClient.keywordPlanIdeas.generateKeywordIdeas({
         customer_id: process.env.GOOGLE_ADS_CUSTOMER_ID,
         keyword_plan_network: 'GOOGLE_SEARCH',
         keyword_seed: {
           keywords: [keyword],
-        },  
-        language:'languageConstants/1000',
+        },
+        language: this.getLanguageId(language || 'English'),
         geo_target_constants: locations,
-        include_adult_keywords: false, 
+        include_adult_keywords: false,
         page_token: '',
         page_size: 3,
         keyword_annotation: [],
         toJSON: function (): { [k: string]: any; } {
           throw new Error('Function not implemented.');
         }
-      }); 
+      });
       console.log(response)
-      
-      const formattedResponse =(response as any).map((item: any) => ({
+
+      const formattedResponse = (response as any).map((item: any) => ({
         text: item.text,
         competition: item.keyword_idea_metrics?.competition || null,
         avg_monthly_searches: item.keyword_idea_metrics?.avg_monthly_searches || null,
       }));
 
-      return formattedResponse ;
+      return formattedResponse;
     } catch (error: any) {
       console.log('Error fetching keyword suggestions:', error);
       throw new HttpException(
@@ -418,7 +450,7 @@ export class GoogleCampaignService {
       );
     }
   }
-  private async addLanguageTargeting(campaignResourceName: string, languages: any[]) {
+  public async addLanguageTargeting(campaignResourceName: string, languages: any[]) {
     console.log('Adding language targeting...');
 
     // Map the languages to valid ICampaignCriterion objects
@@ -439,87 +471,61 @@ export class GoogleCampaignService {
       throw error;
     }
   }
-
   private getLanguageId(language: string): string {
+
     const languageMap: Record<string, string> = {
-      'Afrikaans': 'languageConstants/1006',
-      'Albanian': 'languageConstants/1019',
-      'Amharic': 'languageConstants/1020',
-      'Arabic': 'languageConstants/1007',
-      'Armenian': 'languageConstants/1021',
-      'Azerbaijani': 'languageConstants/1022',
-      'Basque': 'languageConstants/1023',
-      'Belarusian': 'languageConstants/1024',
-      'Bengali': 'languageConstants/1025',
-      'Bosnian': 'languageConstants/1026',
-      'Bulgarian': 'languageConstants/1027',
-      'Catalan': 'languageConstants/1008',
-      'Chinese (Simplified)': 'languageConstants/1018',
-      'Chinese (Traditional)': 'languageConstants/1028',
-      'Croatian': 'languageConstants/1029',
-      'Czech': 'languageConstants/1003',
+      'Arabic': 'languageConstants/1019',
+      'Bengali': 'languageConstants/1056',
+      'Bulgarian': 'languageConstants/1020',
+      'Catalan': 'languageConstants/1038',
+      'Chinese (simplified)': 'languageConstants/1017',
+      'Chinese (traditional)': 'languageConstants/1018',
+      'Croatian': 'languageConstants/1039',
+      'Czech': 'languageConstants/1021',
       'Danish': 'languageConstants/1009',
       'Dutch': 'languageConstants/1010',
       'English': 'languageConstants/1000',
-      'Estonian': 'languageConstants/1030',
-      'Filipino': 'languageConstants/1011',
-      'Finnish': 'languageConstants/1012',
+      'Estonian': 'languageConstants/1043',
+      'Filipino': 'languageConstants/1042',
+      'Finnish': 'languageConstants/1011',
       'French': 'languageConstants/1002',
-      'Galician': 'languageConstants/1031',
-      'Georgian': 'languageConstants/1032',
       'German': 'languageConstants/1001',
-      'Greek': 'languageConstants/1013',
-      'Gujarati': 'languageConstants/1033',
-      'Hebrew': 'languageConstants/1014',
-      'Hindi': 'languageConstants/1015',
-      'Hungarian': 'languageConstants/1016',
-      'Icelandic': 'languageConstants/1034',
-      'Indonesian': 'languageConstants/1017',
-      'Irish': 'languageConstants/1035',
+      'Greek': 'languageConstants/1022',
+      'Gujarati': 'languageConstants/1072',
+      'Hebrew': 'languageConstants/1027',
+      'Hindi': 'languageConstants/1023',
+      'Hungarian': 'languageConstants/1024',
+      'Icelandic': 'languageConstants/1026',
+      'Indonesian': 'languageConstants/1025',
       'Italian': 'languageConstants/1004',
-      'Japanese': 'languageConstants/1010',
-      'Kannada': 'languageConstants/1036',
-      'Kazakh': 'languageConstants/1037',
-      'Khmer': 'languageConstants/1038',
-      'Korean': 'languageConstants/1018',
-      'Kurdish': 'languageConstants/1039',
-      'Kyrgyz': 'languageConstants/1040',
-      'Lao': 'languageConstants/1041',
-      'Latvian': 'languageConstants/1042',
-      'Lithuanian': 'languageConstants/1043',
-      'Macedonian': 'languageConstants/1044',
-      'Malay': 'languageConstants/1045',
-      'Malayalam': 'languageConstants/1046',
-      'Maltese': 'languageConstants/1047',
-      'Maori': 'languageConstants/1048',
-      'Marathi': 'languageConstants/1049',
-      'Mongolian': 'languageConstants/1050',
-      'Nepali': 'languageConstants/1051',
-      'Norwegian': 'languageConstants/1019',
-      'Persian': 'languageConstants/1052',
-      'Polish': 'languageConstants/1010',
+      'Japanese': 'languageConstants/1005',
+      'Kannada': 'languageConstants/1086',
+      'Korean': 'languageConstants/1012',
+      'Latvian': 'languageConstants/1028',
+      'Lithuanian': 'languageConstants/1029',
+      'Malay': 'languageConstants/1102',
+      'Malayalam': 'languageConstants/1098',
+      'Marathi': 'languageConstants/1101',
+      'Norwegian': 'languageConstants/1013',
+      'Persian': 'languageConstants/1064',
+      'Polish': 'languageConstants/1030',
       'Portuguese': 'languageConstants/1014',
-      'Punjabi': 'languageConstants/1053',
-      'Romanian': 'languageConstants/1012',
-      'Russian': 'languageConstants/1017',
-      'Serbian': 'languageConstants/1054',
-      'Slovak': 'languageConstants/1003',
-      'Slovenian': 'languageConstants/1055',
+      'Punjabi': 'languageConstants/1110',
+      'Romanian': 'languageConstants/1032',
+      'Russian': 'languageConstants/1031',
+      'Serbian': 'languageConstants/1035',
+      'Slovak': 'languageConstants/1033',
+      'Slovenian': 'languageConstants/1034',
       'Spanish': 'languageConstants/1003',
-      'Swahili': 'languageConstants/1056',
-      'Swedish': 'languageConstants/1009',
-      'Tamil': 'languageConstants/1057',
-      'Telugu': 'languageConstants/1058',
-      'Thai': 'languageConstants/1059',
-      'Turkish': 'languageConstants/1010',
-      'Ukrainian': 'languageConstants/1060',
-      'Urdu': 'languageConstants/1061',
-      'Uzbek': 'languageConstants/1062',
-      'Vietnamese': 'languageConstants/1063',
-      'Welsh': 'languageConstants/1064',
-      'Zulu': 'languageConstants/1065',
+      'Swedish': 'languageConstants/1015',
+      'Tamil': 'languageConstants/1130',
+      'Telugu': 'languageConstants/1131',
+      'Thai': 'languageConstants/1044',
+      'Turkish': 'languageConstants/1037',
+      'Ukrainian': 'languageConstants/1036',
+      'Urdu': 'languageConstants/1041',
+      'Vietnamese': 'languageConstants/1040'
     };
-
     const languageConstant = languageMap[language];
     if (!languageConstant) {
       throw new Error(`Unsupported language: ${language}`);
@@ -558,14 +564,14 @@ export class GoogleCampaignService {
   //   }
   // }
 
-  private async addGeoTargeting(campaignResourceName: string,locations:string []): Promise<void> {
+  public async addGeoTargeting(campaignResourceName: string, locations: string[]): Promise<void> {
     console.log('Adding geo-targeting to campaign:', campaignResourceName);
 
     // Prepare the campaign criteria
     const campaignCriteria = locations.map((location) => ({
       campaign: campaignResourceName,
       type: enums.CriterionType.LOCATION,
-      location: { geo_target_constant: location}, // Ensure location is an object
+      location: { geo_target_constant: location }, // Ensure location is an object
       status: enums.CampaignCriterionStatus.ENABLED,
     }));
 
@@ -576,6 +582,58 @@ export class GoogleCampaignService {
     } catch (error) {
       console.error('Failed to add geo-targeting:', error);
       throw error;
+    }
+  }
+  async getAdReport(campaignId: string , orderId: string): Promise<any> {
+    try {
+      console.log('Fetching ad report for campaign:', campaignId);  
+      const query =  `
+      SELECT
+        campaign.id,
+        campaign.name,
+        metrics.impressions,
+        metrics.clicks,
+        metrics.ctr,
+        metrics.average_cpc,
+        metrics.cost_micros,
+        metrics.conversions,
+        metrics.all_conversions,
+        metrics.cost_per_all_conversions,
+        metrics.view_through_conversions
+      FROM
+        campaign
+      WHERE
+        campaign.resource_name = '${campaignId}'
+    `; 
+  
+      const rows = await this.googleAdsClient.query(query);
+  
+      const report = rows.map(row => ({
+        campaignId: row.campaign.id,
+        campaignName: row.campaign.name,
+        impressions: row.metrics.impressions,
+        clicks: row.metrics.clicks,
+        ctr: row.metrics.ctr,
+        averageCpc: row.metrics.average_cpc,
+        costMicros: row.metrics.cost_micros,
+        conversions: row.metrics.conversions,
+        allConversions: row.metrics.all_conversions,
+        costPerAllConversions: row.metrics.cost_per_all_conversions,
+        viewThroughConversions: row.metrics.view_through_conversions,
+      }));
+      console.log(report)
+      const order = await this.orderService.getOrderById(orderId);
+      return { ...report[0], ...order._doc };
+      return report;
+    } catch (error: any) {
+      console.log('Error fetching ad report:', error);
+      throw new HttpException(
+        {
+          message: 'Failed to fetch ad report',
+          error
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

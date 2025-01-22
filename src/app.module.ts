@@ -12,6 +12,7 @@ import { GoogleCampaignModule } from './google-campaign/google-campaign.module';
 import { TiktokCampaignModule } from './tiktok-campaign/tiktok-campaign.module';
 import { FacebookCampaignModule } from './facebook-campaign/facebook-campaign.module';
 import { YouTubeCampaignModule } from './youtupe-campaign/youtube-campaing.module';
+import { SnapchatCampaignModule } from './snapchat-campaign/snapchat-campaign.module';
 import { StripeModule } from './stripe/stripe.module';
 import { OrderModule } from './order/order.module';
 import { ConfigModule } from '@nestjs/config';
@@ -30,6 +31,7 @@ import { JwtModule } from '@nestjs/jwt'; // Import JwtModule
     MongooseModule.forRoot(process.env.MONGO_URI),
     GoogleCampaignModule,
     TiktokCampaignModule,
+    SnapchatCampaignModule,
     YouTubeCampaignModule,
     FacebookCampaignModule,
     StripeModule,
@@ -50,9 +52,16 @@ export class AppModule implements OnModuleInit {
       .forRoutes(
         { path: 'user/wallet', method: RequestMethod.GET },
         { path: 'user/orders', method: RequestMethod.GET },
-        { path: 'google-campaign/create', method: RequestMethod.POST },
+        {
+          path: 'google-campaign/create-search-ad',
+          method: RequestMethod.POST,
+        },
+        { path: 'youtube-campaign/create', method: RequestMethod.POST },
+
         { path: 'tiktok-campaign/FeedAd', method: RequestMethod.POST },
         { path: 'tiktok-campaign/SparkAd', method: RequestMethod.POST },
+        { path: 'snapchat-campaign/SnapAd', method: RequestMethod.POST },
+        { path: 'snapchat-campaign/CollectionAd', method: RequestMethod.POST },
         { path: 'user/orders/deposit', method: RequestMethod.POST },
       );
   }
