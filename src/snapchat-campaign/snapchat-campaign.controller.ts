@@ -360,8 +360,7 @@ export class SnapchatCampaignController {
       );
       return {
         message: 'Report fetched successfully',
-        details: report,
-        status: report.status,
+        data :report
       };
     } catch (error) {
       this.logger.error('Error fetching campaign report:', error.message);
