@@ -160,7 +160,7 @@ export class YouTubeCampaignService {
             squareImages,
             landscapeImages,
             square_logo_images,
-            videoId,
+            videoUrl: this.getYouTubeShortUrl(videoId),
             finalUrl,
             businessName,
             headlines,
@@ -192,14 +192,8 @@ export class YouTubeCampaignService {
       throw error;
     }
   }
-  private validateVideoId(videoId: string): string {
-    if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
-      throw new HttpException(
-        'Invalid YouTube video ID. It must be exactly 11 characters long.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    return videoId;
+  private getYouTubeShortUrl(videoId: string): string {
+    return `https://youtu.be/${videoId}`;
   }
   private async createVideoAsset(
     name: string,
