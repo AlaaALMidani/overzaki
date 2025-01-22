@@ -576,9 +576,6 @@ export class SnapchatCampaignService {
             lifetime_budget_micro: budget * 1000000,
             start_time: startTime,
             end_time: endTime,
-            billing_event: 'IMPRESSION',
-            bid_strategy: 'AUTO_BID',
-            delivery_constraint: 'LIFETIME_BUDGET '
           },
         ],
       };
@@ -591,11 +588,12 @@ export class SnapchatCampaignService {
           Authorization: `Bearer ${accessToken}`,
         },
       });
+      console.log(response.data)
       return response.data;
     } catch (error) {
       console.log(' Error', error.response?.data?.message);
       throw new Error(
-        error.response?.data?.message || 'interaction creation failed',
+        error.response?.data?.message || 'Ad Squad creation failed',
       );
     }
   }
@@ -617,7 +615,7 @@ export class SnapchatCampaignService {
             name: name,
             type: type,
             status: 'PAUSED',
-            render_type: 'DYNAMIC'
+            // render_type: 'DYNAMIC'
           },
         ],
       };
@@ -753,60 +751,37 @@ export class SnapchatCampaignService {
     minAge: string,
     maxAge: string,
     gender: string,
+    languages: string[],
     countryCodes: string[],
+    osType: string,
     budget: number,
     startTime: string,
     endTime: string,
-    brandName: string,
-    headline: string,
-    languages: string[],
-    osType: string,
-    url: string,
-    callToAction: string,
-    file: string,
+    url:string,
+    callToAction:string,
+    ads: { [key: string]: { brandName: string; headline: string; callToAction: string; url: string; file: string } }
   ) {
     try {
       this.logger.log('Refreshing access token...');
       const accessToken = await this.refreshAccessToken();
       this.logger.log('Access token refreshed successfully: ' + accessToken);
-
+  
       const adAccountId = '993c271d-05ce-4c6a-aeeb-13b62b657ae6';
       const profileId = 'aca22c35-6fee-4912-a3ad-9ddc20fd21b7';
-
-      // Step 1: Create and upload media
-      const { mediaResponse, downloadLink } = await this.createAndUploadMedia(
-        accessToken,
-        adAccountId,
-        file,
-        name,
-      );
-
-      // Step 2: Create creative
-      this.logger.log('Creating creative...');
-      const creativeResponse = await this.createCreative(
-        accessToken,
-        adAccountId,
-        mediaResponse.media[0].media.id,
-        name,
-        'SNAP_AD',
-        brandName,
-        headline,
-        profileId,
-      );
-      const creativeId = creativeResponse.creatives[0].creative.id;
-      this.logger.log(`Creative created with ID: ${creativeId}`);
-      // Step 3: Create campaign
+  
+      // Step 1: Create campaign
       this.logger.log('Creating campaign...');
       const campaignResponse = await this.createCampaign(
         accessToken,
         name,
         adAccountId,
         startTime,
-        objective,
+        objective
       );
       const campaignId = campaignResponse.campaigns[0].campaign.id;
-
-      // Step 4: Create ad squad
+      this.logger.log(`Campaign created with ID: ${campaignId}`);
+  
+      // Step 2: Create ad squad
       this.logger.log('Creating ad squad...');
       const adSquadResponse = await this.createAdSquad(
         accessToken,
@@ -821,33 +796,66 @@ export class SnapchatCampaignService {
         startTime,
         endTime,
         languages,
-        osType,
+        osType
       );
       const adSquadId = adSquadResponse.adsquads[0].adsquad.id;
-
-      // Step 5: Create ad
-      this.logger.log('Creating ad...');
-      const adPayload = {
-        ads: [
-          {
-            ad_squad_id: adSquadId,
-            creative_id: creativeId,
-            name: name,
-            type: 'SNAP_AD',
-            status: 'PAUSED',
-          },
-        ],
-      };
-      const endpoint = `https://adsapi.snapchat.com/v1/adsquads/${adSquadId}/ads`;
-      const response = await axios.post(endpoint, adPayload, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      const ad = response.data;
-      this.logger.log(`Ad created with ID: ${ad.ads[0].ad.id}`);
-
-      // Step 6: Create order
+      this.logger.log(`Ad squad created with ID: ${adSquadId}`);
+  
+      // Step 3: Create ads and collect their data
+      const adsData = [];
+      for (const adKey in ads) {
+        const ad = ads[adKey];
+  
+        // Step 3.1: Create and upload media
+        const { mediaResponse, downloadLink } = await this.createAndUploadMedia(
+          accessToken,
+          adAccountId,
+          ad.file,
+          ad.brandName
+        );
+        this.logger.log(`Media uploaded for ad ${adKey}: ${downloadLink}`);
+  
+        // Step 3.2: Create creative
+        this.logger.log('Creating creative...');
+        const creativeResponse = await this.createCreative(
+          accessToken,
+          adAccountId,
+          mediaResponse.media[0].media.id,
+          ad.brandName,
+          'SNAP_AD',
+          ad.brandName,
+          ad.headline,
+          profileId
+        );
+        const creativeId = creativeResponse.creatives[0].creative.id;
+        this.logger.log(`Creative created with ID: ${creativeId}`);
+  
+        // Step 3.3: Create ad using the `createAd` function
+        this.logger.log('Creating ad...');
+        const createdAd = await this.createAd(
+          accessToken,
+          adSquadId,
+          creativeId,
+          ad.brandName,
+          'SNAP_AD'
+        );
+        this.logger.log(`Ad created with ID: ${createdAd.ads[0].ad.id}`);
+  
+        // Collect ad data for the order
+        adsData.push({
+          adId: createdAd.ads[0].ad.id,
+          brandName: ad.brandName,
+          headline: ad.headline,
+          callToAction: ad.callToAction,
+          url: ad.url,
+          mediaFile: downloadLink,
+          creative: creativeResponse.creatives[0].creative,
+          media: mediaResponse.media[0].media,
+        });
+      }
+  
+      // Step 4: Create order with all ad data
+      this.logger.log('Creating order...');
       const order = await this.orderService.createOrderWithTransaction(
         userId,
         walletId,
@@ -861,24 +869,22 @@ export class SnapchatCampaignService {
             schedule_start_time: adSquadResponse.adsquads[0].adsquad.start_time,
             schedule_end_time: adSquadResponse.adsquads[0].adsquad.end_time,
             budget: budget,
-            finalUrl: url,
             maxAge,
             minAge,
-            mainMediaFile: downloadLink,
           },
+          ads: adsData,
           campaign: campaignResponse.campaigns[0].campaign,
-          media: mediaResponse.media[0].media,
-          creative: creativeResponse.creatives[0].creative,
-          file: { download_link: downloadLink },
-          adSquadResponse: adSquadResponse.adsquads[0].adsquad,
-          ad: ad.ads[0].ad,
-        },
+          adSquad: adSquadResponse.adsquads[0].adsquad,
+        }
       );
       this.logger.log('Order created successfully:', order._id);
-
+  
       return {
-        orderID: order._id,
-        order,
+        message: 'Snap Ads created successfully!',
+        data: {
+          orderID: order._id,
+          order,
+        },
       };
     } catch (error) {
       this.logger.error('Error during Snap Ad creation:', error.message);
@@ -1025,6 +1031,7 @@ export class SnapchatCampaignService {
         languages,
         osType,
       );
+      console.log(adSquadResponse)
       const adSquadId = adSquadResponse.adsquads[0].adsquad.id;
       this.logger.log(`Ad squad created with ID: ${adSquadId}`);
 
