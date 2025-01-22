@@ -139,8 +139,8 @@ export class SnapchatCampaignService {
     interactionZoneId?: string,
     interactionType?: string,
     url?: string,
-    iosAppId?:string,
-    androidAppUrl?:string,
+    iosAppId?: string,
+    androidAppUrl?: string,
   ): Promise<any> {
     const payload: any = {
       creatives: [
@@ -163,7 +163,7 @@ export class SnapchatCampaignService {
         interaction_zone_id: interactionZoneId,
         default_fallback_interaction_type: interactionType,
       };
-    
+
       switch (interactionType) {
         case 'WEB_VIEW':
           payload.creatives[0].collection_properties.web_view_properties = {
@@ -177,17 +177,21 @@ export class SnapchatCampaignService {
             app_name: name,
             icon_media_id: mediaId,
           };
-    
+
           // Now you can safely set ios_app_id and android_app_url
           if (iosAppId) {
-            payload.creatives[0].collection_properties.deep_link_properties.ios_app_id = iosAppId;
+            payload.creatives[0].collection_properties.deep_link_properties.ios_app_id =
+              iosAppId;
           }
           if (androidAppUrl) {
-            payload.creatives[0].collection_properties.deep_link_properties.android_app_url = androidAppUrl;
+            payload.creatives[0].collection_properties.deep_link_properties.android_app_url =
+              androidAppUrl;
           }
           break;
         default:
-          throw new Error("Unsupported interaction type. Use 'WEB_VIEW' or 'DEEP_LINK'.");
+          throw new Error(
+            "Unsupported interaction type. Use 'WEB_VIEW' or 'DEEP_LINK'.",
+          );
       }
     }
 
@@ -676,7 +680,7 @@ export class SnapchatCampaignService {
     mainUrl: string,
     productUrls: string[],
     callToAction: string,
-    mainFile: string, 
+    mainFile: string,
     product1: string,
     product2: string,
     product3: string,

@@ -455,7 +455,7 @@ export class YouTubeCampaignService {
       );
     }
   }
-  private async  getYoutubeVideosSuggestions(
+  public async  getYoutubeVideosSuggestions(
     query: string,
     maxResults: number = 10,
     pageToken?: string,
