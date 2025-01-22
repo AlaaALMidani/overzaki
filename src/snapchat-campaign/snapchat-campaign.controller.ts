@@ -11,6 +11,7 @@ import {
   Req,
 } from '@nestjs/common';
 import { SnapchatCampaignService } from './snapchat-campaign.service';
+import { url } from 'inspector';
 
 @Controller('snapchat-campaign')
 export class SnapchatCampaignController {
@@ -63,13 +64,11 @@ export class SnapchatCampaignController {
       budget,
       startTime,
       endTime,
-      brandName,
-      headline,
-      callToAction,
       url,
-      file,
+      callToAction,
+      ads,
     } = body;
-
+  
     if (
       !name ||
       !minAge ||
@@ -77,22 +76,17 @@ export class SnapchatCampaignController {
       !budget ||
       !startTime ||
       !endTime ||
-      !brandName ||
-      !headline
+      !ads
     ) {
       throw new HttpException(
         'Missing required fields. Please check your input.',
-        HttpStatus.BAD_REQUEST,
+        HttpStatus.BAD_REQUEST
       );
     }
-
-    if (!file) {
-      throw new HttpException('Video file is required', HttpStatus.BAD_REQUEST);
-    }
-
+  
     const countryCodesArray = this.ensureArray(countryCodes);
     const languagesArray = this.ensureArray(languages);
-
+  
     try {
       this.logger.log('Initiating Snap Ad creation...');
       const result = await this.campaignService.createSnapAd(
@@ -103,21 +97,19 @@ export class SnapchatCampaignController {
         minAge,
         maxAge,
         gender,
+        languagesArray,
         countryCodesArray,
+        osType,
         parseFloat(budget),
         startTime,
         endTime,
-        brandName,
-        headline,
-        languagesArray,
-        osType,
         url,
         callToAction,
-        file,
+        ads
       );
-
+  
       return {
-        message: 'Snap Ad created successfully!',
+        message: 'Snap Ads created successfully!',
         data: result,
       };
     } catch (error) {
@@ -227,8 +219,8 @@ export class SnapchatCampaignController {
         product2,
         product3,
         product4,
-        iosAppId, // Optional
-        androidAppUrl, // Optional
+        iosAppId,
+        androidAppUrl,
       );
 
       return {
