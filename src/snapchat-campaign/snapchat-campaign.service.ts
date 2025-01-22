@@ -757,9 +757,175 @@ export class SnapchatCampaignService {
     budget: number,
     startTime: string,
     endTime: string,
-    url:string,
-    callToAction:string,
-    ads: { [key: string]: { brandName: string; headline: string; callToAction: string; url: string; file: string } }
+    ads: {
+      [key: string]: {
+        brandName: string;
+        headline: string;
+        callToAction: string;
+        url: string;
+        file: string
+      }
+    }
+  ) {
+    try {
+      this.logger.log('Refreshing access token...');
+      const accessToken = await this.refreshAccessToken();
+      this.logger.log('Access token refreshed successfully: ' + accessToken);
+
+      const adAccountId = '993c271d-05ce-4c6a-aeeb-13b62b657ae6';
+      const profileId = 'aca22c35-6fee-4912-a3ad-9ddc20fd21b7';
+
+      // Step 1: Create campaign
+      this.logger.log('Creating campaign...');
+      const campaignResponse = await this.createCampaign(
+        accessToken,
+        name,
+        adAccountId,
+        startTime,
+        objective
+      );
+      const campaignId = campaignResponse.campaigns[0].campaign.id;
+      this.logger.log(`Campaign created with ID: ${campaignId}`);
+
+      // Step 2: Create ad squad
+      this.logger.log('Creating ad squad...');
+      const adSquadResponse = await this.createAdSquad(
+        accessToken,
+        name,
+        campaignId,
+        'SNAP_ADS',
+        minAge,
+        maxAge,
+        gender,
+        countryCodes,
+        budget,
+        startTime,
+        endTime,
+        languages,
+        osType
+      );
+      const adSquadId = adSquadResponse.adsquads[0].adsquad.id;
+      this.logger.log(`Ad squad created with ID: ${adSquadId}`);
+
+      // Step 3: Create ads and collect their data
+      const adsData = [];
+      for (const adKey in ads) {
+        const ad = ads[adKey];
+
+        // Step 3.1: Create and upload media
+        const { mediaResponse, downloadLink } = await this.createAndUploadMedia(
+          accessToken,
+          adAccountId,
+          ad.file,
+          ad.brandName
+        );
+        this.logger.log(`Media uploaded for ad ${adKey}: ${downloadLink}`);
+
+        // Step 3.2: Create creative
+        this.logger.log('Creating creative...');
+        const creativeResponse = await this.createCreative(
+          accessToken,
+          adAccountId,
+          mediaResponse.media[0].media.id,
+          ad.brandName,
+          'SNAP_AD',
+          ad.brandName,
+          ad.headline,
+          profileId
+        );
+        const creativeId = creativeResponse.creatives[0].creative.id;
+        this.logger.log(`Creative created with ID: ${creativeId}`);
+
+        // Step 3.3: Create ad using the `createAd` function
+        this.logger.log('Creating ad...');
+        const createdAd = await this.createAd(
+          accessToken,
+          adSquadId,
+          creativeId,
+          ad.brandName,
+          'SNAP_AD'
+        );
+        this.logger.log(`Ad created with ID: ${createdAd.ads[0].ad.id}`);
+
+        // Collect ad data for the order
+        adsData.push({
+          adId: createdAd.ads[0].ad.id,
+          brandName: ad.brandName,
+          headline: ad.headline,
+          callToAction: ad.callToAction,
+          url: ad.url,
+          mediaFile: downloadLink,
+          creative: creativeResponse.creatives[0].creative,
+          media: mediaResponse.media[0].media,
+        });
+      }
+
+      // Step 4: Create order with all ad data
+      this.logger.log('Creating order...');
+      const order = await this.orderService.createOrderWithTransaction(
+        userId,
+        walletId,
+        'Snapchat Snap Ad',
+        budget,
+        {
+          base: {
+            campaign_id: campaignId,
+            campaign_name: campaignResponse.campaigns[0].campaign.name,
+            create_time: campaignResponse.campaigns[0].campaign.created_at,
+            schedule_start_time: adSquadResponse.adsquads[0].adsquad.start_time,
+            schedule_end_time: adSquadResponse.adsquads[0].adsquad.end_time,
+            budget: budget,
+            maxAge,
+            minAge,
+          },
+          ads: adsData,
+          campaign: campaignResponse.campaigns[0].campaign,
+          adSquad: adSquadResponse.adsquads[0].adsquad,
+        }
+      );
+      this.logger.log('Order created successfully:', order._id);
+
+      return {
+        message: 'Snap Ads created successfully!',
+        data: {
+          orderID: order._id,
+          order,
+        },
+      };
+    } catch (error) {
+      this.logger.error('Error during Snap Ad creation:', error.message);
+      throw error;
+    }
+  }
+
+  async createCollectionAd(
+    userId: string,
+    walletId: string,
+    name: string,
+    objective: string,
+    minAge: string,
+    maxAge: string,
+    gender: string,
+    languages: string[],
+    countryCodes: string[],
+    osType: string,
+    budget: number,
+    startTime: string,
+    endTime: string,
+    interactionType: string,
+    ads: {
+      [key: string]: {
+        brandName: string;
+        headline: string;
+        mainFile: string;
+        mainUrl: string;
+        productUrls: string[];
+        productsImages: string[];
+        callToAction: string;
+        iosAppId?: string;
+        androidAppUrl?: string;
+      };
+    }
   ) {
     try {
       this.logger.log('Refreshing access token...');
@@ -806,38 +972,87 @@ export class SnapchatCampaignService {
       for (const adKey in ads) {
         const ad = ads[adKey];
   
-        // Step 3.1: Create and upload media
-        const { mediaResponse, downloadLink } = await this.createAndUploadMedia(
+        // Step 3.1: Handle product files for the ad
+        const { mediaIds, productsMedia } = await this.handleProductMedia(
           accessToken,
           adAccountId,
-          ad.file,
+          ad.productsImages,
           ad.brandName
         );
-        this.logger.log(`Media uploaded for ad ${adKey}: ${downloadLink}`);
+        this.logger.log(`Product media uploaded for ad ${adKey}: ${mediaIds}`);
   
-        // Step 3.2: Create creative
-        this.logger.log('Creating creative...');
+        // Step 3.2: Create Creative Elements
+        this.logger.log(`Creating Creative Elements for ad ${adKey}...`);
+        const creativeElementsResponse = await this.createCreativeElements(
+          accessToken,
+          adAccountId,
+          ad.brandName,
+          interactionType,
+          mediaIds,
+          ad.productUrls,
+          ad.brandName,
+          ad.iosAppId,
+          ad.androidAppUrl
+        );
+        this.logger.log(JSON.stringify(creativeElementsResponse));
+  
+        // Step 3.3: Extract Creative Element IDs
+        const creativeElementsIds = creativeElementsResponse.creative_elements.map(
+          (element) => element.creative_element.id
+        );
+        this.logger.log(`Creative Element IDs for ad ${adKey}: ${creativeElementsIds}`);
+  
+        // Step 3.4: Create an Interaction Zone
+        this.logger.log(`Creating Interaction Zone for ad ${adKey}...`);
+        const interactionZoneResponse = await this.createInteraction(
+          accessToken,
+          adAccountId,
+          ad.brandName,
+          ad.callToAction,
+          creativeElementsIds
+        );
+        const interactionZoneId =
+          interactionZoneResponse.interaction_zones[0].interaction_zone.id;
+        this.logger.log(`Interaction zone created with ID: ${interactionZoneId}`);
+  
+        // Step 3.5: Handle main file for the ad
+        const { mediaResponse: mainMediaResponse, downloadLink: mainDownloadLink } =
+          await this.createAndUploadMedia(
+            accessToken,
+            adAccountId,
+            ad.mainFile,
+            ad.brandName
+          );
+        this.logger.log(`Main media uploaded for ad ${adKey}: ${mainDownloadLink}`);
+  
+        // Step 3.6: Create creative for the ad
+        this.logger.log('Creating creative for ad...');
         const creativeResponse = await this.createCreative(
           accessToken,
           adAccountId,
-          mediaResponse.media[0].media.id,
+          mainMediaResponse.media[0].media.id,
           ad.brandName,
-          'SNAP_AD',
+          'COLLECTION',
           ad.brandName,
           ad.headline,
-          profileId
+          profileId,
+          interactionZoneId,
+          interactionType,
+          ad.mainUrl,
+          ad.iosAppId,
+          ad.androidAppUrl
         );
         const creativeId = creativeResponse.creatives[0].creative.id;
         this.logger.log(`Creative created with ID: ${creativeId}`);
   
-        // Step 3.3: Create ad using the `createAd` function
+        // Step 3.7: Create ad using the `createAd` function
         this.logger.log('Creating ad...');
         const createdAd = await this.createAd(
           accessToken,
           adSquadId,
           creativeId,
           ad.brandName,
-          'SNAP_AD'
+          'COLLECTION'
         );
         this.logger.log(`Ad created with ID: ${createdAd.ads[0].ad.id}`);
   
@@ -847,10 +1062,13 @@ export class SnapchatCampaignService {
           brandName: ad.brandName,
           headline: ad.headline,
           callToAction: ad.callToAction,
-          url: ad.url,
-          mediaFile: downloadLink,
+          mainUrl: ad.mainUrl,
+          mainMediaFile: mainDownloadLink,
+          productsMedia,
           creative: creativeResponse.creatives[0].creative,
-          media: mediaResponse.media[0].media,
+          media: mainMediaResponse.media[0].media,
+          interactionZone: interactionZoneResponse.interaction_zones[0],
+          creativeElements: creativeElementsResponse.creative_elements[0],
         });
       }
   
@@ -859,7 +1077,7 @@ export class SnapchatCampaignService {
       const order = await this.orderService.createOrderWithTransaction(
         userId,
         walletId,
-        'Snapchat Snap Ad',
+        'Snapchat Collection Ad',
         budget,
         {
           base: {
@@ -880,206 +1098,11 @@ export class SnapchatCampaignService {
       this.logger.log('Order created successfully:', order._id);
   
       return {
-        message: 'Snap Ads created successfully!',
+        message: 'Collection Ads created successfully!',
         data: {
           orderID: order._id,
           order,
         },
-      };
-    } catch (error) {
-      this.logger.error('Error during Snap Ad creation:', error.message);
-      throw error;
-    }
-  }
-
-  async createCollectionAd(
-    userId: string,
-    walletId: string,
-    name: string,
-    objective: string,
-    minAge: string,
-    maxAge: string,
-    gender: string,
-    languages: string[],
-    countryCodes: string[],
-    osType: string,
-    budget: number,
-    startTime: string,
-    endTime: string,
-    brandName: string,
-    headline: string,
-    interactionType: string,
-    mainUrl: string,
-    productUrls: string[],
-    callToAction: string,
-    mainFile: string,
-    product1: string,
-    product2: string,
-    product3: string,
-    product4: string,
-    iosAppId?: string,
-    androidAppUrl?: string,
-  ) {
-    try {
-      this.logger.log("hi")
-      this.logger.log('Refreshing access token..');
-      const accessToken = await this.refreshAccessToken();
-      this.logger.log('Access token refreshed successfully: ' + accessToken);
-
-      const adAccountId = '993c271d-05ce-4c6a-aeeb-13b62b657ae6';
-      const profileId = 'aca22c35-6fee-4912-a3ad-9ddc20fd21b7';
-
-      // Step 1: Handle product files
-      const productFiles = [product1, product2, product3, product4];
-      const { mediaIds, productsMedia } = await this.handleProductMedia(
-        accessToken,
-        adAccountId,
-        productFiles,
-        name,
-      );
-      this.logger.log('All media IDs:', mediaIds);
-
-      // Step 2: Create Creative Elements
-      this.logger.log(`Creating Creative Elements...`);
-      const creativeElementsResponse = await this.createCreativeElements(
-        accessToken,
-        adAccountId,
-        name,
-        interactionType,
-        mediaIds,
-        productUrls,
-        name,
-        iosAppId,
-        androidAppUrl,
-      );
-      this.logger.log(JSON.stringify(creativeElementsResponse));
-
-      // Step 3: Extract Creative Element IDs
-      const creativeElementsIds = creativeElementsResponse.creative_elements.map(
-        (element) => element.creative_element.id,
-      );
-      this.logger.log('All Creative Element IDs:', creativeElementsIds);
-
-      // Step 4: Create an Interaction Zone
-      this.logger.log(`Creating Interaction Zone...`);
-      const interactionZoneResponse = await this.createInteraction(
-        accessToken,
-        adAccountId,
-        name,
-        callToAction,
-        creativeElementsIds,
-      );
-      const interactionZoneId =
-        interactionZoneResponse.interaction_zones[0].interaction_zone.id;
-      this.logger.log(`Interaction zone created with ID: ${interactionZoneId}`);
-
-      // Step 5: Handle main file
-      const { mediaResponse: mainMediaResponse, downloadLink: mainDownloadLink } =
-        await this.createAndUploadMedia(
-          accessToken,
-          adAccountId,
-          mainFile,
-          name,
-        );
-
-      // Step 6: Create creative
-      this.logger.log('Creating creative...');
-      const creativeResponse = await this.createCreative(
-        accessToken,
-        adAccountId,
-        mainMediaResponse.media[0].media.id,
-        name,
-        'COLLECTION',
-        brandName,
-        headline,
-        profileId,
-        interactionZoneId,
-        interactionType,
-        mainUrl,
-        iosAppId,
-        androidAppUrl,
-      );
-      const creativeId = creativeResponse.creatives[0].creative.id;
-      this.logger.log(`Creative created with ID: ${creativeId}`);
-
-      // Step 7: Create campaign
-      this.logger.log('Creating campaign...');
-      const campaignResponse = await this.createCampaign(
-        accessToken,
-        name,
-        adAccountId,
-        startTime,
-        objective,
-      );
-      const campaignId = campaignResponse.campaigns[0].campaign.id;
-      this.logger.log(`Campaign created with ID: ${campaignId}`);
-
-      // Step 8: Create ad squad
-      this.logger.log('Creating ad squad...');
-      const adSquadResponse = await this.createAdSquad(
-        accessToken,
-        name,
-        campaignId,
-        'SNAP_ADS',
-        minAge,
-        maxAge,
-        gender,
-        countryCodes,
-        budget,
-        startTime,
-        endTime,
-        languages,
-        osType,
-      );
-      console.log(adSquadResponse)
-      const adSquadId = adSquadResponse.adsquads[0].adsquad.id;
-      this.logger.log(`Ad squad created with ID: ${adSquadId}`);
-
-      // Step 9: Create ad
-      this.logger.log('Creating ad...');
-      const adResponse = await this.createAd(
-        accessToken,
-        adSquadId,
-        creativeId,
-        name,
-        'COLLECTION',
-      );
-      this.logger.log('Ad created with ID: ' + adResponse.ads[0].ad.id);
-
-      // Step 10: Create order (commented out for now)
-      const order = await this.orderService.createOrderWithTransaction(
-        userId,
-        walletId,
-        'Snapchat Collection Ad',
-        budget,
-        {
-          base: {
-            campaign_id: campaignId,
-            campaign_name: campaignResponse.campaigns[0].campaign.name,
-            create_time: campaignResponse.campaigns[0].campaign.created_at,
-            schedule_start_time: adSquadResponse.adsquads[0].adsquad.start_time,
-            schedule_end_time: adSquadResponse.adsquads[0].adsquad.end_time,
-            budget: budget,
-            finalUrl: mainUrl,
-            maxAge,
-            minAge,
-            mainMediaFile: mainDownloadLink,
-            productsMedia,
-          },
-          campaign: campaignResponse.campaigns[0].campaign,
-          media: mainMediaResponse.media[0].media,
-          creative: creativeResponse.creatives[0].creative,
-          file: { download_link: mainDownloadLink },
-          adSquadResponse: adSquadResponse.adsquads[0].adsquad,
-          ad: adResponse.ads[0].ad,
-          interactionZone: interactionZoneResponse.interaction_zones[0],
-          creativeElements: creativeElementsResponse.creative_elements[0],
-        },
-      );
-      this.logger.log('Order created successfully:', order._id);
-
-      return {
-        ...adResponse,
       };
     } catch (error) {
       this.logger.error('Error during Collection Ad creation:', error.message);
