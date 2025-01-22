@@ -478,7 +478,7 @@ export class YouTubeCampaignService {
       });
   
       const data = response.data;
-  
+  console.log(JSON.stringify(data))
       return {
         videos: data.items.map((item) => ({
           videoId: item.id.videoId,
@@ -486,6 +486,7 @@ export class YouTubeCampaignService {
           description: item.snippet.description,
           thumbnail: item.snippet.thumbnails.default.url,
           publishedAt: item.snippet.publishedAt,
+          channelTitle:item.snippet.channelTitle,
         })),
         nextPageToken: data.nextPageToken,
         prevPageToken: data.prevPageToken,
