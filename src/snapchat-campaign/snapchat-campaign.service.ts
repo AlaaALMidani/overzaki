@@ -907,7 +907,6 @@ export class SnapchatCampaignService {
     productUrls: string[],
     callToAction: string,
     mainFile: string,
-    mainFile: string,
     product1: string,
     product2: string,
     product3: string,
