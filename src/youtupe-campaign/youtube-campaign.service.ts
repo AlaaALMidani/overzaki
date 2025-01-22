@@ -5,13 +5,13 @@ import { GoogleAdsApi, Customer } from 'google-ads-api';
 import * as dotenv from 'dotenv';
 import { OrderService } from '../order/order.service';
 // import { google } from 'googleapis';
+import axios from 'axios';
 dotenv.config();
  
 @Injectable()
 export class YouTubeCampaignService {
   private readonly googleAdsClient: Customer;
-  // private readonly youtubeApiKey = process.env.YOUTUBE_API_KEY;
-  // private readonly youtube = google.youtube('v3');
+  private readonly youtubeApiKey = process.env.YOUTUBE_API_KEY;
 
   constructor(
     private readonly googleCampaignService: GoogleCampaignService,
@@ -455,47 +455,52 @@ export class YouTubeCampaignService {
       );
     }
   }
-  // public async getYoutubeVideosSuggestions(
-  //   query: string,
-  //   maxResults: number = 10,
-  //   pageToken?: string,
-  // ): Promise<{
-  //   videos: any[];
-  //   nextPageToken?: string;
-  //   prevPageToken?: string;
-  // }> {
-
-  //   if (!query) {
-  //     throw new HttpException('Search query is required', HttpStatus.BAD_REQUEST);
-  //   }
-
-  //   try {
-  //     const response = await this.youtube.search.list({
-  //       key: this.youtubeApiKey,
-  //       part: ['snippet'],
-  //       q: query,
-  //       maxResults,
-  //       type: ['video'], // Only search for videos
-  //       pageToken, // Pass the pageToken for pagination
-  //     });
-
-  //     return {
-  //       videos: response.data.items.map((item) => ({
-  //         videoId: item.id.videoId,
-  //         title: item.snippet.title,
-  //         description: item.snippet.description,
-  //         thumbnail: item.snippet.thumbnails.default.url,
-  //         publishedAt: item.snippet.publishedAt,
-  //       })),
-  //       nextPageToken: response.data.nextPageToken,
-  //       prevPageToken: response.data.prevPageToken,
-  //     };
-  //   } catch (error) {
-  //     throw new HttpException(
-  //       'Failed to fetch YouTube videos',
-  //       error,
-  //     );
-  //   }
-  // }
-
+  private async  getYoutubeVideosSuggestions(
+    query: string,
+    maxResults: number = 10,
+    pageToken?: string,
+  ): Promise<{
+    videos: any[];
+    nextPageToken?: string;
+    prevPageToken?: string;
+  }> {
+    if (!query) {
+      throw new HttpException('Search query is required', HttpStatus.BAD_REQUEST);
+    }
+  
+   
+    const apiUrl = 'https://www.googleapis.com/youtube/v3/search';
+  
+    try {
+      const response = await axios.get(apiUrl, {
+        params: {
+          key: this.youtubeApiKey,
+          part: 'snippet',
+          q: query,
+          maxResults,
+          type: 'video',
+          pageToken,
+        },
+      });
+  
+      const data = response.data;
+  
+      return {
+        videos: data.items.map((item) => ({
+          videoId: item.id.videoId,
+          title: item.snippet.title,
+          description: item.snippet.description,
+          thumbnail: item.snippet.thumbnails.default.url,
+          publishedAt: item.snippet.publishedAt,
+        })),
+        nextPageToken: data.nextPageToken,
+        prevPageToken: data.prevPageToken,
+      };
+    } catch (error) {
+      throw new HttpException(
+        error,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }
