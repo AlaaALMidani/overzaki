@@ -1412,10 +1412,10 @@ export class SnapchatCampaignService {
 
       // Structure the report
       const report = {
-        stats: campaignStats.total_stats[0].total_stat.stats,
-        details: order.details,
         status: order.status,
         CampaignStatus: campaignDetails.status,
+        stats: campaignStats.total_stats[0].total_stat.stats,
+        details: order.details,
       };
 
       return report;
