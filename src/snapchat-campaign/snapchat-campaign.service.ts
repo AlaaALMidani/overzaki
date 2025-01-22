@@ -1076,7 +1076,7 @@ export class SnapchatCampaignService {
           creativeElements: creativeElementsResponse.creative_elements[0],
         },
       );
-      this.logger.log('Order created successfully:', order);
+      this.logger.log('Order created successfully:', order._id);
 
       return {
         ...adResponse,
