@@ -915,6 +915,7 @@ export class SnapchatCampaignService {
     androidAppUrl?: string,
   ) {
     try {
+      this.logger.log("hi")
       this.logger.log('Refreshing access token..');
       const accessToken = await this.refreshAccessToken();
       this.logger.log('Access token refreshed successfully: ' + accessToken);
