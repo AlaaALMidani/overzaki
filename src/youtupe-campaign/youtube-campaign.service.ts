@@ -160,7 +160,7 @@ export class YouTubeCampaignService {
             squareImages,
             landscapeImages,
             square_logo_images,
-            videoId,
+            videoUrl: this.getYouTubeShortUrl(videoId),
             finalUrl,
             businessName,
             headlines,
@@ -192,14 +192,8 @@ export class YouTubeCampaignService {
       throw error;
     }
   }
-  private validateVideoId(videoId: string): string {
-    if (!/^[a-zA-Z0-9_-]{11}$/.test(videoId)) {
-      throw new HttpException(
-        'Invalid YouTube video ID. It must be exactly 11 characters long.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-    return videoId;
+  private getYouTubeShortUrl(videoId: string): string {
+    return `https://youtu.be/${videoId}`;
   }
   private async createVideoAsset(
     name: string,
@@ -455,7 +449,7 @@ export class YouTubeCampaignService {
       );
     }
   }
-  private async  getYoutubeVideosSuggestions(
+  public async  getYoutubeVideosSuggestions(
     query: string,
     maxResults: number = 10,
     pageToken?: string,
@@ -484,7 +478,7 @@ export class YouTubeCampaignService {
       });
   
       const data = response.data;
-  
+  console.log(JSON.stringify(data))
       return {
         videos: data.items.map((item) => ({
           videoId: item.id.videoId,
@@ -492,6 +486,7 @@ export class YouTubeCampaignService {
           description: item.snippet.description,
           thumbnail: item.snippet.thumbnails.default.url,
           publishedAt: item.snippet.publishedAt,
+          channelTitle:item.snippet.channelTitle,
         })),
         nextPageToken: data.nextPageToken,
         prevPageToken: data.prevPageToken,
