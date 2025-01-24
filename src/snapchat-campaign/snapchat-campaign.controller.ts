@@ -408,6 +408,8 @@ async createCollectionAd(@Body() body: any, @Req() req: any) {
     }
   }
 
+  
+
   @Get('app-id')
   async getAppId(
     @Query('appName') appName: string,
@@ -415,7 +417,6 @@ async createCollectionAd(@Body() body: any, @Req() req: any) {
   ) {
     this.logger.log(`Fetching app ID for app: ${appName} from store: ${store}`);
 
-    // Validate query parameters
     if (!appName || !store) {
       throw new HttpException(
         'Both appName and store query parameters are required.',
@@ -423,7 +424,6 @@ async createCollectionAd(@Body() body: any, @Req() req: any) {
       );
     }
 
-    // Validate the store parameter
     if (store !== 'google' && store !== 'apple') {
       throw new HttpException(
         'Invalid store parameter. Use "google" or "apple".',
