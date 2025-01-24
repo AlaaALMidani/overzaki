@@ -115,276 +115,272 @@ export class SnapchatCampaignController {
   }
 
   @Post('CollectionAd')
-async createCollectionAd(@Body() body: any, @Req() req: any) {
-  console.log(body);
-  const {
-    name,
-    objective,
-    minAge,
-    maxAge,
-    gender,
-    languages,
-    countryCodes,
-    osType,
-    budget,
-    startTime,
-    endTime,
-    interactionType,
-    ads,
-  } = body;
-
-  // Validate required fields
-  if (
-    !name ||
-    !minAge ||
-    !maxAge ||
-    !countryCodes ||
-    !budget ||
-    !startTime ||
-    !endTime ||
-    !ads
-  ) {
-    throw new HttpException(
-      'Missing required fields. Please check your input.',
-      HttpStatus.BAD_REQUEST,
-    );
-  }
-
-  // Validate ads object
-  if (!ads || typeof ads !== 'object' || Object.keys(ads).length === 0) {
-    throw new HttpException(
-      'The `ads` object must contain at least one ad with required fields.',
-      HttpStatus.BAD_REQUEST,
-    );
-  }
-
-  for (const adKey in ads) {
-    const ad = ads[adKey];
-    if (
-      !ad.brandName ||
-      !ad.headline ||
-      !ad.mainFile ||
-      !ad.mainUrl ||
-      !ad.productUrls ||
-      !ad.productsImages ||
-      !ad.callToAction
-    ) {
-      throw new HttpException(
-        `Ad ${adKey} is missing required fields.`,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    if (!ad.productsImages || ad.productsImages.length === 0) {
-      throw new HttpException(
-        `Ad ${adKey} must have at least one product image.`,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    if (!ad.productUrls || ad.productUrls.length === 0) {
-      throw new HttpException(
-        `Ad ${adKey} must have at least one product URL.`,
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-  }
-
-
-  if (!interactionType || !['WEB_VIEW', 'DEEP_LINK'].includes(interactionType)) {
-    throw new HttpException(
-      'Invalid or missing interactionType. Must be either "WEB_VIEW" or "DEEP_LINK".',
-      HttpStatus.BAD_REQUEST,
-    );
-  }
-
-  if (interactionType === 'DEEP_LINK') {
-    for (const adKey in ads) {
-      const ad = ads[adKey];
-      if (!ad.iosAppId && !ad.androidAppUrl) {
-        throw new HttpException(
-          `Ad ${adKey} is missing both iosAppId and androidAppUrl, which are required for DEEP_LINK interaction type.`,
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-    }
-  }
-
-  const startDate = new Date(startTime);
-  const endDate = new Date(endTime);
-
-  if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-    throw new HttpException(
-      'Invalid startTime or endTime. Please provide valid dates.',
-      HttpStatus.BAD_REQUEST,
-    );
-  }
-
-  if (endDate <= startDate) {
-    throw new HttpException(
-      'endTime must be after startTime.',
-      HttpStatus.BAD_REQUEST,
-    );
-  }
-
-  if (!Array.isArray(languages) || languages.length === 0) {
-    throw new HttpException(
-      'Languages must be a non-empty array.',
-      HttpStatus.BAD_REQUEST,
-    );
-  }
-
-  if (!Array.isArray(countryCodes) || countryCodes.length === 0) {
-    throw new HttpException(
-      'Country codes must be a non-empty array.',
-      HttpStatus.BAD_REQUEST,
-    );
-  }
-  const countryCodesArray = this.ensureArray(countryCodes);
-  const languagesArray = this.ensureArray(languages);
-
-  try {
-    this.logger.log('Initiating Collection Ad creation...');
-    const result = await this.campaignService.createCollectionAd(
-      req.user.id,
-      req.user.walletId,
+  async createCollectionAd(@Body() body: any, @Req() req: any) {
+    console.log(body);
+    const {
       name,
       objective,
       minAge,
       maxAge,
       gender,
-      languagesArray,
-      countryCodesArray,
+      languages,
+      countryCodes,
       osType,
-      parseFloat(budget),
+      budget,
       startTime,
       endTime,
       interactionType,
-      ads
-    );
+      ads,
+    } = body;
 
-    return {
-      message: 'Collection Ad created successfully!',
-      data: result,
-    };
-  } catch (error) {
-    this.logger.error('Error creating Collection Ad:', error.message);
-    throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    // Validate required fields
+    if (
+      !name ||
+      !minAge ||
+      !maxAge ||
+      !countryCodes ||
+      !budget ||
+      !startTime ||
+      !endTime ||
+      !ads
+    ) {
+      throw new HttpException(
+        'Missing required fields. Please check your input.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    // Validate ads object
+    if (!ads || typeof ads !== 'object' || Object.keys(ads).length === 0) {
+      throw new HttpException(
+        'The `ads` object must contain at least one ad with required fields.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    for (const adKey in ads) {
+      const ad = ads[adKey];
+      if (
+        !ad.brandName ||
+        !ad.headline ||
+        !ad.mainFile ||
+        !ad.mainUrl ||
+        !ad.productUrls ||
+        !ad.productsImages ||
+        !ad.callToAction
+      ) {
+        throw new HttpException(
+          `Ad ${adKey} is missing required fields.`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      if (!ad.productsImages || ad.productsImages.length === 0) {
+        throw new HttpException(
+          `Ad ${adKey} must have at least one product image.`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+
+      if (!ad.productUrls || ad.productUrls.length === 0) {
+        throw new HttpException(
+          `Ad ${adKey} must have at least one product URL.`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+
+
+    if (!interactionType || !['WEB_VIEW', 'DEEP_LINK'].includes(interactionType)) {
+      throw new HttpException(
+        'Invalid or missing interactionType. Must be either "WEB_VIEW" or "DEEP_LINK".',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (interactionType === 'DEEP_LINK') {
+      for (const adKey in ads) {
+        const ad = ads[adKey];
+        if (!ad.iosAppId && !ad.androidAppUrl) {
+          throw new HttpException(
+            `Ad ${adKey} is missing both iosAppId and androidAppUrl, which are required for DEEP_LINK interaction type.`,
+            HttpStatus.BAD_REQUEST,
+          );
+        }
+      }
+    }
+
+    const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
+
+    if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+      throw new HttpException(
+        'Invalid startTime or endTime. Please provide valid dates.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (endDate <= startDate) {
+      throw new HttpException(
+        'endTime must be after startTime.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (!Array.isArray(languages) || languages.length === 0) {
+      throw new HttpException(
+        'Languages must be a non-empty array.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    if (!Array.isArray(countryCodes) || countryCodes.length === 0) {
+      throw new HttpException(
+        'Country codes must be a non-empty array.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+    const countryCodesArray = this.ensureArray(countryCodes);
+    const languagesArray = this.ensureArray(languages);
+
+    try {
+      this.logger.log('Initiating Collection Ad creation...');
+      const result = await this.campaignService.createCollectionAd(
+        req.user.id,
+        req.user.walletId,
+        name,
+        objective,
+        minAge,
+        maxAge,
+        gender,
+        languagesArray,
+        countryCodesArray,
+        osType,
+        parseFloat(budget),
+        startTime,
+        endTime,
+        interactionType,
+        ads
+      );
+
+      return {
+        message: 'Collection Ad created successfully!',
+        data: result,
+      };
+    } catch (error) {
+      this.logger.error('Error creating Collection Ad:', error.message);
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
-}
 
-  // @Post('ExploreAd')
-  // async createExploreAd(@Body() body: any, @Req() req: any) {
-  //   console.log(body);
-  //   const {
-  //     name,
-  //     objective,
-  //     minAge,
-  //     maxAge,
-  //     gender,
-  //     languages,
-  //     countryCodes,
-  //     osType,
-  //     budget,
-  //     startTime,
-  //     endTime,
-  //     brandName,
-  //     headline,
-  //     logo,
-  //     cover,
-  //     coverHeadline,
-  //     images,
-  //     mainUrl,
-  //     interactionType,
-  //     callToAction,
-  //     iosAppId,
-  //     androidAppUrl,
-  //     icon,
-  //     appName,
-  //   } = body;
-
-  //   // Validate required fields
-  //   if (
-  //     !name ||
-  //     !minAge ||
-  //     !maxAge ||
-  //     !countryCodes ||
-  //     !budget ||
-  //     !startTime ||
-  //     !endTime ||
-  //     !brandName ||
-  //     !headline ||
-  //     !logo ||
-  //     !cover ||
-  //     !coverHeadline ||
-  //     !images ||
-  //     !mainUrl ||
-  //     !interactionType ||
-  //     !callToAction
-  //   ) {
-  //     throw new HttpException(
-  //       'Missing required fields. Please check your input.',
-  //       HttpStatus.BAD_REQUEST,
-  //     );
-  //   }
-
-  //   if (!Array.isArray(images) || images.length === 0) {
-  //     throw new HttpException(
-  //       'At least one image is required for the Explore Ad.',
-  //       HttpStatus.BAD_REQUEST,
-  //     );
-  //   }
-
-  //   if (interactionType === 'DEEP_LINK' && !iosAppId && !androidAppUrl) {
-  //     throw new HttpException(
-  //       'At least one of iosAppId or androidAppUrl is required for DEEP_LINK interaction type.',
-  //       HttpStatus.BAD_REQUEST,
-  //     );
-  //   }
-
-  //   const countryCodesArray = this.ensureArray(countryCodes);
-  //   const languagesArray = this.ensureArray(languages);
-
-  //   try {
-  //     this.logger.log('Initiating Explore Ad creation...');
-  //     const result = await this.campaignService.createExploreAd(
-  //       // req.user.id, 
-  //       // req.user.walletId,
-  //       name,
-  //       objective,
-  //       minAge,
-  //       maxAge,
-  //       gender,
-  //       languagesArray,
-  //       countryCodesArray,
-  //       osType,
-  //       parseFloat(budget),
-  //       startTime,
-  //       endTime,
-  //       brandName,
-  //       headline,
-  //       logo,
-  //       cover,
-  //       coverHeadline,
-  //       images,
-  //       mainUrl,
-  //       interactionType,
-  //       callToAction,
-  //       iosAppId,
-  //       androidAppUrl,
-  //       icon,
-  //       appName,
-  //     );
-
-  //     return {
-  //       message: 'Explore Ad created successfully!',
-  //       data: result,
-  //     };
-  //   } catch (error) {
-  //     this.logger.error('Error creating Explore Ad:', error.message);
-  //     throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
-  //   }
-  // }
+  @Post('ExploreAd')
+  async createExploreAd(@Body() body: any, @Req() req: any) {
+  
+    const {
+      name,
+      objective,
+      minAge,
+      maxAge,
+      gender,
+      languages,
+      countryCodes,
+      osType,
+      budget,
+      startTime,
+      endTime,
+      ads
+    } = body;
+  
+    // Validate required fields
+    if (
+      !name ||
+      !minAge ||
+      !maxAge ||
+      !countryCodes ||
+      !budget ||
+      !startTime ||
+      !endTime ||
+      !ads
+    ) {
+      throw new HttpException(
+        'Missing required fields. Please check your input.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  
+    // Validate ads object
+    if (!ads || typeof ads !== 'object' || Object.keys(ads).length === 0) {
+      throw new HttpException(
+        'The `ads` object must contain at least one ad with required fields.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+  
+    for (const adKey in ads) {
+      const ad = ads[adKey];
+      if (
+        !ad.brandName ||
+        !ad.headline ||
+        !ad.logo ||
+        !ad.cover ||
+        !ad.coverHeadline ||
+        !ad.images ||
+        !ad.mainUrl ||
+        !ad.interactionType ||
+        !ad.callToAction
+      ) {
+        throw new HttpException(
+          `Ad ${adKey} is missing required fields.`,
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+  
+      if (!Array.isArray(ad.images) || ad.images.length <3) {
+        throw new HttpException(
+          'At least 3 image is required for the Explore Ad.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+  
+      if (ad.interactionType === 'DEEP_LINK' && !ad.iosAppId && !ad.androidAppUrl) {
+        throw new HttpException(
+          'At least one of iosAppId or androidAppUrl is required for DEEP_LINK interaction type.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+  
+    const countryCodesArray = this.ensureArray(countryCodes);
+    const languagesArray = this.ensureArray(languages);
+  
+    try {
+      this.logger.log('Initiating Explore Ad creation...');
+      const result = await this.campaignService.createExploreAd(
+        req.user.id,
+        req.user.walletId,
+        name,
+        objective,
+        minAge,
+        maxAge,
+        gender,
+        languagesArray,
+        countryCodesArray,
+        osType,
+        parseFloat(budget),
+        startTime,
+        endTime,
+        ads
+      );
+  
+      return {
+        message: 'Explore Ad created successfully!',
+        data: result,
+      };
+    } catch (error) {
+      this.logger.error('Error creating Explore Ad:', error.message);
+      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
 
   @Post('campaignReport')
   async getCampaignReport(
@@ -410,7 +406,7 @@ async createCollectionAd(@Body() body: any, @Req() req: any) {
     }
   }
 
-  
+
 
   @Get('app-id')
   async getAppId(
