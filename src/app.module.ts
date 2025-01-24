@@ -62,6 +62,7 @@ export class AppModule implements OnModuleInit {
         { path: 'tiktok-campaign/SparkAd', method: RequestMethod.POST },
         { path: 'snapchat-campaign/SnapAd', method: RequestMethod.POST },
         { path: 'snapchat-campaign/CollectionAd', method: RequestMethod.POST },
+        { path: 'snapchat-campaign/ExploreAd', method: RequestMethod.POST },
         { path: 'user/orders/deposit', method: RequestMethod.POST },
       );
   }

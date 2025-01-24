@@ -533,7 +533,6 @@ export class SnapchatCampaignService {
     endTime: string,
     languages: string[],
     osType: string,
-    storyAdCreativeType?: string,
     placement?: string
   ) {
     try {
@@ -599,9 +598,7 @@ export class SnapchatCampaignService {
           },
         ],
       };
-      if (storyAdCreativeType) {
-        payload.adsquads[0].story_ad_creative_type = storyAdCreativeType
-      }
+
       if (placement && placement == 'FEED') {
         payload.adsquads[0].placement_v2 = {
           snapchat_positions: [
@@ -1072,7 +1069,6 @@ export class SnapchatCampaignService {
 
         // Step 3.6: Create creative for the ad
         this.logger.log('Creating creative for ad...');
-        this.logger.log('Uploading icon media...');
         const creativeResponse = await this.createCreative(
           accessToken,
           adAccountId,
@@ -1118,6 +1114,14 @@ export class SnapchatCampaignService {
           interactionZone: interactionZoneResponse.interaction_zones[0],
           creativeElements: creativeElementsResponse.creative_elements[0],
         });
+        if(ad.appName){
+          adsData.push({
+            app:{
+              appName:ad.appName,
+              icon:iconDownloadLink
+            }
+          })
+        }
       }
 
       // Step 4: Create order with all ad data
@@ -1174,31 +1178,30 @@ export class SnapchatCampaignService {
     endTime: string,
     ads: {
       [key: string]: {
-        brandName: string;
-        headline: string;
-        logo: string;
-        cover: string;
-        coverHeadline: string;
-        images: string[];
-        mainUrl: string;
-        interactionType: string;
-        callToAction: string;
-        iosAppId?: string;
-        androidAppUrl?: string;
-        icon?: string;
-        appName?: string;
-        type: 'SNAP_AD' | 'COLLECTION'; // Add a type to distinguish between ad types
-      };
+        brandName: string,
+        headline: string,
+        logo: string,
+        cover: string,
+        coverHeadline: string,
+        images: string[],
+        mainUrl: string,
+        interactionType: string,
+        callToAction: string,
+        iosAppId?: string,
+        androidAppUrl?: string,
+        icon?: string,
+        appName?: string,
+      }
     }
   ) {
     try {
       this.logger.log('Refreshing access token...');
       const accessToken = await this.refreshAccessToken();
       this.logger.log('Access token refreshed successfully: ' + accessToken);
-  
+
       const adAccountId = '993c271d-05ce-4c6a-aeeb-13b62b657ae6';
       const profileId = 'aca22c35-6fee-4912-a3ad-9ddc20fd21b7';
-  
+
       // Step 1: Create campaign
       this.logger.log('Creating campaign...');
       const campaignResponse = await this.createCampaign(
@@ -1206,11 +1209,11 @@ export class SnapchatCampaignService {
         name,
         adAccountId,
         startTime,
-        objective
+        objective,
       );
       const campaignId = campaignResponse.campaigns[0].campaign.id;
       this.logger.log(`Campaign created with ID: ${campaignId}`);
-  
+
       // Step 2: Create ad squad
       this.logger.log('Creating ad squad...');
       const adSquadResponse = await this.createAdSquad(
@@ -1226,144 +1229,177 @@ export class SnapchatCampaignService {
         startTime,
         endTime,
         languages,
-        osType
+        osType,
+        'FEED'
       );
       const adSquadId = adSquadResponse.adsquads[0].adsquad.id;
-      this.logger.log(`Ad squad created with ID: ${adSquadId}`);
-  
-      // Step 3: Process each ad
+      // Step 3: Create ads and collect their data
       const adsData = [];
       for (const adKey in ads) {
+        let imagesDownloadLinks=[]
         const ad = ads[adKey];
-  
-        // Step 3.1: Upload logo media
+        // Step 1: Upload logo media
         this.logger.log('Uploading logo media...');
         const { mediaResponse: logoMediaResponse, downloadLink: logoDownloadLink } =
           await this.createAndUploadMedia(
             accessToken,
             adAccountId,
             ad.logo,
-            `${ad.brandName}_logo`
+            `${name}_logo`,
           );
         const logoMediaId = logoMediaResponse.media[0].media.id;
         this.logger.log(`Logo media created with ID: ${logoMediaId}`);
-  
-        // Step 3.2: Upload cover media
+
+        // Step 2: Upload cover media
         this.logger.log('Uploading cover media...');
         const { mediaResponse: coverMediaResponse, downloadLink: coverDownloadLink } =
           await this.createAndUploadMedia(
             accessToken,
             adAccountId,
             ad.cover,
-            `${ad.brandName}_cover`
+            `${name}_cover`,
           );
         const coverMediaId = coverMediaResponse.media[0].media.id;
         this.logger.log(`Cover media created with ID: ${coverMediaId}`);
-  
-        // Step 3.3: Create creative based on ad type
-        let creativeResponse;
-        if (ad.type === 'SNAP_AD') {
-          // Handle Snap Ad
-          creativeResponse = await this.createCreative(
-            accessToken,
-            adAccountId,
-            coverMediaId,
-            ad.brandName,
-            'SNAP_AD',
-            ad.brandName,
-            ad.headline,
-            profileId
+
+        // Step 3: Create creative
+        this.logger.log('Creating creative...');
+        const creativeResponse = await this.createCreative(
+          accessToken,
+          adAccountId,
+          coverMediaId,
+          name,
+          'PREVIEW',
+          ad.brandName,
+          ad.headline,
+          profileId,
+          logoMediaId,
+          ad.coverHeadline
+        );
+        console.log(creativeResponse)
+        const PreviewCreativeId = creativeResponse.creatives[0].creative.id;
+        this.logger.log(`Creative created with ID: ${PreviewCreativeId}`);
+        // Step 4: Create non-dynamic creatives for each image
+        this.logger.log('Creating non-dynamic creatives...');
+        const nonDynamicCreativeIds: string[] = [];
+
+        for (let i = 0; i < ad.images.length; i++) {
+          const image = ad.images[i];
+          // Step 4.1: Create and upload media for the image
+          const { mediaResponse: imageMediaResponse, downloadLink: imageDownloadLink } =
+            await this.createAndUploadMedia(
+              accessToken,
+              adAccountId,
+              image,
+              `${name}_image_${i + 1}`,
+            );
+          const imageMediaId = imageMediaResponse.media[0].media.id;
+          this.logger.log(`Image media created with ID: ${imageMediaId}`);
+          imagesDownloadLinks.push({
+            imageId:imageMediaId,
+            downloadLink:imageDownloadLink
+          })
+          // Step 4.2: Create a non-dynamic creative
+          let nonDynamicCreativeResponse;
+          switch (ad.interactionType) {
+            case 'WEB_VIEW':
+              nonDynamicCreativeResponse = await this.createCreative(
+                accessToken,
+                adAccountId,
+                imageMediaId,
+                `${name}_non_dynamic_${i + 1}`,
+                'WEB_VIEW',
+                ad.brandName,
+                ad.headline,
+                profileId,
+                ad.callToAction,
+                ad.mainUrl,
+              );
+              break;
+
+            case 'DEEP_LINK':
+              this.logger.log('Uploading icon media...');
+              const { mediaResponse: iconMediaResponse, downloadLink: iconDownloadLink } =
+                await this.createAndUploadMedia(
+                  accessToken,
+                  adAccountId,
+                  ad.icon,
+                  `${name}_icon`,
+                );
+              const iconMediaId = iconMediaResponse.media[0].media.id;
+              this.logger.log(`icon media created with ID: ${iconMediaId}`);
+
+              nonDynamicCreativeResponse = await this.createDeepLinkCreative(
+                accessToken,
+                adAccountId,
+                imageMediaId,
+                `${name}_non_dynamic_${i + 1}`,
+                ad.brandName,
+                ad.headline,
+                profileId,
+                ad.mainUrl,
+                ad.callToAction,
+                ad.iosAppId,
+                ad.androidAppUrl,
+                iconMediaId,
+                ad.appName
+              );
+              console.log('Deep Link Creative Response:', nonDynamicCreativeResponse);
+              break;
+            default:
+              throw new Error(`Unsupported interaction type: ${ad.interactionType}`);
+          }
+          const nonDynamicCreativeId =
+            nonDynamicCreativeResponse.creatives[0].creative.id;
+          nonDynamicCreativeIds.push(nonDynamicCreativeId);
+          this.logger.log(
+            `Non-dynamic creative created with ID: ${nonDynamicCreativeId}`,
           );
-        } else if (ad.type === 'COLLECTION') {
-          // Handle Collection Ad
-          const { mediaIds, productsMedia } = await this.handleProductMedia(
-            accessToken,
-            adAccountId,
-            ad.images,
-            ad.brandName
-          );
-  
-          // Create Creative Elements
-          const creativeElementsResponse = await this.createCreativeElements(
-            accessToken,
-            adAccountId,
-            ad.brandName,
-            ad.interactionType,
-            mediaIds,
-            ad.images.map(() => ad.mainUrl), // Use mainUrl for each product
-            ad.appName,
-            ad.iosAppId,
-            ad.androidAppUrl,
-            logoMediaId
-          );
-  
-          const creativeElementsIds = creativeElementsResponse.creative_elements.map(
-            (element) => element.creative_element.id
-          );
-  
-          // Create Interaction Zone
-          const interactionZoneResponse = await this.createInteraction(
-            accessToken,
-            adAccountId,
-            ad.brandName,
-            ad.callToAction,
-            creativeElementsIds
-          );
-          const interactionZoneId =
-            interactionZoneResponse.interaction_zones[0].interaction_zone.id;
-  
-          // Create Collection Creative
-          creativeResponse = await this.createCreative(
-            accessToken,
-            adAccountId,
-            coverMediaId,
-            ad.brandName,
-            'COLLECTION',
-            ad.brandName,
-            ad.headline,
-            profileId,
-            interactionZoneId,
-            ad.interactionType,
-            ad.mainUrl,
-            ad.iosAppId,
-            ad.androidAppUrl,
-            logoMediaId,
-            ad.appName
-          );
-        } else {
-          throw new Error(`Unsupported ad type: ${ad.type}`);
         }
-  
-        const creativeId = creativeResponse.creatives[0].creative.id;
-        this.logger.log(`Creative created with ID: ${creativeId}`);
-  
-        // Step 3.4: Create ad
-        const createdAd = await this.createAd(
+        // Step 5: Create Composite Creative
+        this.logger.log('Creating composite creative...');
+        console.log('Non-dynamic creative IDs:', nonDynamicCreativeIds);
+        console.log('Preview creative ID:', PreviewCreativeId);
+
+        const compositeCreativeResponse = await this.createCompositeCreative(
+          accessToken,
+          adAccountId,
+          coverMediaId, // Media ID for the composite creative
+          `${name}_composite`, // Name of the composite creative
+          ad.brandName, // Brand name
+          ad.headline, // Headline
+          profileId, // Profile ID
+          nonDynamicCreativeIds, // Array of creative IDs for the composite
+          PreviewCreativeId
+        );
+
+        const compositeCreativeId = compositeCreativeResponse.creatives[0].creative.id;
+        this.logger.log(`Composite creative created with ID: ${compositeCreativeId}`);
+
+        // Step 8: Create ad
+        this.logger.log('Creating ad...');
+        const adResponse = await this.createAd(
           accessToken,
           adSquadId,
-          creativeId,
-          ad.brandName,
-          ad.type
+          compositeCreativeId,
+          name,
+          'STORY',
         );
-        this.logger.log(`Ad created with ID: ${createdAd.ads[0].ad.id}`);
-  
-        // Collect ad data for the order
+        this.logger.log(JSON.stringify(adResponse))
+        this.logger.log('Ad created with ID: ' + adResponse.ads[0].ad.id);
         adsData.push({
-          adId: createdAd.ads[0].ad.id,
+          adId: adResponse.ads[0].ad.id,
           brandName: ad.brandName,
           headline: ad.headline,
           callToAction: ad.callToAction,
           mainUrl: ad.mainUrl,
-          logoMediaFile: logoDownloadLink,
-          coverMediaFile: coverDownloadLink,
+          logo: logoDownloadLink,
+          cover:coverDownloadLink,
+          images:imagesDownloadLinks,
           creative: creativeResponse.creatives[0].creative,
-          media: coverMediaResponse.media[0].media,
-          type: ad.type,
         });
       }
-  
-      // Step 4: Create order with all ad data
-      this.logger.log('Creating order...');
+      // Step 9: Create order (commented out for now)
       const order = await this.orderService.createOrderWithTransaction(
         userId,
         walletId,
@@ -1380,19 +1416,16 @@ export class SnapchatCampaignService {
             maxAge,
             minAge,
           },
-          ads: adsData,
+          ads:adsData,
           campaign: campaignResponse.campaigns[0].campaign,
-          adSquad: adSquadResponse.adsquads[0].adsquad,
-        }
-      );
-      this.logger.log('Order created successfully:', order._id);
-  
-      return {
-        message: 'Explore Ads created successfully!',
-        data: {
-          orderID: order._id,
-          order,
+          adSquadResponse: adSquadResponse.adsquads[0].adsquad,
         },
+      );
+      this.logger.log('Order created successfully:', order);
+
+      return {
+        orderID:order._id,
+        order:order
       };
     } catch (error) {
       this.logger.error('Error during Explore Ad creation:', error.message);
