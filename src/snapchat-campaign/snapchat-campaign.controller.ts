@@ -273,116 +273,118 @@ async createCollectionAd(@Body() body: any, @Req() req: any) {
   }
 }
 
-  @Post('ExploreAd')
-  async createExploreAd(@Body() body: any, @Req() req: any) {
-    console.log(body);
-    const {
-      name,
-      objective,
-      minAge,
-      maxAge,
-      gender,
-      languages,
-      countryCodes,
-      osType,
-      budget,
-      startTime,
-      endTime,
-      brandName,
-      headline,
-      logo,
-      cover,
-      coverHeadline,
-      images,
-      mainUrl,
-      interactionType,
-      callToAction,
-      iosAppId,
-      androidAppUrl,
-      longVideo,
-    } = body;
+  // @Post('ExploreAd')
+  // async createExploreAd(@Body() body: any, @Req() req: any) {
+  //   console.log(body);
+  //   const {
+  //     name,
+  //     objective,
+  //     minAge,
+  //     maxAge,
+  //     gender,
+  //     languages,
+  //     countryCodes,
+  //     osType,
+  //     budget,
+  //     startTime,
+  //     endTime,
+  //     brandName,
+  //     headline,
+  //     logo,
+  //     cover,
+  //     coverHeadline,
+  //     images,
+  //     mainUrl,
+  //     interactionType,
+  //     callToAction,
+  //     iosAppId,
+  //     androidAppUrl,
+  //     icon,
+  //     appName,
+  //   } = body;
 
-    // Validate required fields
-    if (
-      !name ||
-      !minAge ||
-      !maxAge ||
-      !countryCodes ||
-      !budget ||
-      !startTime ||
-      !endTime ||
-      !brandName ||
-      !headline ||
-      !logo ||
-      !cover ||
-      !coverHeadline ||
-      !images ||
-      !mainUrl ||
-      !interactionType ||
-      !callToAction
-    ) {
-      throw new HttpException(
-        'Missing required fields. Please check your input.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+  //   // Validate required fields
+  //   if (
+  //     !name ||
+  //     !minAge ||
+  //     !maxAge ||
+  //     !countryCodes ||
+  //     !budget ||
+  //     !startTime ||
+  //     !endTime ||
+  //     !brandName ||
+  //     !headline ||
+  //     !logo ||
+  //     !cover ||
+  //     !coverHeadline ||
+  //     !images ||
+  //     !mainUrl ||
+  //     !interactionType ||
+  //     !callToAction
+  //   ) {
+  //     throw new HttpException(
+  //       'Missing required fields. Please check your input.',
+  //       HttpStatus.BAD_REQUEST,
+  //     );
+  //   }
 
-    if (!Array.isArray(images) || images.length === 0) {
-      throw new HttpException(
-        'At least one image is required for the Explore Ad.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+  //   if (!Array.isArray(images) || images.length === 0) {
+  //     throw new HttpException(
+  //       'At least one image is required for the Explore Ad.',
+  //       HttpStatus.BAD_REQUEST,
+  //     );
+  //   }
 
-    if (interactionType === 'DEEP_LINK' && !iosAppId && !androidAppUrl) {
-      throw new HttpException(
-        'At least one of iosAppId or androidAppUrl is required for DEEP_LINK interaction type.',
-        HttpStatus.BAD_REQUEST,
-      );
-    }
+  //   if (interactionType === 'DEEP_LINK' && !iosAppId && !androidAppUrl) {
+  //     throw new HttpException(
+  //       'At least one of iosAppId or androidAppUrl is required for DEEP_LINK interaction type.',
+  //       HttpStatus.BAD_REQUEST,
+  //     );
+  //   }
 
-    const countryCodesArray = this.ensureArray(countryCodes);
-    const languagesArray = this.ensureArray(languages);
+  //   const countryCodesArray = this.ensureArray(countryCodes);
+  //   const languagesArray = this.ensureArray(languages);
 
-    try {
-      this.logger.log('Initiating Explore Ad creation...');
-      const result = await this.campaignService.createExploreAd(
-        // req.user.id, 
-        // req.user.walletId,
-        name,
-        objective,
-        minAge,
-        maxAge,
-        gender,
-        languagesArray,
-        countryCodesArray,
-        osType,
-        parseFloat(budget),
-        startTime,
-        endTime,
-        brandName,
-        headline,
-        logo,
-        cover,
-        coverHeadline,
-        images,
-        mainUrl,
-        interactionType,
-        callToAction,
-        iosAppId,
-        androidAppUrl,
-        longVideo,
-      );
+  //   try {
+  //     this.logger.log('Initiating Explore Ad creation...');
+  //     const result = await this.campaignService.createExploreAd(
+  //       // req.user.id, 
+  //       // req.user.walletId,
+  //       name,
+  //       objective,
+  //       minAge,
+  //       maxAge,
+  //       gender,
+  //       languagesArray,
+  //       countryCodesArray,
+  //       osType,
+  //       parseFloat(budget),
+  //       startTime,
+  //       endTime,
+  //       brandName,
+  //       headline,
+  //       logo,
+  //       cover,
+  //       coverHeadline,
+  //       images,
+  //       mainUrl,
+  //       interactionType,
+  //       callToAction,
+  //       iosAppId,
+  //       androidAppUrl,
+  //       icon,
+  //       appName,
+  //     );
 
-      return {
-        message: 'Explore Ad created successfully!',
-        data: result,
-      };
-    } catch (error) {
-      this.logger.error('Error creating Explore Ad:', error.message);
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-  }
+  //     return {
+  //       message: 'Explore Ad created successfully!',
+  //       data: result,
+  //     };
+  //   } catch (error) {
+  //     this.logger.error('Error creating Explore Ad:', error.message);
+  //     throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+  //   }
+  // }
 
   @Post('campaignReport')
   async getCampaignReport(
