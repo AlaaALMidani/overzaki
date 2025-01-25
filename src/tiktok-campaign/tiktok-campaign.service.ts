@@ -814,7 +814,6 @@ export class TiktokCampaignService {
     try {
       const accessToken = "96d622792f5a94483bf9221ad36b92a817e27ee5";
       const advertiserId = "7447785412501946386";
-  
       // Fetch the order details
       const order = await this.orderService.getOrderById(orderId);
       if (!order || !order.details || !order.details.base || !order.details.base.campaign_id) {
