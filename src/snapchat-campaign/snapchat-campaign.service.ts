@@ -334,8 +334,6 @@ export class SnapchatCampaignService {
           },
         ],
       };
-
-      // Add optional fields
       if (iosAppId) {
         payload.creatives[0].deep_link_properties.ios_app_id = iosAppId;
       }
