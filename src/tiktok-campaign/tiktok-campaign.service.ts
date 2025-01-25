@@ -13,13 +13,13 @@ export class TiktokCampaignService {
   constructor(
     private readonly httpService: HttpService,
     private readonly orderService: OrderService,
-  ) {}
+  ) { }
 
   private getBaseUrl(): string {
     return process.env.NODE_ENV === 'production'
       ? 'https://business-api.tiktok.com/open_api/'
       : process.env.TIKTOK_BASE_URL ||
-          'https://sandbox-ads.tiktok.com/open_api/';
+      'https://sandbox-ads.tiktok.com/open_api/';
   }
 
   // Generate TikTok OAuth URL
@@ -65,10 +65,10 @@ export class TiktokCampaignService {
   ): Promise<any> {
     const endpoint = `${this.getBaseUrl()}v1.3/file/video/ad/upload/`;
     const formData = new FormData();
-  
+
     // Decode the Base64 string to a Buffer
     const videoBuffer = this.decodeBase64ToBuffer(base64Video);
-  
+
     formData.append('advertiser_id', advertiserId);
     formData.append('file_name', `video_${Date.now()}.mp4`);
     formData.append('upload_type', 'UPLOAD_BY_FILE');
@@ -77,7 +77,7 @@ export class TiktokCampaignService {
     formData.append('flaw_detect', flawDetect.toString());
     formData.append('auto_fix_enabled', autoFixEnabled.toString());
     formData.append('auto_bind_enabled', autoBindEnabled.toString());
-  
+
     try {
       const response = await axios.post(endpoint, formData, {
         headers: {
@@ -104,10 +104,10 @@ export class TiktokCampaignService {
   ): Promise<any> {
     const endpoint = `${this.getBaseUrl()}v1.3/file/image/ad/upload/`;
     const formData = new FormData();
-  
+
     // Decode the Base64 string to a Buffer
     const imageBuffer = this.decodeBase64ToBuffer(base64Image);
-  
+
     formData.append('advertiser_id', advertiserId);
     formData.append('file_name', `image_${Date.now()}.jpg`, {
       filename: `image_${Date.now()}.jpg`,
@@ -117,7 +117,7 @@ export class TiktokCampaignService {
       filename: `image_${Date.now()}.jpg`,
     });
     formData.append('image_signature', await this.computeFileHash(imageBuffer));
-  
+
     try {
       const response = await axios.post(endpoint, formData, {
         headers: {
@@ -327,12 +327,12 @@ export class TiktokCampaignService {
     scheduleEndTime?: string,
   ) {
     try {
-      scheduleType= "SCHEDULE_START_END"
+      scheduleType = "SCHEDULE_START_END"
       const accessToken = "96d622792f5a94483bf9221ad36b92a817e27ee5";
       const advertiserId = "7447785412501946386";
-      await this.orderService.checkPayAbility(userId, budget, 25, 1000);
+      // await this.orderService.checkPayAbility(userId, budget, 25, 1000);
       const budgetMode = 'BUDGET_MODE_TOTAL';
-  
+
       // Step 1: Create Campaign
       this.logger.log('Step 1: Creating campaign...');
       const campaignDetails = {
@@ -351,7 +351,7 @@ export class TiktokCampaignService {
       if (!campaignId)
         throw new Error('Campaign creation failed: Missing campaign ID.');
       this.logger.log(`Campaign created successfully with ID: ${campaignId}`);
-  
+
       // Step 2: Upload Logo
       this.logger.log('Uploading logo...');
       const logoUpload = await this.uploadImageByFile(
@@ -362,7 +362,7 @@ export class TiktokCampaignService {
       const logoId = logoUpload?.image_id;
       if (!logoId) throw new Error('logo upload failed: Missing logo ID.');
       this.logger.log(`logo uploaded successfully with ID: ${logoId}`);
-  
+
       // Step 3: Create Identity
       this.logger.log('Creating new identity...');
       const identity = await this.createIdentity(
@@ -373,11 +373,11 @@ export class TiktokCampaignService {
       );
       this.logger.log(`Identity response: ${JSON.stringify(identity)}`);
       const identityId = identity.data.identity_id;
-  
+
       if (!identityId)
         throw new Error('Identity creation failed: Missing identity ID.');
       this.logger.log(`Identity created successfully with ID: ${identityId}`);
-  
+
       // Step 4: Create Ad Group
       this.logger.log('Step 4: Creating ad group...');
       const adGroupDetails: any = {
@@ -417,7 +417,7 @@ export class TiktokCampaignService {
         adGroupDetails.tiktok_subplacements = ['IN_FEED'];
       }
       this.logger.log(`Ad Group details: ${JSON.stringify(adGroupDetails)}`);
-  
+
       const adGroup = await this.createAdGroup(
         accessToken,
         advertiserId,
@@ -427,13 +427,13 @@ export class TiktokCampaignService {
       if (!adGroupId)
         throw new Error('Ad group creation failed: Missing ad group ID.');
       this.logger.log(`Ad group created successfully with ID: ${adGroupId}`);
-  
+
       // Step 5: Create Ads
       this.logger.log('Step 5: Creating ads...');
       const adsData = [];
       for (const [key, ad] of Object.entries(ads)) {
         this.logger.log(`Creating ad ${key}...`);
-  
+
         // Upload video
         this.logger.log('Uploading video...');
         const videoUpload = await this.uploadVideoByFile(
@@ -442,9 +442,10 @@ export class TiktokCampaignService {
           advertiserId,
         );
         const videoId = videoUpload?.video_id;
+        this.logger.log(JSON.stringify(videoUpload))
         if (!videoId) throw new Error('Video upload failed: Missing video ID.');
         this.logger.log(`Video uploaded successfully with ID: ${videoId}`);
-  
+
         // Upload cover
         this.logger.log('Uploading cover...');
         const coverUpload = await this.uploadImageByFile(
@@ -455,7 +456,7 @@ export class TiktokCampaignService {
         const coverId = coverUpload?.image_id;
         if (!coverId) throw new Error('cover upload failed: Missing image ID.');
         this.logger.log(`cover uploaded successfully with ID: ${coverId}`);
-  
+
         // Create ad
         const adPayload = {
           advertiser_id: advertiserId,
@@ -478,7 +479,7 @@ export class TiktokCampaignService {
           ],
         };
         this.logger.log(`Ad details: ${JSON.stringify(adPayload)}`);
-  
+
         const createAdResponse = await axios.post(
           `${this.getBaseUrl()}v1.3/ad/create/`,
           adPayload,
@@ -496,7 +497,7 @@ export class TiktokCampaignService {
           );
         }
         this.logger.log(`Ad created successfully with ID: ${adId}`);
-  
+
         // Collect ad data for the order
         adsData.push({
           adId: adId,
@@ -504,12 +505,12 @@ export class TiktokCampaignService {
           headline: ad.adText,
           callToAction: ad.callToAction,
           url: ad.url,
-          videoId: videoId,
-          coverId: coverId,
+          video: videoUpload.video_url,
+          cover: coverUpload.image_url,
           creative: createAdResponse.data.data.creatives[0],
         });
       }
-  
+
       // Step 6: Create Order
       this.logger.log('Creating order...');
       const order = await this.orderService.createOrderWithTransaction(
@@ -526,9 +527,7 @@ export class TiktokCampaignService {
             schedule_start_time: scheduleStartTime,
             schedule_end_time: scheduleEndTime,
             budget: budget,
-            logoUpload,
-            videoUploads: Object.values(ads).map(ad => ad.base64Video),
-            coverUploads: Object.values(ads).map(ad => ad.base64Cover),
+            logo:logoUpload.image_url,
           },
           ads: adsData,
           campaign,
@@ -536,7 +535,7 @@ export class TiktokCampaignService {
         },
       );
       this.logger.log('Order created successfully:', order._id);
-  
+
       return {
         message: 'TikTok Feed created successfully!',
         data: {
@@ -604,14 +603,14 @@ export class TiktokCampaignService {
     scheduleType: string,
     scheduleStartTime: string,
     budget: number,
-    ageGroups: Array<string>,
-    languages: Array<string>,
-    locationIds: Array<string>,
-    interestCategoryIds: Array<string>,
+    ageGroups: string[],
+    languages: string[],
+    locationIds: string[],
+    // interestCategoryIds: Array<string>,
     operatingSystems: Array<string>,
     ads: {
       [key: string]: {
-        authCode: string; 
+        authCode: string;
         callToAction: string;
         url: string;
       };
@@ -621,9 +620,9 @@ export class TiktokCampaignService {
     try {
       const accessToken = "96d622792f5a94483bf9221ad36b92a817e27ee5";
       const advertiserId = "7447785412501946386";
-      await this.orderService.checkPayAbility(userId, budget, 25, 1000);
+      // await this.orderService.checkPayAbility(userId, budget, 25, 1000);
       const budgetMode = 'BUDGET_MODE_TOTAL';
-  this.logger.log("create campaign ")
+      this.logger.log("create campaign ")
       // Step 1: Create Campaign
       const campaignDetails = {
         campaignName,
@@ -641,7 +640,7 @@ export class TiktokCampaignService {
       if (!campaignId) {
         throw new Error('Campaign creation failed: Missing campaign ID.');
       }
-  
+
       // Step 2: Create Ad Group
       this.logger.log('Creating ad group...');
       const adGroupDetails: any = {
@@ -658,7 +657,6 @@ export class TiktokCampaignService {
         scheduleStartTime,
         languages,
         ageGroups,
-        interestCategoryIds,
         operatingSystems,
         spendingPower,
         optimizationGoal: 'CLICK',
@@ -681,7 +679,7 @@ export class TiktokCampaignService {
         adGroupDetails.tiktok_subplacements = ['IN_FEED'];
       }
       this.logger.log(`Ad Group details: ${JSON.stringify(adGroupDetails)}`);
-  
+
       const adGroup = await this.createAdGroup(
         accessToken,
         advertiserId,
@@ -692,13 +690,13 @@ export class TiktokCampaignService {
         throw new Error('Ad group creation failed: Missing ad group ID.');
       }
       this.logger.log(`Ad group created successfully with ID: ${adGroupId}`);
-  
+
       // Step 3: Create Ads
       this.logger.log('Creating ads...');
       const adsData = [];
       for (const [key, ad] of Object.entries(ads)) {
         this.logger.log(`Creating ad ${key}...`);
-  
+
         // Step 3.1: Authenticate and retrieve video and identity information for each ad
         let authVideo = await this.AuthVideo(
           accessToken,
@@ -711,7 +709,7 @@ export class TiktokCampaignService {
         );
         this.logger.log(authVideo);
         this.logger.log(videoInfo);
-  
+
         const identityId = videoInfo.data?.list?.[0]?.user_info?.identity_id;
         const itemId = videoInfo.data?.list?.[0]?.item_info?.item_id;
         if (!identityId || !itemId) {
@@ -719,7 +717,7 @@ export class TiktokCampaignService {
         }
         this.logger.log(identityId);
         this.logger.log(itemId);
-  
+
         // Step 3.2: Create Ad
         const adPayload = {
           advertiser_id: advertiserId,
@@ -731,16 +729,16 @@ export class TiktokCampaignService {
               identity_id: identityId,
               ad_format: 'SINGLE_VIDEO',
               tiktok_item_id: itemId,
-              call_to_action: ad.callToAction, // Use the unique callToAction for each ad
+              call_to_action: ad.callToAction,
               display_name: campaignName,
               app_name: campaignName,
-              landing_page_url: ad.url, // Use the unique URL for each ad
+              landing_page_url: ad.url,
               url: ad.url,
             },
           ],
         };
         this.logger.log(`Ad details: ${JSON.stringify(adPayload)}`);
-  
+
         const createAdResponse = await axios.post(
           `${this.getBaseUrl()}v1.3/ad/create/`,
           adPayload,
@@ -758,7 +756,7 @@ export class TiktokCampaignService {
           );
         }
         this.logger.log(`Ad created successfully with ID: ${adId}`);
-  
+
         // Collect ad data for the order
         adsData.push({
           adId: adId,
@@ -769,7 +767,7 @@ export class TiktokCampaignService {
           creative: createAdResponse.data.data.creatives[0],
         });
       }
-  
+
       // Step 4: Create Order
       this.logger.log('Creating order...');
       const order = await this.orderService.createOrderWithTransaction(
@@ -793,7 +791,7 @@ export class TiktokCampaignService {
         },
       );
       this.logger.log('Order created successfully:', order._id);
-  
+
       return {
         message: 'TikTok Spark created successfully!',
         data: {
@@ -848,7 +846,7 @@ export class TiktokCampaignService {
       console.log(orderId);
       const order = await this.orderService.getOrderById(orderId);
       console.log(order);
-      return{
+      return {
         serviceName: order.serviceName,
         status: order.status,
         stats: response.data,

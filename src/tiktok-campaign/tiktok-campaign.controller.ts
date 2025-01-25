@@ -133,7 +133,6 @@ export class TiktokCampaignController {
       ageGroups,
       languages,
       locationIds,
-      interestCategoryIds,
       operatingSystems,
       ads,
       
@@ -170,13 +169,12 @@ export class TiktokCampaignController {
         scheduleType,
         scheduleStartTime,
         budget,
-        ageGroups,
-        languages,
-        locationIds,
-        interestCategoryIds,
+        ageGroupsArray,
+        languagesArray,
+        locationIdsArray,
         operatingSystems,
         ads,
-        scheduleEndTime,
+        scheduleEndTime
       );
       return result;
     } catch (error) {
