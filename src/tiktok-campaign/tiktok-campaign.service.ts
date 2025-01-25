@@ -505,7 +505,7 @@ export class TiktokCampaignService {
           headline: ad.adText,
           callToAction: ad.callToAction,
           url: ad.url,
-          video: videoUpload.video_url,
+          video: videoUpload.preview_url,
           cover: coverUpload.image_url,
           creative: createAdResponse.data.data.creatives[0],
         });
