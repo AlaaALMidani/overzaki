@@ -24,7 +24,7 @@ export class FacebookController {
   // Fetch ad accounts
   @Get('adaccounts')
   async getAdAccounts(@Req() req) {
-    const accessToken = req.user.accessToken; // Retrieve token from session or user context
+    const accessToken = req.user.accessToken; 
     return this.facebookCampaignService.fetchAdAccounts(accessToken);
   }
 
@@ -32,6 +32,6 @@ export class FacebookController {
   @Post('campaigns/create')
   async createCampaign(@Req() req) {
     const { accessToken, adAccountId, campaignDetails } = req.body;
-    return this.facebookCampaignService.createCampaign(accessToken, adAccountId, campaignDetails);
+    // return this.facebookCampaignService.createCampaign(accessToken, adAccountId, campaignDetails);
   }
 }

@@ -1111,15 +1111,8 @@ export class SnapchatCampaignService {
           media: mainMediaResponse.media[0].media,
           interactionZone: interactionZoneResponse.interaction_zones[0],
           creativeElements: creativeElementsResponse.creative_elements[0],
+          ...(ad.appName && { app: { appName: ad.appName, icon: iconDownloadLink } }) 
         });
-        if(ad.appName){
-          adsData.push({
-            app:{
-              appName:ad.appName,
-              icon:iconDownloadLink
-            }
-          })
-        }
       }
 
       // Step 4: Create order with all ad data
@@ -1395,6 +1388,7 @@ export class SnapchatCampaignService {
           cover:coverDownloadLink,
           images:imagesDownloadLinks,
           creative: creativeResponse.creatives[0].creative,
+          
         });
       }
       // Step 9: Create order (commented out for now)
