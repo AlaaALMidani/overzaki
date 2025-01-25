@@ -197,7 +197,7 @@ export class TiktokCampaignController {
       throw new HttpException('Order ID is required', HttpStatus.BAD_REQUEST);
     }
     try {
-      const report = await this.campaignService.getReport(orderId);
+      const report = await this.campaignService.getCampaignReport(orderId);
       return {
         message: 'Report fetched successfully',
         data: report,
