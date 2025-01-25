@@ -809,9 +809,7 @@ export class TiktokCampaignService {
   }
 
   // Fetch Campaign Report
-  async getReport(
-    orderId: string,
-  ): Promise<any> {
+  async getCampaignReport(orderId: string): Promise<any> {
     const endpoint = `${this.getBaseUrl()}v1.3/report/integrated/get`;
     try {
       const accessToken = "96d622792f5a94483bf9221ad36b92a817e27ee5";
@@ -862,16 +860,25 @@ export class TiktokCampaignService {
         },
       });
   
+      // Check if the response contains data for the specified campaign
+      const campaignData = response.data.data.list.find(
+        (item: any) => item.dimensions.campaign_id === order.details.base.campaign_id
+      );
+  
+      if (!campaignData) {
+        throw new Error("No data found for the specified campaign.");
+      }
+  
       // Return the report along with order details
       return {
         serviceName: order.serviceName,
         status: order.status,
-        stats: response.data.data, // Ensure the response data is correctly structured
+        stats: campaignData.metrics, // Only return metrics for the specified campaign
         details: order.details,
       };
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
-      console.error("Error fetching report:", errorDetails);
+      console.error("Error fetching campaign report:", errorDetails);
       throw error;
     }
   }
