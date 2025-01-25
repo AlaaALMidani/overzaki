@@ -492,6 +492,8 @@ export class YouTubeCampaignService {
         prevPageToken: data.prevPageToken,
       };
     } catch (error) {
+
+      console.log(error)
       throw new HttpException(
         error,
         HttpStatus.INTERNAL_SERVER_ERROR,

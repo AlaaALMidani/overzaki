@@ -126,8 +126,7 @@ export class SnapchatCampaignService {
       throw new Error(errorDetails?.message || 'File upload failed');
     }
   }
-
-  async createCreative(
+    async createCreative(
     accessToken: string,
     adAccountId: string,
     mediaId: string,
