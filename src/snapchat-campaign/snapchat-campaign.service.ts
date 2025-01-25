@@ -1501,12 +1501,13 @@ export class SnapchatCampaignService {
     }
   }
 
-  async generateCampaignReport(campaignId: string, orderId: string) {
+  async generateCampaignReport( orderId: string) {
     try {
       this.logger.log('Refreshing access token...');
       const accessToken = await this.refreshAccessToken();
       this.logger.log('Access token refreshed successfully: ' + accessToken);
-
+      const order = await this.orderService.getOrderById(orderId);
+      const campaignId=order.details.base.campaign_id;
       const campaignDetails = await this.getCampaignDetails(
         accessToken,
         campaignId,
@@ -1518,8 +1519,6 @@ export class SnapchatCampaignService {
         campaignDetails.start_time,
         'DAY',
       );
-
-      const order = await this.orderService.getOrderById(orderId);
 
       // Structure the report
       const report = {

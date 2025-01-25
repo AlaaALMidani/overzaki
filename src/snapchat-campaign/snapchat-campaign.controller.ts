@@ -386,14 +386,12 @@ export class SnapchatCampaignController {
   async getCampaignReport(
     @Body()
     body: {
-      campaignId: string;
       orderId: string;
     },
   ) {
     try {
-      const { campaignId, orderId } = body;
+      const {orderId } = body;
       const report = await this.campaignService.generateCampaignReport(
-        campaignId,
         orderId,
       );
       return {

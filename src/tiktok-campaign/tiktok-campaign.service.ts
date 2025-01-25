@@ -816,6 +816,8 @@ export class TiktokCampaignService {
     try {
       const accessToken = "96d622792f5a94483bf9221ad36b92a817e27ee5";
       const advertiserId = "7447785412501946386";
+      const order = await this.orderService.getOrderById(orderId);
+      const currentDate = new Date().toISOString().split('T')[0];
       const response = await axios.get(endpoint, {
         headers: {
           'Access-Token': accessToken,
@@ -825,7 +827,7 @@ export class TiktokCampaignService {
           advertiser_id: advertiserId,
           report_type: 'BASIC',
           start_date: '2025-01-01',
-          end_date: '2025-01-10',
+          end_date: currentDate,
           dimensions: JSON.stringify(['campaign_id']),
           service_type: 'AUCTION',
           data_level: 'AUCTION_CAMPAIGN',
@@ -841,17 +843,21 @@ export class TiktokCampaignService {
             'conversion_rate_v2',
             'currency',
           ]),
+          filters: JSON.stringify([
+            {
+              field_name: 'campaign_id',
+              filter_type: 'IN',
+              filter_value: [order.details.base.campaign_id],
+            },
+          ]),
         },
       });
-      console.log(orderId);
-      const order = await this.orderService.getOrderById(orderId);
-      console.log(order);
       return {
         serviceName: order.serviceName,
         status: order.status,
         stats: response.data,
         details: order.details,
-      }
+      };
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
       console.log(error);
