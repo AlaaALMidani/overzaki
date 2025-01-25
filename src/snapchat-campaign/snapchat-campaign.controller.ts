@@ -386,14 +386,12 @@ export class SnapchatCampaignController {
   async getCampaignReport(
     @Body()
     body: {
-      campaignId: string;
       orderId: string;
     },
   ) {
     try {
-      const { campaignId, orderId } = body;
+      const {orderId } = body;
       const report = await this.campaignService.generateCampaignReport(
-        campaignId,
         orderId,
       );
       return {
@@ -405,9 +403,6 @@ export class SnapchatCampaignController {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-
-
-
   @Get('app-id')
   async getAppId(
     @Query('appName') appName: string,
