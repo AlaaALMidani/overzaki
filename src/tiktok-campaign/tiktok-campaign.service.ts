@@ -855,7 +855,7 @@ export class TiktokCampaignService {
       return {
         serviceName: order.serviceName,
         status: order.status,
-        stats: response.data,
+        stats: response.data.data,
         details: order.details,
       };
     } catch (error) {

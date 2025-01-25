@@ -403,9 +403,6 @@ export class SnapchatCampaignController {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
-
-
-
   @Get('app-id')
   async getAppId(
     @Query('appName') appName: string,
