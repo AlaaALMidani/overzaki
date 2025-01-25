@@ -1111,7 +1111,7 @@ export class SnapchatCampaignService {
           media: mainMediaResponse.media[0].media,
           interactionZone: interactionZoneResponse.interaction_zones[0],
           creativeElements: creativeElementsResponse.creative_elements[0],
-          ...(ad.appName && { app: { appName: ad.appName, icon: iconDownloadLink } }) 
+          ...(ad.appName && { app: { appName: ad.appName, icon: iconDownloadLink } })
         });
       }
 
@@ -1227,7 +1227,7 @@ export class SnapchatCampaignService {
       // Step 3: Create ads and collect their data
       const adsData = [];
       for (const adKey in ads) {
-        let imagesDownloadLinks=[]
+        let imagesDownloadLinks = []
         const ad = ads[adKey];
         // Step 1: Upload logo media
         this.logger.log('Uploading logo media...');
@@ -1273,6 +1273,21 @@ export class SnapchatCampaignService {
         // Step 4: Create non-dynamic creatives for each image
         this.logger.log('Creating non-dynamic creatives...');
         const nonDynamicCreativeIds: string[] = [];
+        let iconMediaId;
+        let iconDownloadLink;
+        if (ad.icon) {
+          this.logger.log('Uploading icon media...');
+          const { mediaResponse: iconMediaResponse, downloadLink: iconDownloadLinkTemp } =
+            await this.createAndUploadMedia(
+              accessToken,
+              adAccountId,
+              ad.icon,
+              `${name}_icon`,
+            );
+          iconMediaId = iconMediaResponse.media[0].media.id;
+          iconDownloadLink = iconDownloadLinkTemp;
+          this.logger.log(`icon media created with ID: ${iconMediaId}`);
+        }
 
         for (let i = 0; i < ad.images.length; i++) {
           const image = ad.images[i];
@@ -1287,8 +1302,8 @@ export class SnapchatCampaignService {
           const imageMediaId = imageMediaResponse.media[0].media.id;
           this.logger.log(`Image media created with ID: ${imageMediaId}`);
           imagesDownloadLinks.push({
-            imageId:imageMediaId,
-            downloadLink:imageDownloadLink
+            imageId: imageMediaId,
+            downloadLink: imageDownloadLink
           })
           // Step 4.2: Create a non-dynamic creative
           let nonDynamicCreativeResponse;
@@ -1309,17 +1324,6 @@ export class SnapchatCampaignService {
               break;
 
             case 'DEEP_LINK':
-              this.logger.log('Uploading icon media...');
-              const { mediaResponse: iconMediaResponse, downloadLink: iconDownloadLink } =
-                await this.createAndUploadMedia(
-                  accessToken,
-                  adAccountId,
-                  ad.icon,
-                  `${name}_icon`,
-                );
-              const iconMediaId = iconMediaResponse.media[0].media.id;
-              this.logger.log(`icon media created with ID: ${iconMediaId}`);
-
               nonDynamicCreativeResponse = await this.createDeepLinkCreative(
                 accessToken,
                 adAccountId,
@@ -1385,10 +1389,11 @@ export class SnapchatCampaignService {
           callToAction: ad.callToAction,
           mainUrl: ad.mainUrl,
           logo: logoDownloadLink,
-          cover:coverDownloadLink,
-          images:imagesDownloadLinks,
+          cover: coverDownloadLink,
+          images: imagesDownloadLinks,
           creative: creativeResponse.creatives[0].creative,
-          
+          ...(ad.appName && { app: { appName: ad.appName, icon: iconDownloadLink } })
+
         });
       }
       // Step 9: Create order (commented out for now)
@@ -1408,7 +1413,7 @@ export class SnapchatCampaignService {
             maxAge,
             minAge,
           },
-          ads:adsData,
+          ads: adsData,
           campaign: campaignResponse.campaigns[0].campaign,
           adSquadResponse: adSquadResponse.adsquads[0].adsquad,
         },
@@ -1416,8 +1421,8 @@ export class SnapchatCampaignService {
       this.logger.log('Order created successfully:', order);
 
       return {
-        orderID:order._id,
-        order:order
+        orderID: order._id,
+        order: order
       };
     } catch (error) {
       this.logger.error('Error during Explore Ad creation:', error.message);
@@ -1493,13 +1498,13 @@ export class SnapchatCampaignService {
     }
   }
 
-  async generateCampaignReport( orderId: string) {
+  async generateCampaignReport(orderId: string) {
     try {
       this.logger.log('Refreshing access token...');
       const accessToken = await this.refreshAccessToken();
       this.logger.log('Access token refreshed successfully: ' + accessToken);
       const order = await this.orderService.getOrderById(orderId);
-      const campaignId=order.details.base.campaign_id;
+      const campaignId = order.details.base.campaign_id;
       const campaignDetails = await this.getCampaignDetails(
         accessToken,
         campaignId,
