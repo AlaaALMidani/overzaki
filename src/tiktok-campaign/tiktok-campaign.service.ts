@@ -816,8 +816,17 @@ export class TiktokCampaignService {
     try {
       const accessToken = "96d622792f5a94483bf9221ad36b92a817e27ee5";
       const advertiserId = "7447785412501946386";
+  
+      // Fetch the order details
       const order = await this.orderService.getOrderById(orderId);
+      if (!order || !order.details || !order.details.base || !order.details.base.campaign_id) {
+        throw new Error("Order details or campaign ID not found.");
+      }
+  
+      // Get the current date in YYYY-MM-DD format
       const currentDate = new Date().toISOString().split('T')[0];
+  
+      // Fetch the report for the specific campaign
       const response = await axios.get(endpoint, {
         headers: {
           'Access-Token': accessToken,
@@ -826,8 +835,8 @@ export class TiktokCampaignService {
         params: {
           advertiser_id: advertiserId,
           report_type: 'BASIC',
-          start_date: '2025-01-01',
-          end_date: currentDate,
+          start_date: '2025-01-01', // Adjust the start date as needed
+          end_date: currentDate,    // Use the current date as the end date
           dimensions: JSON.stringify(['campaign_id']),
           service_type: 'AUCTION',
           data_level: 'AUCTION_CAMPAIGN',
@@ -847,20 +856,22 @@ export class TiktokCampaignService {
             {
               field_name: 'campaign_id',
               filter_type: 'IN',
-              filter_value: [order.details.base.campaign_id],
+              filter_value: [order.details.base.campaign_id], // Filter by the campaign ID from the order
             },
           ]),
         },
       });
+  
+      // Return the report along with order details
       return {
         serviceName: order.serviceName,
         status: order.status,
-        stats: response.data.data,
+        stats: response.data.data, // Ensure the response data is correctly structured
         details: order.details,
       };
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
-      console.log(error);
+      console.error("Error fetching report:", errorDetails);
       throw error;
     }
   }
