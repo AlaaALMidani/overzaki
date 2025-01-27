@@ -1291,6 +1291,7 @@ export class SnapchatCampaignService {
 
         for (let i = 0; i < ad.images.length; i++) {
           const image = ad.images[i];
+          console.log(image)
           // Step 4.1: Create and upload media for the image
           const { mediaResponse: imageMediaResponse, downloadLink: imageDownloadLink } =
             await this.createAndUploadMedia(

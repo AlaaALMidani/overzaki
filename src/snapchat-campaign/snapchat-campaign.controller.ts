@@ -275,7 +275,7 @@ export class SnapchatCampaignController {
 
   @Post('ExploreAd')
   async createExploreAd(@Body() body: any, @Req() req: any) {
-  console.log(body)
+    console.log(body)
     const {
       name,
       objective,
@@ -290,7 +290,7 @@ export class SnapchatCampaignController {
       endTime,
       ads
     } = body;
-  
+
     // Validate required fields
     if (
       !name ||
@@ -307,7 +307,7 @@ export class SnapchatCampaignController {
         HttpStatus.BAD_REQUEST,
       );
     }
-  
+
     // Validate ads object
     if (!ads || typeof ads !== 'object' || Object.keys(ads).length === 0) {
       throw new HttpException(
@@ -315,7 +315,7 @@ export class SnapchatCampaignController {
         HttpStatus.BAD_REQUEST,
       );
     }
-  
+
     for (const adKey in ads) {
       const ad = ads[adKey];
       if (
@@ -334,14 +334,14 @@ export class SnapchatCampaignController {
           HttpStatus.BAD_REQUEST,
         );
       }
-  
-      if (!Array.isArray(ad.images) || ad.images.length <3) {
+      console.log(ad.images)
+      if (!Array.isArray(ad.images) || ad.images.length < 3) {
         throw new HttpException(
           'At least 3 image is required for the Explore Ad.',
           HttpStatus.BAD_REQUEST,
         );
       }
-      ad.images=this.ensureArray(ad.images)
+      ad.images = this.ensureArray(ad.images)
       if (ad.interactionType === 'DEEP_LINK' && !ad.iosAppId && !ad.androidAppUrl) {
         throw new HttpException(
           'At least one of iosAppId or androidAppUrl is required for DEEP_LINK interaction type.',
@@ -349,10 +349,10 @@ export class SnapchatCampaignController {
         );
       }
     }
-  
+
     const countryCodesArray = this.ensureArray(countryCodes);
     const languagesArray = this.ensureArray(languages);
-  
+
     try {
       this.logger.log('Initiating Explore Ad creation...');
       const result = await this.campaignService.createExploreAd(
@@ -371,7 +371,7 @@ export class SnapchatCampaignController {
         endTime,
         ads
       );
-  
+
       return {
         message: 'Explore Ad created successfully!',
         data: result,
@@ -390,7 +390,7 @@ export class SnapchatCampaignController {
     },
   ) {
     try {
-      const {orderId } = body;
+      const { orderId } = body;
       const report = await this.campaignService.generateCampaignReport(
         orderId,
       );
