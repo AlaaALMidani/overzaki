@@ -341,7 +341,7 @@ export class SnapchatCampaignController {
           HttpStatus.BAD_REQUEST,
         );
       }
-  
+      ad.images=this.ensureArray(ad.images)
       if (ad.interactionType === 'DEEP_LINK' && !ad.iosAppId && !ad.androidAppUrl) {
         throw new HttpException(
           'At least one of iosAppId or androidAppUrl is required for DEEP_LINK interaction type.',
