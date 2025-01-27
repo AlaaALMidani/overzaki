@@ -275,7 +275,7 @@ export class SnapchatCampaignController {
 
   @Post('ExploreAd')
   async createExploreAd(@Body() body: any, @Req() req: any) {
-  
+  console.log(body)
     const {
       name,
       objective,
