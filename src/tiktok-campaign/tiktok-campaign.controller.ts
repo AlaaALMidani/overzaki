@@ -9,12 +9,10 @@ import {
   HttpException,
   HttpStatus,
   Logger,
-  UseInterceptors,
-  UploadedFiles,
   Req,
 } from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { TiktokCampaignService } from './tiktok-campaign.service';
+
 @Controller('tiktok-campaign')
 export class TiktokCampaignController {
   private readonly logger = new Logger(TiktokCampaignController.name);
@@ -51,252 +49,158 @@ export class TiktokCampaignController {
   }
 
   @Post('FeedAd')
-  @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'videoFile', maxCount: 1 },
-      { name: 'logoFile', maxCount: 1 },
-      { name: 'coverFile', maxCount: 1 },
-    ]),
-  )
-  async FeedAd(
-    @Body() body: any,
-    @Req() req: any,
-    @UploadedFiles()
-    files: {
-      videoFile?: Express.Multer.File[];
-      logoFile?: Express.Multer.File[];
-      coverFile?: Express.Multer.File[];
-    },
-  ) {
+  async FeedAd(@Body() body: any, @Req() req: any) {
     const {
-      accessToken,
-      advertiserId,
       campaignName,
       objectiveType,
-      callToAction,
+      ageGroups,
       gender,
       spendingPower,
+      languages,
+      locationIds,
+      operatingSystems,
+      budget,
       scheduleType,
       scheduleStartTime,
-      // dayparting: rawDayparting,
-      budget,
+      base64Logo,
       appName,
-      adText,
-      url,
-      ageGroups: rawAgeGroups,
-      languages: rawLanguages,
-      locationIds: rawLocationIds,
-      interestCategoryIds: rawInterestCategoryIds,
-      operatingSystems: rawOperatingSystems,
-      // devicePriceRanges,
-      // deviceModelIds,
+      ads,
       scheduleEndTime,
     } = body;
-    console.log('request from frontend:', body);
-    const locationIds = this.normalizeArray(rawLocationIds);
-    const ageGroups = this.normalizeArray(rawAgeGroups);
-    const languages = this.normalizeArray(rawLanguages);
-    const interestCategoryIds = this.normalizeArray(rawInterestCategoryIds);
-    const operatingSystems = this.normalizeArray(rawOperatingSystems);
+
     if (
-      !accessToken ||
-      !advertiserId ||
       !campaignName ||
       !locationIds ||
       !scheduleEndTime ||
       !scheduleStartTime ||
       !budget ||
-      !adText
+      !base64Logo ||
+      !ads
     ) {
       throw new HttpException(
         'Missing required fields for campaign setup.',
         HttpStatus.BAD_REQUEST,
       );
     }
-    if (
-      !files.videoFile ||
-      files.videoFile.length === 0 ||
-      !files.logoFile ||
-      files.logoFile.length === 0 ||
-      !files.coverFile ||
-      files.coverFile.length === 0
-    ) {
-      console.log('Both video and image files are required.');
+    const ageGroupsArray=this.ensureArray(ageGroups);
+    const languagesArray=this.ensureArray(languages);
+    const locationIdsArray=this.ensureArray(locationIds);
+    const operatingSystemsArray = this.ensureArray(operatingSystems);
+     
+
+    try {
+      const result = await this.campaignService.CreateFeed(
+        req.user.id,
+        req.user.walletId,
+        campaignName,
+        objectiveType,
+        ageGroupsArray,
+        gender,
+        spendingPower,
+        languagesArray,
+        locationIdsArray,
+        operatingSystemsArray,
+        parseFloat(budget),
+        scheduleType,
+        scheduleStartTime,
+        base64Logo,
+        appName,
+        ads,
+        scheduleEndTime
+      ); return {
+        message: 'In Feed Ads created successfully!',
+        data: result,
+      };
+    } catch (error) {
       throw new HttpException(
-        'Both video and image files are required.',
-        HttpStatus.BAD_REQUEST,
+        error.message || 'Failed to create Feed Ad',
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
-    // let parsedDayparting: Record<string, { start: string; end: string }>;
-    // parsedDayparting = JSON.parse(rawDayparting);
-    // try {
-    // } catch (error) {
-    //   console.log('object');
-    //   throw new HttpException(
-    //     'Invalid JSON format for dayparting.',
-    //     HttpStatus.BAD_REQUEST,
-    //   );
-    // }
-
-    // const processedDayparting =
-    // this.convertDaypartingToString(parsedDayparting);
-    const videoFile = files.videoFile[0];
-    const coverFile = files.coverFile[0];
-    const logoFile = files.logoFile[0];
-    console.log(req.user);
-    const result = await this.campaignService.CreateFeed(
-      req.user.id,
-      req.user.walletId,
-      accessToken,
-      advertiserId,
-      campaignName,
-      objectiveType,
-      callToAction,
-      gender,
-      spendingPower,
-      scheduleType,
-      scheduleStartTime,
-      // processedDayparting,
-      budget,
-      appName,
-      adText,
-      url,
-      ageGroups,
-      languages,
-      locationIds,
-      interestCategoryIds,
-      operatingSystems,
-      // devicePriceRanges,
-      // deviceModelIds,
-      videoFile,
-      coverFile,
-      logoFile,
-      scheduleEndTime,
-    );
-    return result;
   }
 
   @Post('SparkAd')
   async SparkAd(@Body() body: any, @Req() req: any) {
-    console.log(body);
     const {
-      accessToken,
-      advertiserId,
-      authCode,
       campaignName,
       objectiveType,
-      callToAction,
       gender,
       spendingPower,
       scheduleType,
       scheduleStartTime,
-      dayparting: rawDayparting,
-      budget,
-      url,
-      ageGroups: rawAgeGroups,
-      languages: rawLanguages,
-      locationIds: rawLocationIds,
-      interestCategoryIds: rawInterestCategoryIds,
-      operatingSystems: rawOperatingSystems,
-      // devicePriceRanges,
-      // deviceModelIds,
       scheduleEndTime,
+      budget,
+      ageGroups,
+      languages,
+      locationIds,
+      operatingSystems,
+      ads,
+      
     } = body;
 
-    const locationIds = this.normalizeArray(rawLocationIds);
-    const ageGroups = this.normalizeArray(rawAgeGroups);
-    const languages = this.normalizeArray(rawLanguages);
-    const interestCategoryIds = this.normalizeArray(rawInterestCategoryIds);
-    const operatingSystems = this.normalizeArray(rawOperatingSystems);
     if (
-      !accessToken ||
-      !advertiserId ||
       !campaignName ||
       !locationIds ||
       !scheduleEndTime ||
       !scheduleStartTime ||
-      !budget
+      !budget ||
+      !ads
     ) {
       throw new HttpException(
         'Missing required fields for campaign setup.',
         HttpStatus.BAD_REQUEST,
       );
     }
+    const ageGroupsArray=this.ensureArray(ageGroups);
+    const languagesArray=this.ensureArray(languages);
+    const locationIdsArray=this.ensureArray(locationIds);
+    const operatingSystemsArray = this.ensureArray(operatingSystems);
+     
 
-    // let parsedDayparting: Record<string, { start: string; end: string }>;
-    // // parsedDayparting = JSON.parse(rawDayparting);
-    // try {
-    // } catch (error) {
-    //   console.log('object');
-    //   throw new HttpException(
-    //     'Invalid JSON format for dayparting.',
-    //     HttpStatus.BAD_REQUEST,
-    //   );
-    // }
 
-    // const processedDayparting =
-    // this.convertDaypartingToString(parsedDayparting);
-
-    const result = await this.campaignService.CreateSpark(
-      req.user.id,
-      req.user.walletId,
-      accessToken,
-      advertiserId,
-      authCode,
-      campaignName,
-      objectiveType,
-      callToAction,
-      gender,
-      spendingPower,
-      scheduleType,
-      scheduleStartTime,
-      // processedDayparting,
-      budget,
-      url,
-      ageGroups,
-      languages,
-      locationIds,
-      interestCategoryIds,
-      operatingSystems,
-      // devicePriceRanges,
-      // deviceModelIds,
-      scheduleEndTime,
-    );
-    return result;
+    try {
+      const result = await this.campaignService.CreateSpark(
+        req.user.id,
+        req.user.walletId,
+        campaignName,
+        objectiveType,
+        gender,
+        spendingPower,
+        scheduleType,
+        scheduleStartTime,
+        budget,
+        ageGroupsArray,
+        languagesArray,
+        locationIdsArray,
+        operatingSystems,
+        ads,
+        scheduleEndTime
+      );
+      return result;
+    } catch (error) {
+      throw new HttpException(
+        error.message || 'Failed to create Spark Ad',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   @Post('campaignReport')
   async campaignReport(
     @Body()
     body: {
-      accessToken: string;
-      advertiserId: string;
-      campaignId: string;
       orderId: string;
     },
   ) {
-    const { accessToken, advertiserId, campaignId, orderId } = body;
-    if (!accessToken || !advertiserId || !campaignId) {
-      throw new HttpException(
-        'Access token, advertiser ID, and campaign ID are required',
-        HttpStatus.BAD_REQUEST,
-      );
+    const { orderId } = body;
+    if (!orderId) {
+      throw new HttpException('Order ID is required', HttpStatus.BAD_REQUEST);
     }
     try {
-      const report = await this.campaignService.getReport(
-        accessToken,
-        advertiserId,
-        orderId,
-      );
-      const reportCampaign = report.data.list.filter(
-        (a) => a.dimensions.campaign_id == campaignId,
-      );
-
+      const report = await this.campaignService.getCampaignReport(orderId);
       return {
         message: 'Report fetched successfully',
-        data: reportCampaign,
-        details: report.details,
-        status: report.status,
+        data: report,
       };
     } catch (error) {
       throw new HttpException(
@@ -306,69 +210,24 @@ export class TiktokCampaignController {
     }
   }
 
-  private normalizeArray(input: any): string[] {
-    console.log('input', input);
+  /**
+   * Helper function to ensure the input is an array.
+   * @param input - The input value (string, array, or undefined).
+   * @returns An array of strings.
+   */
+  ensureArray(input: string | string[] | undefined): string[] {
+    if (!input) {
+      return [];
+    }
     if (Array.isArray(input)) {
-      console.log('(Array.isArray(input)', input);
-      return [...new Set(input)];
+      // If it's already an array, return it directly
+      return input;
     }
     if (typeof input === 'string') {
-      console.log('typeof input === string', input);
-      return [
-        ...new Set(
-          input
-            .replace(/[\[\]]/g, '')
-            .split(',')
-            .map((item) => item.trim().replace(/"/g, '')),
-        ),
-      ];
+      // Handle comma-separated strings like "ar,us"
+      return input.split(',').map((item) => item.trim());
     }
-    throw new Error('Invalid input type for array normalization');
+    // Fallback for unexpected types
+    return [input];
   }
-
-  // private convertDaypartingToString(
-  //   dayparting: Record<string, { start: string; end: string }>,
-  // ): string {
-  //   const timeToSlot = (time: string): number => {
-  //     const [hours, minutes] = time.split(':').map(Number);
-  //     let slot = hours * 2;
-  //     if (minutes >= 30) {
-  //       slot += 1;
-  //     }
-  //     return slot;
-  //   };
-
-  //   const week = [
-  //     'monday',
-  //     'tuesday',
-  //     'wednesday',
-  //     'thursday',
-  //     'friday',
-  //     'saturday',
-  //     'sunday',
-  //   ];
-  //   let fullSchedule = '';
-
-  //   for (const day of week) {
-  //     const { start, end } = dayparting[day];
-  //     const startSlot = timeToSlot(start);
-  //     const endSlot = timeToSlot(end);
-
-  //     if (startSlot >= endSlot) {
-  //       throw new HttpException(
-  //         `Invalid schedule for ${day}: Start time (${start}) must be earlier than end time (${end})`,
-  //         HttpStatus.BAD_REQUEST,
-  //       );
-  //     }
-
-  //     const daySchedule = Array(48).fill('0');
-  //     for (let i = startSlot; i < endSlot; i++) {
-  //       daySchedule[i] = '1';
-  //     }
-
-  //     fullSchedule += daySchedule.join('');
-  //   }
-
-  //   return fullSchedule;
-  // }
 }

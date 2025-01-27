@@ -13,13 +13,13 @@ export class TiktokCampaignService {
   constructor(
     private readonly httpService: HttpService,
     private readonly orderService: OrderService,
-  ) {}
+  ) { }
 
   private getBaseUrl(): string {
     return process.env.NODE_ENV === 'production'
       ? 'https://business-api.tiktok.com/open_api/'
       : process.env.TIKTOK_BASE_URL ||
-          'https://sandbox-ads.tiktok.com/open_api/';
+      'https://sandbox-ads.tiktok.com/open_api/';
   }
 
   // Generate TikTok OAuth URL
@@ -56,7 +56,7 @@ export class TiktokCampaignService {
 
   // Upload Video to TikTok
   async uploadVideoByFile(
-    file: Express.Multer.File,
+    base64Video: string,
     accessToken: string,
     advertiserId: string,
     flawDetect: boolean = false,
@@ -65,14 +65,19 @@ export class TiktokCampaignService {
   ): Promise<any> {
     const endpoint = `${this.getBaseUrl()}v1.3/file/video/ad/upload/`;
     const formData = new FormData();
+
+    // Decode the Base64 string to a Buffer
+    const videoBuffer = this.decodeBase64ToBuffer(base64Video);
+
     formData.append('advertiser_id', advertiserId);
-    formData.append('file_name', file.originalname + Date.now());
+    formData.append('file_name', `video_${Date.now()}.mp4`);
     formData.append('upload_type', 'UPLOAD_BY_FILE');
-    formData.append('video_file', file.buffer, { filename: file.originalname });
-    formData.append('video_signature', await this.computeFileHash(file.buffer));
+    formData.append('video_file', videoBuffer, { filename: `video_${Date.now()}.mp4` });
+    formData.append('video_signature', await this.computeFileHash(videoBuffer));
     formData.append('flaw_detect', flawDetect.toString());
     formData.append('auto_fix_enabled', autoFixEnabled.toString());
     formData.append('auto_bind_enabled', autoBindEnabled.toString());
+
     try {
       const response = await axios.post(endpoint, formData, {
         headers: {
@@ -93,21 +98,26 @@ export class TiktokCampaignService {
 
   // Upload Image to TikTok
   async uploadImageByFile(
-    file: Express.Multer.File,
+    base64Image: string,
     accessToken: string,
     advertiserId: string,
   ): Promise<any> {
     const endpoint = `${this.getBaseUrl()}v1.3/file/image/ad/upload/`;
     const formData = new FormData();
+
+    // Decode the Base64 string to a Buffer
+    const imageBuffer = this.decodeBase64ToBuffer(base64Image);
+
     formData.append('advertiser_id', advertiserId);
-    formData.append('file_name', file.originalname, {
-      filename: `${Date.now()}_${file.originalname}`,
+    formData.append('file_name', `image_${Date.now()}.jpg`, {
+      filename: `image_${Date.now()}.jpg`,
     });
     formData.append('upload_type', 'UPLOAD_BY_FILE');
-    formData.append('image_file', file.buffer, {
-      filename: `${Date.now()}_${file.originalname}`,
+    formData.append('image_file', imageBuffer, {
+      filename: `image_${Date.now()}.jpg`,
     });
-    formData.append('image_signature', await this.computeFileHash(file.buffer));
+    formData.append('image_signature', await this.computeFileHash(imageBuffer));
+
     try {
       const response = await axios.post(endpoint, formData, {
         headers: {
@@ -291,35 +301,38 @@ export class TiktokCampaignService {
   async CreateFeed(
     userId: string,
     walletId: string,
-    accessToken: string,
-    advertiserId: string,
     campaignName: string,
     objectiveType: string,
-    callToAction: string,
+    ageGroups: string[],
     gender: string,
     spendingPower: string,
+    languages: string[],
+    locationIds: string[],
+    operatingSystems: string[],
+    budget: number,
     scheduleType: string,
     scheduleStartTime: string,
-    // dayparting: string,
-    budget: number,
+    base64Logo: string,
     appName: string,
-    adText: string,
-    url: string,
-    ageGroups: Array<string>,
-    languages: Array<string>,
-    locationIds: Array<string>,
-    interestCategoryIds: Array<string>,
-    operatingSystems: Array<string>,
-    // devicePriceRanges: Array<number>,
-    // deviceModelIds: Array<string>,
-    videoFile: Express.Multer.File,
-    coverFile: Express.Multer.File,
-    logoFile: Express.Multer.File,
+    ads: {
+      [key: string]: {
+        adText: string,
+        callToAction: string,
+        url: string,
+        base64Video: string,
+        base64Cover: string,
+      }
+    },
+    // interestCategoryIds?: string[],
     scheduleEndTime?: string,
   ) {
     try {
-      await this.orderService.checkPayAbility(userId, budget, 25, 1000);
+      scheduleType = "SCHEDULE_START_END"
+      const accessToken = "96d622792f5a94483bf9221ad36b92a817e27ee5";
+      const advertiserId = "7447785412501946386";
+      // await this.orderService.checkPayAbility(userId, budget, 25, 1000);
       const budgetMode = 'BUDGET_MODE_TOTAL';
+
       // Step 1: Create Campaign
       this.logger.log('Step 1: Creating campaign...');
       const campaignDetails = {
@@ -339,26 +352,16 @@ export class TiktokCampaignService {
         throw new Error('Campaign creation failed: Missing campaign ID.');
       this.logger.log(`Campaign created successfully with ID: ${campaignId}`);
 
-      // Step 2: Upload Media Files
-      this.logger.log('Step 2: Uploading media files...');
-      this.logger.log('Uploading video...');
-      const videoUpload = await this.uploadVideoByFile(
-        videoFile,
-        accessToken,
-        advertiserId,
-      );
-      const videoId = videoUpload?.video_id;
-      if (!videoId) throw new Error('Video upload failed: Missing video ID.');
-      this.logger.log(`Video uploaded successfully with ID: ${videoId}`);
+      // Step 2: Upload Logo
       this.logger.log('Uploading logo...');
       const logoUpload = await this.uploadImageByFile(
-        logoFile,
+        base64Logo,
         accessToken,
         advertiserId,
       );
       const logoId = logoUpload?.image_id;
       if (!logoId) throw new Error('logo upload failed: Missing logo ID.');
-      this.logger.log(`Image uploaded successfully with ID: ${logoId}`);
+      this.logger.log(`logo uploaded successfully with ID: ${logoId}`);
 
       // Step 3: Create Identity
       this.logger.log('Creating new identity...');
@@ -389,19 +392,15 @@ export class TiktokCampaignService {
         gender,
         scheduleType,
         scheduleStartTime,
-        // dayparting,
         languages,
         ageGroups,
-        interestCategoryIds,
         operatingSystems,
-        // devicePriceRanges,
         spendingPower,
         optimizationGoal: 'CLICK',
         bidType: 'BID_TYPE_NO_BID',
         billingEvent: 'CPC',
         pacing: 'PACING_MODE_SMOOTH',
         identityId,
-        // deviceModelIds,
         scheduleEndTime,
       };
       if (objectiveType === 'PRODUCT_SALES') {
@@ -429,84 +428,120 @@ export class TiktokCampaignService {
         throw new Error('Ad group creation failed: Missing ad group ID.');
       this.logger.log(`Ad group created successfully with ID: ${adGroupId}`);
 
-      this.logger.log('Uploading cover...');
-      const coverUpload = await this.uploadImageByFile(
-        coverFile,
-        accessToken,
-        advertiserId,
-      );
-      const coverId = coverUpload?.image_id;
-      if (!coverId) throw new Error('cover upload failed: Missing image ID.');
-      this.logger.log(`cover uploaded successfully with ID: ${coverId}`);
+      // Step 5: Create Ads
+      this.logger.log('Step 5: Creating ads...');
+      const adsData = [];
+      for (const [key, ad] of Object.entries(ads)) {
+        this.logger.log(`Creating ad ${key}...`);
 
-      // Step 5: Create Ad
-      this.logger.log('Step 5: Creating ad...');
-      const adPayload = {
-        advertiser_id: advertiserId,
-        adgroup_id: adGroupId,
-        creatives: [
-          {
-            ad_name: campaignName,
-            display_name: appName,
-            app_name: appName,
-            call_to_action: callToAction,
-            ad_text: adText,
-            video_id: videoId,
-            identity_id: identityId,
-            identity_type: 'CUSTOMIZED_USER',
-            ad_format: 'SINGLE_VIDEO',
-            image_ids: [coverId],
-            landing_page_url: url,
-            url: url,
-          },
-        ],
-      };
-      this.logger.log(`Ad details: ${JSON.stringify(adPayload)}`);
-
-      const createAdResponse = await axios.post(
-        `${this.getBaseUrl()}v1.3/ad/create/`,
-        adPayload,
-        {
-          headers: {
-            'Access-Token': accessToken,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-      const adId = createAdResponse.data.data.ad_ids?.[0];
-      if (!adId) {
-        throw new Error(
-          `Ad creation failed: ${createAdResponse?.data?.message || 'Unknown error'}`,
+        // Upload video
+        this.logger.log('Uploading video...');
+        const videoUpload = await this.uploadVideoByFile(
+          ad.base64Video,
+          accessToken,
+          advertiserId,
         );
+        const videoId = videoUpload?.video_id;
+        this.logger.log(JSON.stringify(videoUpload))
+        if (!videoId) throw new Error('Video upload failed: Missing video ID.');
+        this.logger.log(`Video uploaded successfully with ID: ${videoId}`);
+
+        // Upload cover
+        this.logger.log('Uploading cover...');
+        const coverUpload = await this.uploadImageByFile(
+          ad.base64Cover,
+          accessToken,
+          advertiserId,
+        );
+        const coverId = coverUpload?.image_id;
+        if (!coverId) throw new Error('cover upload failed: Missing image ID.');
+        this.logger.log(`cover uploaded successfully with ID: ${coverId}`);
+
+        // Create ad
+        const adPayload = {
+          advertiser_id: advertiserId,
+          adgroup_id: adGroupId,
+          creatives: [
+            {
+              ad_name: campaignName,
+              display_name: appName,
+              app_name: appName,
+              call_to_action: ad.callToAction,
+              ad_text: ad.adText,
+              video_id: videoId,
+              identity_id: identityId,
+              identity_type: 'CUSTOMIZED_USER',
+              ad_format: 'SINGLE_VIDEO',
+              image_ids: [coverId],
+              landing_page_url: ad.url,
+              url: ad.url,
+            },
+          ],
+        };
+        this.logger.log(`Ad details: ${JSON.stringify(adPayload)}`);
+
+        const createAdResponse = await axios.post(
+          `${this.getBaseUrl()}v1.3/ad/create/`,
+          adPayload,
+          {
+            headers: {
+              'Access-Token': accessToken,
+              'Content-Type': 'application/json',
+            },
+          },
+        );
+        const adId = createAdResponse.data.data.ad_ids?.[0];
+        if (!adId) {
+          throw new Error(
+            `Ad creation failed: ${createAdResponse?.data?.message || 'Unknown error'}`,
+          );
+        }
+        this.logger.log(`Ad created successfully with ID: ${adId}`);
+
+        // Collect ad data for the order
+        adsData.push({
+          adId: adId,
+          brandName: appName,
+          headline: ad.adText,
+          callToAction: ad.callToAction,
+          url: ad.url,
+          video: videoUpload.preview_url,
+          cover: coverUpload.image_url,
+          creative: createAdResponse.data.data.creatives[0],
+        });
       }
-      this.logger.log(`Ad created successfully with ID: ${adId}`);
+
+      // Step 6: Create Order
+      this.logger.log('Creating order...');
       const order = await this.orderService.createOrderWithTransaction(
         userId,
         walletId,
-        'Tiktok feed',
+        'TikTok Feed',
         budget,
         {
           base: {
-            campaign_id: campaign.data.campaign_id,
-            campaign_name: campaign.data.campaign_name,
+            campaign_id: campaignId,
+            campaign_name: campaignName,
             create_time: campaign.data.create_time,
-            budget_mode: campaign.data.budget_mode,
-            schedule_start_time: adGroup.data.schedule_start_time,
-            schedule_end_time: adGroup.data.schedule_end_time,
+            budget_mode: budgetMode,
+            schedule_start_time: scheduleStartTime,
+            schedule_end_time: scheduleEndTime,
             budget: budget,
-            videoUpload,
-            coverUpload,
-            logoUpload,
+            logo:logoUpload.image_url,
           },
+          ads: adsData,
           campaign,
           adGroup,
-          // identity: existingIdentity || { data: { identity_id: identityId } },
-          ...createAdResponse.data.data.creatives[0],
         },
       );
+      this.logger.log('Order created successfully:', order._id);
+
       return {
-        ...order,
-        details: order.details.base,
+        message: 'TikTok Feed created successfully!',
+        data: {
+          orderID: order._id,
+          order,
+        },
       };
     } catch (error) {
       this.logger.error('Error during setupAdCampaign:', error.message);
@@ -561,56 +596,38 @@ export class TiktokCampaignService {
   async CreateSpark(
     userId: string,
     walletId: string,
-    accessToken: string,
-    advertiserId: string,
-    authCode: string,
     campaignName: string,
     objectiveType: string,
-    callToAction: string,
     gender: string,
     spendingPower: string,
     scheduleType: string,
     scheduleStartTime: string,
-    // dayparting: string,
     budget: number,
-    url: string,
-    ageGroups: Array<string>,
-    languages: Array<string>,
-    locationIds: Array<string>,
-    interestCategoryIds: Array<string>,
+    ageGroups: string[],
+    languages: string[],
+    locationIds: string[],
+    // interestCategoryIds: Array<string>,
     operatingSystems: Array<string>,
-    // devicePriceRanges: Array<number>,
-    // deviceModelIds: Array<string>,
+    ads: {
+      [key: string]: {
+        authCode: string;
+        callToAction: string;
+        url: string;
+      };
+    },
     scheduleEndTime?: string,
   ) {
     try {
-      await this.orderService.checkPayAbility(userId, budget, 25, 1000);
+      const accessToken = "96d622792f5a94483bf9221ad36b92a817e27ee5";
+      const advertiserId = "7447785412501946386";
+      // await this.orderService.checkPayAbility(userId, budget, 25, 1000);
       const budgetMode = 'BUDGET_MODE_TOTAL';
+      this.logger.log("create campaign ")
       // Step 1: Create Campaign
-      let authVideo = await this.AuthVideo(
-        '1548a753b674f01b55dbfb056ab18ed8653780f6',
-        '7447536677184372754',
-        authCode,
-      );
-      let videoInfo = await this.getVideoInfo(
-        '1548a753b674f01b55dbfb056ab18ed8653780f6',
-        '7447536677184372754',
-      );
-      this.logger.log(authVideo);
-      this.logger.log(videoInfo);
-      const identityId = videoInfo.data?.list?.[0]?.user_info?.identity_id;
-      const itemId = videoInfo.data?.list?.[0]?.item_info?.item_id;
-      if (!identityId || !itemId) {
-        throw new Error(
-          'Failed to retrieve required video or identity information.',
-        );
-      }
-      this.logger.log(identityId);
-      this.logger.log(itemId);
       const campaignDetails = {
         campaignName,
         objectiveType,
-        budgetMode: 'BUDGET_MODE_TOTAL',
+        budgetMode,
         budget,
       };
       const campaign = await this.createCampaign(
@@ -623,8 +640,9 @@ export class TiktokCampaignService {
       if (!campaignId) {
         throw new Error('Campaign creation failed: Missing campaign ID.');
       }
-      //  Create Ad Group
-      this.logger.log(' Creating ad group...');
+
+      // Step 2: Create Ad Group
+      this.logger.log('Creating ad group...');
       const adGroupDetails: any = {
         adgroupName: campaignName,
         campaignId,
@@ -637,19 +655,14 @@ export class TiktokCampaignService {
         gender,
         scheduleType,
         scheduleStartTime,
-        // dayparting,
         languages,
         ageGroups,
-        interestCategoryIds,
         operatingSystems,
-        // devicePriceRanges,
         spendingPower,
         optimizationGoal: 'CLICK',
         bidType: 'BID_TYPE_NO_BID',
         billingEvent: 'CPC',
         pacing: 'PACING_MODE_SMOOTH',
-        identityId,
-        // deviceModelIds,
         scheduleEndTime,
       };
       if (objectiveType === 'PRODUCT_SALES') {
@@ -666,107 +679,161 @@ export class TiktokCampaignService {
         adGroupDetails.tiktok_subplacements = ['IN_FEED'];
       }
       this.logger.log(`Ad Group details: ${JSON.stringify(adGroupDetails)}`);
+
       const adGroup = await this.createAdGroup(
         accessToken,
         advertiserId,
         adGroupDetails,
       );
       const adGroupId = adGroup?.data?.adgroup_id;
-      if (!adGroupId)
+      if (!adGroupId) {
         throw new Error('Ad group creation failed: Missing ad group ID.');
-      this.logger.log(`Ad group created successfully with ID: ${adGroupId}`);
-      // Step 5: Create Ad
-      this.logger.log('Step 5: Creating ad...');
-      const adPayload = {
-        advertiser_id: advertiserId,
-        adgroup_id: adGroupId,
-        creatives: [
-          {
-            ad_name: campaignName,
-            identity_type: 'AUTH_CODE',
-            identity_id: identityId,
-            ad_format: 'SINGLE_VIDEO',
-            tiktok_item_id: itemId,
-            call_to_action: callToAction,
-            display_name: campaignName,
-            app_name: campaignName,
-            landing_page_url: url,
-            url: url,
-          },
-        ],
-      };
-      this.logger.log(`Ad details: ${JSON.stringify(adPayload)}`);
-
-      const createAdResponse = await axios.post(
-        `${this.getBaseUrl()}v1.3/ad/create/`,
-        adPayload,
-        {
-          headers: {
-            'Access-Token': accessToken,
-            'Content-Type': 'application/json',
-          },
-        },
-      );
-      const adId = createAdResponse.data.data.ad_ids?.[0];
-      if (!adId) {
-        throw new BadRequestException(
-          `Ad creation failed: ${createAdResponse?.data?.message || 'Unknown error'}`,
-        );
       }
-      this.logger.log(`Ad created successfully with ID: ${adId}`);
+      this.logger.log(`Ad group created successfully with ID: ${adGroupId}`);
+
+      // Step 3: Create Ads
+      this.logger.log('Creating ads...');
+      const adsData = [];
+      for (const [key, ad] of Object.entries(ads)) {
+        this.logger.log(`Creating ad ${key}...`);
+
+        // Step 3.1: Authenticate and retrieve video and identity information for each ad
+        let authVideo = await this.AuthVideo(
+          accessToken,
+          advertiserId,
+          ad.authCode, // Use the unique authCode for each ad
+        );
+        let videoInfo = await this.getVideoInfo(
+          accessToken,
+          advertiserId,
+        );
+        this.logger.log(authVideo);
+        this.logger.log(videoInfo);
+
+        const identityId = videoInfo.data?.list?.[0]?.user_info?.identity_id;
+        const itemId = videoInfo.data?.list?.[0]?.item_info?.item_id;
+        if (!identityId || !itemId) {
+          throw new Error('Failed to retrieve required video or identity information.');
+        }
+        this.logger.log(identityId);
+        this.logger.log(itemId);
+
+        // Step 3.2: Create Ad
+        const adPayload = {
+          advertiser_id: advertiserId,
+          adgroup_id: adGroupId,
+          creatives: [
+            {
+              ad_name: campaignName,
+              identity_type: 'AUTH_CODE',
+              identity_id: identityId,
+              ad_format: 'SINGLE_VIDEO',
+              tiktok_item_id: itemId,
+              call_to_action: ad.callToAction,
+              display_name: campaignName,
+              app_name: campaignName,
+              landing_page_url: ad.url,
+              url: ad.url,
+            },
+          ],
+        };
+        this.logger.log(`Ad details: ${JSON.stringify(adPayload)}`);
+
+        const createAdResponse = await axios.post(
+          `${this.getBaseUrl()}v1.3/ad/create/`,
+          adPayload,
+          {
+            headers: {
+              'Access-Token': accessToken,
+              'Content-Type': 'application/json',
+            },
+          },
+        );
+        const adId = createAdResponse.data.data.ad_ids?.[0];
+        if (!adId) {
+          throw new BadRequestException(
+            `Ad creation failed: ${createAdResponse?.data?.message || 'Unknown error'}`,
+          );
+        }
+        this.logger.log(`Ad created successfully with ID: ${adId}`);
+
+        // Collect ad data for the order
+        adsData.push({
+          adId: adId,
+          brandName: campaignName,
+          headline: campaignName,
+          callToAction: ad.callToAction,
+          url: ad.url,
+          creative: createAdResponse.data.data.creatives[0],
+        });
+      }
+
+      // Step 4: Create Order
+      this.logger.log('Creating order...');
       const order = await this.orderService.createOrderWithTransaction(
         userId,
         walletId,
-        'Tiktok spark',
+        'TikTok Spark',
         budget,
         {
           base: {
-            campaign_id: campaign.data.campaign_id,
-            campaign_name: campaign.data.campaign_name,
+            campaign_id: campaignId,
+            campaign_name: campaignName,
             create_time: campaign.data.create_time,
-            budget_mode: campaign.data.budget_mode,
-            schedule_start_time: adGroup.data.schedule_start_time,
-            schedule_end_time: adGroup.data.schedule_end_time,
+            budget_mode: budgetMode,
+            schedule_start_time: scheduleStartTime,
+            schedule_end_time: scheduleEndTime,
             budget: budget,
           },
+          ads: adsData,
           campaign,
           adGroup,
-          // identity: existingIdentity || { data: { identity_id: identityId } },
-          ...createAdResponse.data.data.creatives[0],
         },
       );
+      this.logger.log('Order created successfully:', order._id);
+
       return {
-        ...order,
-        details: order.details.base,
+        message: 'TikTok Spark created successfully!',
+        data: {
+          orderID: order._id,
+          order,
+        },
       };
     } catch (error) {
-      this.logger.error('Error during setupAdCampaign:', error.message);
+      this.logger.error('Error during CreateSpark:', error.message);
       if (error.message === 'Campaign creation failed: Missing campaign ID.') {
-        throw new BadRequestException('Campaign name is already exist.');
+        throw new BadRequestException('Campaign name already exists.');
       }
-
       throw error;
     }
   }
 
   // Fetch Campaign Report
-  async getReport(
-    access_token: string,
-    advertiser_id: string,
-    orderId: string,
-  ): Promise<any> {
+  async getCampaignReport(orderId: string): Promise<any> {
     const endpoint = `${this.getBaseUrl()}v1.3/report/integrated/get`;
     try {
+      const accessToken = "96d622792f5a94483bf9221ad36b92a817e27ee5";
+      const advertiserId = "7447785412501946386";
+      // Fetch the order details
+      const order = await this.orderService.getOrderById(orderId);
+      if (!order || !order.details || !order.details.base || !order.details.base.campaign_id) {
+        throw new Error("Order details or campaign ID not found.");
+      }
+  
+      // Get the current date in YYYY-MM-DD format
+      const currentDate = new Date().toISOString().split('T')[0];
+  
+      // Fetch the report for the specific campaign
       const response = await axios.get(endpoint, {
         headers: {
-          'Access-Token': access_token,
+          'Access-Token': accessToken,
           'Content-Type': 'application/json',
         },
         params: {
-          advertiser_id: advertiser_id,
+          advertiser_id: advertiserId,
           report_type: 'BASIC',
-          start_date: '2025-01-01',
-          end_date: '2025-01-10',
+          start_date: '2025-01-01', // Adjust the start date as needed
+          end_date: currentDate,    // Use the current date as the end date
           dimensions: JSON.stringify(['campaign_id']),
           service_type: 'AUCTION',
           data_level: 'AUCTION_CAMPAIGN',
@@ -782,16 +849,42 @@ export class TiktokCampaignService {
             'conversion_rate_v2',
             'currency',
           ]),
+          filters: JSON.stringify([
+            {
+              field_name: 'campaign_id',
+              filter_type: 'IN',
+              filter_value: [order.details.base.campaign_id], // Filter by the campaign ID from the order
+            },
+          ]),
         },
       });
-      console.log(orderId);
-      const order = await this.orderService.getOrderById(orderId);
-      console.log(order);
-      return { ...response.data, details: order.details, status: order.status };
+  
+      // Check if the response contains data for the specified campaign
+      const campaignData = response.data.data.list.find(
+        (item: any) => item.dimensions.campaign_id === order.details.base.campaign_id
+      );
+  
+      if (!campaignData) {
+        throw new Error("No data found for the specified campaign.");
+      }
+  
+      // Return the report along with order details
+      return {
+        serviceName: order.serviceName,
+        status: order.status,
+        stats: campaignData.metrics, // Only return metrics for the specified campaign
+        details: order.details,
+      };
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
-      console.log(error);
+      console.error("Error fetching campaign report:", errorDetails);
       throw error;
     }
+  }
+
+  private decodeBase64ToBuffer(base64: string): Buffer {
+    // Remove the data URL prefix if present
+    const base64Data = base64.split(';base64,').pop() || base64;
+    return Buffer.from(base64Data, 'base64');
   }
 }
