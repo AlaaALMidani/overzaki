@@ -1601,6 +1601,7 @@ export class SnapchatCampaignService {
         mediaId,
         fileName,
       );
+      console.log(uploadedFile)
       this.logger.log('File uploaded successfully.');
 
       return {
