@@ -181,15 +181,15 @@ export class SnapchatCampaignController {
           HttpStatus.BAD_REQUEST,
         );
       }
-
+      ad.productsImages=this.ensureArray(ad.productsImages)
       if (!ad.productUrls || ad.productUrls.length === 0) {
         throw new HttpException(
           `Ad ${adKey} must have at least one product URL.`,
           HttpStatus.BAD_REQUEST,
         );
       }
+      ad.productUrls=this.ensureArray(ad.productUrls)
     }
-
 
     if (!interactionType || !['WEB_VIEW', 'DEEP_LINK'].includes(interactionType)) {
       throw new HttpException(
