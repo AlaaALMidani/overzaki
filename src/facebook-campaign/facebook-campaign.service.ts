@@ -5,6 +5,7 @@ import { lastValueFrom } from 'rxjs';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-facebook';
 import * as dotenv from 'dotenv';
+import { AppStoreUtils } from '../shared/app-store-utils';
 dotenv.config();
 @Injectable()
 export class FacebookCampaignService extends PassportStrategy(
@@ -132,6 +133,20 @@ export class FacebookCampaignService extends PassportStrategy(
         error.response?.data?.error?.message || 'Unknown error occurred';
       throw new Error(`Failed to create campaign: ${errorMessage}`);
     }
+  }
+
+  async createAdSets(
+    accessToken: string,
+    adAccountId: string,
+    name: string,
+    campaignId: string,
+    budget: string,
+    startTime: string,
+    endTime: string,
+    maxAge: string,
+    minAge: string,
+  ) {
+
   }
 
 }
