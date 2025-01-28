@@ -1029,6 +1029,7 @@ export class SnapchatCampaignService {
           iconDownloadLink = iconDownloadLinkTemp;
           this.logger.log(`icon media created with ID: ${iconMediaId}`);
         }
+        console.log(ad.productUrls)
         const creativeElementsResponse = await this.createCreativeElements(
           accessToken,
           adAccountId,
