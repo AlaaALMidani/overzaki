@@ -5,6 +5,7 @@ import { HttpService } from '@nestjs/axios';
 import { OrderService } from '../order/order.service';
 import gplay, { app } from 'google-play-scraper';
 import * as appStoreScraper from 'app-store-scraper';
+import { response } from 'express';
 @Injectable()
 export class SnapchatCampaignService {
   private readonly logger = new Logger(SnapchatCampaignService.name);
@@ -120,10 +121,12 @@ export class SnapchatCampaignService {
           ...formData.getHeaders(),
         },
       });
+      console.log(JSON.stringify(response.data));
       return response.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
-      throw new Error(errorDetails?.message || 'File upload failed');
+      console.log(JSON.stringify(errorDetails));
+      throw new Error(errorDetails?.message || response);
     }
   }
 
@@ -410,8 +413,6 @@ export class SnapchatCampaignService {
         payload.creatives[0].preview_creative_id = previewCreativeId;
       }
 
-      console.log('Composite Creative Payload:', payload);
-
       // Make the API request to create the composite creative
       const endpoint = `https://adsapi.snapchat.com/v1/adaccounts/${adAccountId}/creatives`;
       const response = await axios.post(endpoint, payload, {
@@ -420,7 +421,6 @@ export class SnapchatCampaignService {
         },
       });
 
-      console.log('Composite Creative Response:', response.data);
       return response.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
@@ -477,14 +477,14 @@ export class SnapchatCampaignService {
         creativeIds,
         previewCreativeId,
       );
-      console.log(payload);
+
       const endpoint = `https://adsapi.snapchat.com/v1/adaccounts/${adAccountId}/creatives`;
       const response = await axios.post(endpoint, payload, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-      console.log(response.data);
+
       return response.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
@@ -700,7 +700,7 @@ export class SnapchatCampaignService {
           element.deep_link_properties = {
             deep_link_uri: urls[index],
             app_name: appName,
-            icon_media_id: mediaId,
+            icon_media_id: icon,
           };
 
           // Add iOS App ID if provided
@@ -734,6 +734,7 @@ export class SnapchatCampaignService {
           'Content-Type': 'application/json',
         },
       });
+      console.log(JSON.stringify(response.data));
       return response.data;
     } catch (error) {
       const errorMessage =
@@ -1021,19 +1022,24 @@ export class SnapchatCampaignService {
         // Step 3.2: Create Creative Elements
         this.logger.log(`Creating Creative Elements for ad ${adKey}...`);
         this.logger.log('Creating creative for ad...');
-        this.logger.log('Uploading icon media...');
-        const {
-          mediaResponse: iconMediaResponse,
-          downloadLink: iconDownloadLink,
-        } = await this.createAndUploadMedia(
-          accessToken,
-          adAccountId,
-          ad.icon,
-          `${name}_icon`,
-        );
-        const iconMediaId = iconMediaResponse.media[0].media.id;
-        this.logger.log(`icon media created with ID: ${iconMediaId}`);
-
+        let iconMediaId;
+        let iconDownloadLink;
+        if (ad.icon) {
+          this.logger.log('Uploading icon media...');
+          const {
+            mediaResponse: iconMediaResponse,
+            downloadLink: iconDownloadLinkTemp,
+          } = await this.createAndUploadMedia(
+            accessToken,
+            adAccountId,
+            ad.icon,
+            `${name}_icon`,
+          );
+          iconMediaId = iconMediaResponse.media[0].media.id;
+          iconDownloadLink = iconDownloadLinkTemp;
+          this.logger.log(`icon media created with ID: ${iconMediaId}`);
+        }
+        console.log(ad.productUrls);
         const creativeElementsResponse = await this.createCreativeElements(
           accessToken,
           adAccountId,
@@ -1320,7 +1326,6 @@ export class SnapchatCampaignService {
 
         for (let i = 0; i < ad.images.length; i++) {
           const image = ad.images[i];
-          console.log(image);
           // Step 4.1: Create and upload media for the image
           const {
             mediaResponse: imageMediaResponse,
@@ -1613,6 +1618,7 @@ export class SnapchatCampaignService {
   ): Promise<{ mediaResponse: any; downloadLink: string }> {
     try {
       // Extract file type and buffer from the base64 string
+      console.log(file);
       const base64Data = file.split(';base64,').pop();
       if (!base64Data) {
         throw new Error('Invalid base64 file data');
@@ -1641,10 +1647,11 @@ export class SnapchatCampaignService {
         mediaId,
         fileName,
       );
+      console.log(uploadedFile);
       this.logger.log('File uploaded successfully.');
 
       return {
-        mediaResponse, // Return the full mediaResponse object
+        mediaResponse,
         downloadLink: uploadedFile.result.download_link,
       };
     } catch (error) {
