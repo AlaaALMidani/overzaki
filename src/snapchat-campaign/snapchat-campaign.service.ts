@@ -401,7 +401,6 @@ export class SnapchatCampaignService {
         payload.creatives[0].preview_creative_id = previewCreativeId;
       }
 
-      console.log('Composite Creative Payload:', payload);
 
       // Make the API request to create the composite creative
       const endpoint = `https://adsapi.snapchat.com/v1/adaccounts/${adAccountId}/creatives`;
@@ -411,7 +410,7 @@ export class SnapchatCampaignService {
         },
       });
 
-      console.log('Composite Creative Response:', response.data);
+     
       return response.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
@@ -466,14 +465,14 @@ export class SnapchatCampaignService {
         creativeIds,
         previewCreativeId,
       );
-      console.log(payload)
+     
       const endpoint = `https://adsapi.snapchat.com/v1/adaccounts/${adAccountId}/creatives`;
       const response = await axios.post(endpoint, payload, {
         headers: {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-      console.log(response.data)
+      
       return response.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
