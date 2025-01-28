@@ -692,7 +692,7 @@ export class SnapchatCampaignService {
           element.deep_link_properties = {
             deep_link_uri: urls[index],
             app_name: appName,
-            icon_media_id: mediaId,
+            icon_media_id: icon,
           };
 
           // Add iOS App ID if provided
@@ -726,6 +726,7 @@ export class SnapchatCampaignService {
           'Content-Type': 'application/json',
         },
       });
+      console.log(JSON.stringify(response.data))
       return response.data;
     } catch (error) {
       const errorMessage =
