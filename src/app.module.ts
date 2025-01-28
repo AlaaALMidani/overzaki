@@ -6,7 +6,6 @@ import {
   RequestMethod,
 } from '@nestjs/common';
 import { AppController } from './app.controller';
-
 import { AppService } from './app.service';
 import { GoogleCampaignModule } from './google-campaign/google-campaign.module';
 import { TiktokCampaignModule } from './tiktok-campaign/tiktok-campaign.module';
@@ -20,7 +19,8 @@ import { MongooseModule } from '@nestjs/mongoose';
 import * as mongoose from 'mongoose';
 import { AuthModule } from './auth/auth.module';
 import { DecodeTokenMiddleware } from './middleware/decode-token.middleware';
-import { JwtModule } from '@nestjs/jwt'; // Import JwtModule
+import { JwtModule } from '@nestjs/jwt';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -37,6 +37,7 @@ import { JwtModule } from '@nestjs/jwt'; // Import JwtModule
     StripeModule,
     AuthModule,
     OrderModule,
+    UserModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '1d' },
@@ -57,13 +58,16 @@ export class AppModule implements OnModuleInit {
           method: RequestMethod.POST,
         },
         { path: 'youtube-campaign/create', method: RequestMethod.POST },
-
         { path: 'tiktok-campaign/FeedAd', method: RequestMethod.POST },
         { path: 'tiktok-campaign/SparkAd', method: RequestMethod.POST },
         { path: 'snapchat-campaign/SnapAd', method: RequestMethod.POST },
         { path: 'snapchat-campaign/CollectionAd', method: RequestMethod.POST },
         { path: 'snapchat-campaign/ExploreAd', method: RequestMethod.POST },
         { path: 'user/orders/deposit', method: RequestMethod.POST },
+        {
+          path: 'users/info',
+          method: RequestMethod.GET,
+        },
       );
   }
 
