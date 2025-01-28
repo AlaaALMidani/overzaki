@@ -1013,17 +1013,21 @@ export class SnapchatCampaignService {
         // Step 3.2: Create Creative Elements
         this.logger.log(`Creating Creative Elements for ad ${adKey}...`);
         this.logger.log('Creating creative for ad...');
-        this.logger.log('Uploading icon media...');
-        const { mediaResponse: iconMediaResponse, downloadLink: iconDownloadLink } =
-          await this.createAndUploadMedia(
-            accessToken,
-            adAccountId,
-            ad.icon,
-            `${name}_icon`,
-          );
-        const iconMediaId = iconMediaResponse.media[0].media.id;
-        this.logger.log(`icon media created with ID: ${iconMediaId}`);
-
+        let iconMediaId;
+        let iconDownloadLink;
+        if (ad.icon) {
+          this.logger.log('Uploading icon media...');
+          const { mediaResponse: iconMediaResponse, downloadLink: iconDownloadLinkTemp } =
+            await this.createAndUploadMedia(
+              accessToken,
+              adAccountId,
+              ad.icon,
+              `${name}_icon`,
+            );
+          iconMediaId = iconMediaResponse.media[0].media.id;
+          iconDownloadLink = iconDownloadLinkTemp;
+          this.logger.log(`icon media created with ID: ${iconMediaId}`);
+        }
         const creativeElementsResponse = await this.createCreativeElements(
           accessToken,
           adAccountId,
