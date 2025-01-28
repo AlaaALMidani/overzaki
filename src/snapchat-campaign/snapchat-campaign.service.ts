@@ -5,6 +5,7 @@ import { HttpService } from '@nestjs/axios';
 import { OrderService } from '../order/order.service';
 import gplay, { app } from 'google-play-scraper';
 import * as appStoreScraper from 'app-store-scraper';
+import { response } from 'express';
 @Injectable()
 export class SnapchatCampaignService {
   private readonly logger = new Logger(SnapchatCampaignService.name);
@@ -124,7 +125,7 @@ export class SnapchatCampaignService {
       return response.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
-      throw new Error(errorDetails?.message || 'File upload failed');
+      throw new Error(errorDetails?.message ||response);
     }
   }
 
