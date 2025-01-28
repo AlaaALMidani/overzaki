@@ -125,6 +125,7 @@ export class SnapchatCampaignService {
       return response.data;
     } catch (error) {
       const errorDetails = error.response?.data || error.message;
+      console.log(JSON.stringify(errorDetails))
       throw new Error(errorDetails?.message ||response);
     }
   }
@@ -1573,6 +1574,7 @@ export class SnapchatCampaignService {
   ): Promise<{ mediaResponse: any; downloadLink: string }> {
     try {
       // Extract file type and buffer from the base64 string
+      console.log(file)
       const base64Data = file.split(';base64,').pop();
       if (!base64Data) {
         throw new Error('Invalid base64 file data');
