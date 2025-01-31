@@ -10,7 +10,10 @@ import { HttpService } from '@nestjs/axios';
 dotenv.config();
 
 @Injectable()
-export class FacebookCampaignService extends PassportStrategy(Strategy, 'facebook') {
+export class FacebookCampaignService extends PassportStrategy(
+  Strategy,
+  'facebook',
+) {
   private readonly BASE_URL = 'https://graph.facebook.com/v21.0';
   private readonly logger = new Logger(FacebookCampaignService.name);
 
@@ -36,7 +39,8 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
       );
       return response.data.data;
     } catch (error) {
-      const errorMessage = error.response?.data?.error?.message || 'Unknown error occurred';
+      const errorMessage =
+        error.response?.data?.error?.message || 'Unknown error occurred';
       throw new Error(`Failed to fetch ad accounts: ${errorMessage}`);
     }
   }
@@ -46,7 +50,7 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
     accessToken: string,
     adAccountId: string,
     campaignName: string,
-    objective: string
+    objective: string,
   ) {
     const url = `${this.BASE_URL}/act_${adAccountId}/campaigns`;
     const validObjectives = [
@@ -55,11 +59,13 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
       'OUTCOME_ENGAGEMENT',
       'OUTCOME_AWARENESS',
       'OUTCOME_TRAFFIC',
-      'OUTCOME_APP_PROMOTION'
+      'OUTCOME_APP_PROMOTION',
     ];
 
     if (!validObjectives.includes(objective)) {
-      throw new Error(`Invalid objective: ${objective}. Valid objectives are: ${validObjectives.join(', ')}`);
+      throw new Error(
+        `Invalid objective: ${objective}. Valid objectives are: ${validObjectives.join(', ')}`,
+      );
     }
     const payload = {
       name: campaignName,
@@ -70,11 +76,14 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
     };
     try {
       const response = await lastValueFrom(
-        this.httpService.post(url, payload, { params: { access_token: accessToken } }),
+        this.httpService.post(url, payload, {
+          params: { access_token: accessToken },
+        }),
       );
       return response.data;
     } catch (error) {
-      const errorMessage = error.response?.data?.error?.message || 'Unknown error occurred';
+      const errorMessage =
+        error.response?.data?.error?.message || 'Unknown error occurred';
       throw new Error(`Failed to create campaign: ${errorMessage}`);
     }
   }
@@ -123,30 +132,33 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
       access_token: accessToken,
     };
     const objectiveMapping: Record<string, any> = {
-      'OUTCOME_TRAFFIC': {
+      OUTCOME_TRAFFIC: {
         billing_event: 'IMPRESSIONS',
         optimization_goal: 'LINK_CLICKS',
-        bid_amount: 2
+        bid_amount: 2,
       },
-      'OUTCOME_AWARENESS': {
+      OUTCOME_AWARENESS: {
         billing_event: 'IMPRESSIONS',
         optimization_goal: 'BRAND_AWARENESS',
       },
-      'OUTCOME_ENGAGEMENT': {
+      OUTCOME_ENGAGEMENT: {
         billing_event: 'IMPRESSIONS',
         optimization_goal: 'POST_ENGAGEMENT',
       },
-      'OUTCOME_LEADS': {
+      OUTCOME_LEADS: {
         billing_event: 'IMPRESSIONS',
         optimization_goal: 'LEAD_GENERATION',
         promoted_object: { page_id: pageId },
       },
-      'OUTCOME_SALES': {
+      OUTCOME_SALES: {
         billing_event: 'IMPRESSIONS',
         optimization_goal: 'CONVERSIONS',
-        promoted_object: { pixel_id: pixelId, custom_conversion_id: customConversionId },
+        promoted_object: {
+          pixel_id: pixelId,
+          custom_conversion_id: customConversionId,
+        },
       },
-      'OUTCOME_APP_PROMOTION': {
+      OUTCOME_APP_PROMOTION: {
         billing_event: 'IMPRESSIONS',
         optimization_goal: 'APP_INSTALLS',
       },
@@ -161,12 +173,21 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
       payload.promoted_object = { application_id: applicationId };
     }
     if (objective == 'OUTCOME_APP_PROMOTION' && objectStoreUrl) {
-      payload.promoted_object = { object_store_url: objectStoreUrl }
+      payload.promoted_object = { object_store_url: objectStoreUrl };
     }
     const placementMapping: Record<string, any> = {
-      'feed': platform === 'facebook' ? { facebook_positions: ['feed'] } : { instagram_positions: ['feed'] },
-      'story': platform === 'facebook' ? { facebook_positions: ['story'] } : { instagram_positions: ['story'] },
-      'reels': platform === 'facebook' ? { facebook_positions: ['instream_video'] } : { instagram_positions: ['reels'] },
+      feed:
+        platform === 'facebook'
+          ? { facebook_positions: ['feed'] }
+          : { instagram_positions: ['feed'] },
+      story:
+        platform === 'facebook'
+          ? { facebook_positions: ['story'] }
+          : { instagram_positions: ['story'] },
+      reels:
+        platform === 'facebook'
+          ? { facebook_positions: ['instream_video'] }
+          : { instagram_positions: ['reels'] },
     };
 
     if (placement in placementMapping) {
@@ -179,11 +200,14 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
 
     try {
       const response = await lastValueFrom(
-        this.httpService.post(url, payload, { params: { access_token: accessToken } }),
+        this.httpService.post(url, payload, {
+          params: { access_token: accessToken },
+        }),
       );
       return response.data;
     } catch (error) {
-      const errorMessage = error.response?.data?.error?.message || 'Unknown error occurred';
+      const errorMessage =
+        error.response?.data?.error?.message || 'Unknown error occurred';
       throw new Error(`Failed to create ad set: ${errorMessage}`);
     }
   }
@@ -242,7 +266,10 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
             image_hash: data.imageHash,
             link: data.link,
             message: data.caption,
-            call_to_action: { type: data.callToAction, value: { link: data.link } },
+            call_to_action: {
+              type: data.callToAction,
+              value: { link: data.link },
+            },
           },
         };
         break;
@@ -253,7 +280,10 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
           video_data: {
             video_id: data.videoId,
             message: data.caption,
-            call_to_action: { type: data.callToAction, value: { link: data.link } },
+            call_to_action: {
+              type: data.callToAction,
+              value: { link: data.link },
+            },
           },
         };
         break;
@@ -269,7 +299,10 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
               link: item.link,
               message: item.caption,
             })),
-            call_to_action: { type: data.callToAction, value: { link: data.link } },
+            call_to_action: {
+              type: data.callToAction,
+              value: { link: data.link },
+            },
           },
         };
         break;
@@ -282,12 +315,20 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
       const response = await axios.post(url, payload);
       return response.data.id;
     } catch (error) {
-      throw new Error(`Failed to create ad creative: ${error.response?.data?.error?.message || error.message}`);
+      throw new Error(
+        `Failed to create ad creative: ${error.response?.data?.error?.message || error.message}`,
+      );
     }
   }
 
   // Create Ad
-  async createAd(accessToken: string, adAccountId: string, adSetId: string, creativeId: string, adName: string) {
+  async createAd(
+    accessToken: string,
+    adAccountId: string,
+    adSetId: string,
+    creativeId: string,
+    adName: string,
+  ) {
     const url = `${this.BASE_URL}/act_${adAccountId}/ads`;
     const payload = {
       name: adName,
@@ -300,7 +341,9 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
       const response = await axios.post(url, payload);
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to create ad: ${error.response?.data?.error?.message || error.message}`);
+      throw new Error(
+        `Failed to create ad: ${error.response?.data?.error?.message || error.message}`,
+      );
     }
   }
 
@@ -329,7 +372,8 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
     objectStoreUrl?: string,
   ) {
     try {
-      const accessToken = 'EAAiBDujrpvgBOZBwSvnzPbspmVlWdVDcQ3e8lstlmWebDhKzzhnSYZAzWNcPBBgfkRLmfX3e8XZCPSdsAaZAHFOymS8kylYd9SWxpkOxXWqPXehC7gK8B3kgnbEHgdFHRaZAe5BxkHGs6ZCqcYqsJBSVidWOwx9DsfMAqDoHzyXwiXgIG3YSsQTGgvkYSJnmThjZA1Rf8ZAc';
+      const accessToken =
+        'EAAiBDujrpvgBOZBwSvnzPbspmVlWdVDcQ3e8lstlmWebDhKzzhnSYZAzWNcPBBgfkRLmfX3e8XZCPSdsAaZAHFOymS8kylYd9SWxpkOxXWqPXehC7gK8B3kgnbEHgdFHRaZAe5BxkHGs6ZCqcYqsJBSVidWOwx9DsfMAqDoHzyXwiXgIG3YSsQTGgvkYSJnmThjZA1Rf8ZAc';
       const adAccountId = '1579232156802346';
       const pageId = '509895802207941';
 
@@ -356,7 +400,7 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
         osType,
         interests,
         applicationId,
-        objectStoreUrl
+        objectStoreUrl,
       );
       const adSetId = adSet.id;
 
@@ -404,5 +448,4 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
       throw new Error(`Failed to create full campaign: ${error.message}`);
     }
   }
-
 }
