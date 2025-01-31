@@ -10,7 +10,10 @@ import { HttpService } from '@nestjs/axios';
 dotenv.config();
 
 @Injectable()
-export class FacebookCampaignService extends PassportStrategy(Strategy, 'facebook') {
+export class FacebookCampaignService extends PassportStrategy(
+  Strategy,
+  'facebook',
+) {
   private readonly BASE_URL = 'https://graph.facebook.com/v21.0';
   private readonly logger = new Logger(FacebookCampaignService.name);
 
@@ -36,7 +39,8 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
       );
       return response.data.data;
     } catch (error) {
-      const errorMessage = error.response?.data?.error?.message || 'Unknown error occurred';
+      const errorMessage =
+        error.response?.data?.error?.message || 'Unknown error occurred';
       throw new Error(`Failed to fetch ad accounts: ${errorMessage}`);
     }
   }
@@ -46,7 +50,7 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
     accessToken: string,
     adAccountId: string,
     campaignName: string,
-    objective: string
+    objective: string,
   ) {
     const url = `${this.BASE_URL}/act_${adAccountId}/campaigns`;
     const validObjectives = [
@@ -55,11 +59,13 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
       'OUTCOME_ENGAGEMENT',
       'OUTCOME_AWARENESS',
       'OUTCOME_TRAFFIC',
-      'OUTCOME_APP_PROMOTION'
+      'OUTCOME_APP_PROMOTION',
     ];
 
     if (!validObjectives.includes(objective)) {
-      throw new Error(`Invalid objective: ${objective}. Valid objectives are: ${validObjectives.join(', ')}`);
+      throw new Error(
+        `Invalid objective: ${objective}. Valid objectives are: ${validObjectives.join(', ')}`,
+      );
     }
     const payload = {
       name: campaignName,
@@ -70,11 +76,14 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
     };
     try {
       const response = await lastValueFrom(
-        this.httpService.post(url, payload, { params: { access_token: accessToken } }),
+        this.httpService.post(url, payload, {
+          params: { access_token: accessToken },
+        }),
       );
       return response.data;
     } catch (error) {
-      const errorMessage = error.response?.data?.error?.message || 'Unknown error occurred';
+      const errorMessage =
+        error.response?.data?.error?.message || 'Unknown error occurred';
       throw new Error(`Failed to create campaign: ${errorMessage}`);
     }
   }
@@ -124,30 +133,33 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
     };
 
     const objectiveMapping: Record<string, any> = {
-      'OUTCOME_TRAFFIC': {
+      OUTCOME_TRAFFIC: {
         billing_event: 'IMPRESSIONS',
         optimization_goal: 'LINK_CLICKS',
-        bid_amount: 2
+        bid_amount: 2,
       },
-      'OUTCOME_AWARENESS': {
+      OUTCOME_AWARENESS: {
         billing_event: 'IMPRESSIONS',
         optimization_goal: 'BRAND_AWARENESS',
       },
-      'OUTCOME_ENGAGEMENT': {
+      OUTCOME_ENGAGEMENT: {
         billing_event: 'IMPRESSIONS',
         optimization_goal: 'POST_ENGAGEMENT',
       },
-      'OUTCOME_LEADS': {
+      OUTCOME_LEADS: {
         billing_event: 'IMPRESSIONS',
         optimization_goal: 'LEAD_GENERATION',
         promoted_object: { page_id: pageId },
       },
-      'OUTCOME_SALES': {
+      OUTCOME_SALES: {
         billing_event: 'IMPRESSIONS',
         optimization_goal: 'CONVERSIONS',
-        promoted_object: { pixel_id: pixelId, custom_conversion_id: customConversionId },
+        promoted_object: {
+          pixel_id: pixelId,
+          custom_conversion_id: customConversionId,
+        },
       },
-      'OUTCOME_APP_PROMOTION': {
+      OUTCOME_APP_PROMOTION: {
         billing_event: 'IMPRESSIONS',
         optimization_goal: 'APP_INSTALLS',
       },
@@ -162,12 +174,21 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
       payload.promoted_object = { application_id: applicationId };
     }
     if (objective == 'OUTCOME_APP_PROMOTION' && objectStoreUrl) {
-      payload.promoted_object = { object_store_url: objectStoreUrl }
+      payload.promoted_object = { object_store_url: objectStoreUrl };
     }
     const placementMapping: Record<string, any> = {
-      'feed': platform === 'facebook' ? { facebook_positions: ['feed'] } : { instagram_positions: ['feed'] },
-      'story': platform === 'facebook' ? { facebook_positions: ['story'] } : { instagram_positions: ['story'] },
-      'reels': platform === 'facebook' ? { facebook_positions: ['instream_video'] } : { instagram_positions: ['reels'] },
+      feed:
+        platform === 'facebook'
+          ? { facebook_positions: ['feed'] }
+          : { instagram_positions: ['feed'] },
+      story:
+        platform === 'facebook'
+          ? { facebook_positions: ['story'] }
+          : { instagram_positions: ['story'] },
+      reels:
+        platform === 'facebook'
+          ? { facebook_positions: ['instream_video'] }
+          : { instagram_positions: ['reels'] },
     };
 
     if (placement in placementMapping) {
@@ -180,11 +201,14 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
 
     try {
       const response = await lastValueFrom(
-        this.httpService.post(url, payload, { params: { access_token: accessToken } }),
+        this.httpService.post(url, payload, {
+          params: { access_token: accessToken },
+        }),
       );
       return response.data;
     } catch (error) {
-      const errorMessage = error.response?.data?.error?.message || 'Unknown error occurred';
+      const errorMessage =
+        error.response?.data?.error?.message || 'Unknown error occurred';
       throw new Error(`Failed to create ad set: ${errorMessage}`);
     }
   }
@@ -195,7 +219,7 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
     adAccountId: string,
     file: string,
     fileName: string,
-    type: 'image' | 'video'
+    type: 'image' | 'video',
   ) {
     const url = `${this.BASE_URL}/act_${adAccountId}/${type === 'image' ? 'adimages' : 'advideos'}`;
     const base64Data = file.split(';base64,').pop();
@@ -207,10 +231,16 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
     formData.append('file', fileBuffer, { filename: fileName });
 
     try {
-      const response = await axios.post(url, formData, { headers: formData.getHeaders() });
-      return type === 'image' ? response.data.images[Object.keys(response.data.images)[0]].hash : { videoId: response.data.id };
+      const response = await axios.post(url, formData, {
+        headers: formData.getHeaders(),
+      });
+      return type === 'image'
+        ? response.data.images[Object.keys(response.data.images)[0]].hash
+        : { videoId: response.data.id };
     } catch (error) {
-      throw new Error(`Failed to upload ${type}: ${error.response?.data?.error?.message || error.message}`);
+      throw new Error(
+        `Failed to upload ${type}: ${error.response?.data?.error?.message || error.message}`,
+      );
     }
   }
 
@@ -240,7 +270,10 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
             image_hash: data.imageHash,
             link: data.link,
             message: data.caption,
-            call_to_action: { type: data.callToAction, value: { link: data.link } },
+            call_to_action: {
+              type: data.callToAction,
+              value: { link: data.link },
+            },
           },
         };
         break;
@@ -251,7 +284,10 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
           video_data: {
             video_id: data.videoId,
             message: data.caption,
-            call_to_action: { type: data.callToAction, value: { link: data.link } },
+            call_to_action: {
+              type: data.callToAction,
+              value: { link: data.link },
+            },
           },
         };
         break;
@@ -267,7 +303,10 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
               link: item.link,
               message: item.caption,
             })),
-            call_to_action: { type: data.callToAction, value: { link: data.link } },
+            call_to_action: {
+              type: data.callToAction,
+              value: { link: data.link },
+            },
           },
         };
         break;
@@ -280,12 +319,20 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
       const response = await axios.post(url, payload);
       return response.data.id;
     } catch (error) {
-      throw new Error(`Failed to create ad creative: ${error.response?.data?.error?.message || error.message}`);
+      throw new Error(
+        `Failed to create ad creative: ${error.response?.data?.error?.message || error.message}`,
+      );
     }
   }
 
   // Create Ad
-  async createAd(accessToken: string, adAccountId: string, adSetId: string, creativeId: string, adName: string) {
+  async createAd(
+    accessToken: string,
+    adAccountId: string,
+    adSetId: string,
+    creativeId: string,
+    adName: string,
+  ) {
     const url = `${this.BASE_URL}/act_${adAccountId}/ads`;
     const payload = {
       name: adName,
@@ -299,7 +346,9 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
       const response = await axios.post(url, payload);
       return response.data;
     } catch (error) {
-      throw new Error(`Failed to create ad: ${error.response?.data?.error?.message || error.message}`);
+      throw new Error(
+        `Failed to create ad: ${error.response?.data?.error?.message || error.message}`,
+      );
     }
   }
 
@@ -328,14 +377,20 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
     objectStoreUrl?: string,
   ) {
     try {
-      const accessToken = 'EAAiBDujrpvgBOZBwSvnzPbspmVlWdVDcQ3e8lstlmWebDhKzzhnSYZAzWNcPBBgfkRLmfX3e8XZCPSdsAaZAHFOymS8kylYd9SWxpkOxXWqPXehC7gK8B3kgnbEHgdFHRaZAe5BxkHGs6ZCqcYqsJBSVidWOwx9DsfMAqDoHzyXwiXgIG3YSsQTGgvkYSJnmThjZA1Rf8ZAc';
+      const accessToken =
+        'EAAiBDujrpvgBOZBwSvnzPbspmVlWdVDcQ3e8lstlmWebDhKzzhnSYZAzWNcPBBgfkRLmfX3e8XZCPSdsAaZAHFOymS8kylYd9SWxpkOxXWqPXehC7gK8B3kgnbEHgdFHRaZAe5BxkHGs6ZCqcYqsJBSVidWOwx9DsfMAqDoHzyXwiXgIG3YSsQTGgvkYSJnmThjZA1Rf8ZAc';
       const adAccountId = '1579232156802346';
       const pageId = '509895802207941';
       // 1. Create Campaign
-      const campaign = await this.createCampaign(accessToken, adAccountId, campaignName, objective);
+      const campaign = await this.createCampaign(
+        accessToken,
+        adAccountId,
+        campaignName,
+        objective,
+      );
 
       const campaignId = campaign.id;
-      console.log('campaign ' + campaignId)
+      console.log('campaign ' + campaignId);
       // 2. Create Ad Set
       const adSet = await this.createAdSets(
         accessToken,
@@ -355,10 +410,10 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
         osType,
         interests,
         applicationId,
-        objectStoreUrl
+        objectStoreUrl,
       );
 
-      console.log(JSON.stringify(adSet))
+      console.log(JSON.stringify(adSet));
       const adSetId = adSet.id;
       let mediaType: 'IMAGE' | 'VIDEO' | 'CAROUSEL';
       if (mediaFiles.length > 1) {
@@ -376,27 +431,68 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
 
       let creativeId;
       if (mediaType === 'IMAGE') {
-        const imageHash = (await this.uploadMedia(accessToken, adAccountId, mediaFiles[0], 'image.jpg', 'image')) as string;
-        creativeId = await this.createAdCreative(accessToken, adAccountId, pageId, 'IMAGE', { imageHash, link: url, caption });
+        const imageHash = (await this.uploadMedia(
+          accessToken,
+          adAccountId,
+          mediaFiles[0],
+          'image.jpg',
+          'image',
+        )) as string;
+        creativeId = await this.createAdCreative(
+          accessToken,
+          adAccountId,
+          pageId,
+          'IMAGE',
+          { imageHash, link: url, caption },
+        );
       } else if (mediaType === 'VIDEO') {
-        const video = (await this.uploadMedia(accessToken, adAccountId, mediaFiles[0], 'video.mp4', 'video')) as { videoId: string };
-        creativeId = await this.createAdCreative(accessToken, adAccountId, pageId, 'VIDEO', { videoId: video.videoId, link: url, caption });
+        const video = (await this.uploadMedia(
+          accessToken,
+          adAccountId,
+          mediaFiles[0],
+          'video.mp4',
+          'video',
+        )) as { videoId: string };
+        creativeId = await this.createAdCreative(
+          accessToken,
+          adAccountId,
+          pageId,
+          'VIDEO',
+          { videoId: video.videoId, link: url, caption },
+        );
       } else if (mediaType === 'CAROUSEL') {
         const carouselData = await Promise.all(
           mediaFiles.map(async (file) => {
-            const imageHash = (await this.uploadMedia(accessToken, adAccountId, file, 'image.jpg', 'image')) as string;
+            const imageHash = (await this.uploadMedia(
+              accessToken,
+              adAccountId,
+              file,
+              'image.jpg',
+              'image',
+            )) as string;
             return { imageHash, link: url, caption };
-          })
+          }),
         );
-        creativeId = await this.createAdCreative(accessToken, adAccountId, pageId, 'CAROUSEL', { carouselData });
+        creativeId = await this.createAdCreative(
+          accessToken,
+          adAccountId,
+          pageId,
+          'CAROUSEL',
+          { carouselData },
+        );
       }
 
       // 4. Create Ad
-      const ad = await this.createAd(accessToken, adAccountId, adSetId, creativeId.id, campaignName);
+      const ad = await this.createAd(
+        accessToken,
+        adAccountId,
+        adSetId,
+        creativeId.id,
+        campaignName,
+      );
       return { campaignId, adSetId, adId: ad.id };
     } catch (error) {
       throw new Error(`Failed to create full campaign: ${error.message}`);
     }
   }
-
 }
