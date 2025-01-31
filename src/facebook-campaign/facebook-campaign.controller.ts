@@ -68,8 +68,7 @@ export class FacebookController {
       budget,
       startTime,
       endTime,
-      osType,
-      applicationId
+      osType
     );
   }
 }
