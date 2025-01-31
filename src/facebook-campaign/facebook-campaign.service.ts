@@ -315,9 +315,7 @@ export class FacebookCampaignService extends PassportStrategy(
       const response = await axios.post(url, payload);
       return response.data.id;
     } catch (error) {
-      throw new Error(
-        `Failed to create ad creative: ${error.response?.data?.error?.message || error.message}`,
-      );
+      throw error
     }
   }
 
@@ -413,7 +411,6 @@ export class FacebookCampaignService extends PassportStrategy(
         // Single media (Image or Video)
         const mediaFile = mediaFiles[0];
         const mediaResponse = await this.uploadMedia(accessToken, adAccountId, mediaFile);
-
         if (mediaFile.startsWith('data:image')) {
           creativeType = 'IMAGE';
           creativeData.imageHash = mediaResponse; 
