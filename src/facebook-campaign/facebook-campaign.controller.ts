@@ -1,18 +1,18 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Req,Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FacebookCampaignService } from './facebook-campaign.service';
 
 @Controller('facebook')
 export class FacebookController {
-  constructor(private readonly facebookCampaignService: FacebookCampaignService) {}
+  constructor(private readonly facebookCampaignService: FacebookCampaignService) { }
 
   // Redirect to Facebook for login
   @Get('login')
   @UseGuards(AuthGuard('facebook'))
   async facebookLogin() {
     // Facebook login endpoint
-  } 
+  }
 
   // Facebook callback
   @Get('callback')
@@ -24,14 +24,54 @@ export class FacebookController {
   // Fetch ad accounts
   @Get('adaccounts')
   async getAdAccounts(@Req() req) {
-    const accessToken = req.user.accessToken; 
+    const accessToken = req.user.accessToken;
     return this.facebookCampaignService.fetchAdAccounts(accessToken);
   }
 
   // Create campaign
-  @Post('campaigns/create')
-  async createCampaign(@Req() req) {
-    const { accessToken, adAccountId, campaignDetails } = req.body;
-    // return this.facebookCampaignService.createCampaign(accessToken, adAccountId, campaignDetails);
+  @Post('full-campaign')
+  async createFullCampaign(@Body() body) {
+    const {
+      campaignName,
+      objective,
+      ageMin,
+      ageMax,
+      gender,
+      countries,
+      interests,
+      platform,
+      placements,
+      mediaType,
+      mediaFiles,
+      url,
+      caption,
+      budget,
+      startTime,
+      endTime,
+      osType,
+      applicationId,
+    } = body;
+
+    return this.facebookCampaignService.createFullCampaign(
+      campaignName,
+      objective,
+      ageMin,
+      ageMax,
+      gender,
+      countries,
+      interests,
+      platform,
+      placements,
+      mediaType,
+      mediaFiles,
+      url,
+      caption,
+      budget,
+      startTime,
+      endTime,
+      osType,
+      applicationId
+    );
   }
 }
+
