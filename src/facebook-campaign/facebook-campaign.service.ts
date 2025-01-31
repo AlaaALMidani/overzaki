@@ -213,7 +213,7 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
       throw new Error(`Failed to upload ${type}: ${error.response?.data?.error?.message || error.message}`);
     }
   }
-
+  
   // Create Ad Creative
   async createAdCreative(
     accessToken: string,
