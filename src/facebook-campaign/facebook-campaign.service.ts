@@ -122,7 +122,6 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
       status: 'PAUSED',
       access_token: accessToken,
     };
-
     const objectiveMapping: Record<string, any> = {
       'OUTCOME_TRAFFIC': {
         billing_event: 'IMPRESSIONS',
@@ -189,31 +188,34 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
     }
   }
 
-  // Upload Media (Image or Video)
+
+  // Upload Media (Image or Video) using Base64
   async uploadMedia(
     accessToken: string,
     adAccountId: string,
     file: string,
-    fileName: string,
-    type: 'image' | 'video'
   ) {
-    const url = `${this.BASE_URL}/act_${adAccountId}/${type === 'image' ? 'adimages' : 'advideos'}`;
     const base64Data = file.split(';base64,').pop();
-    if (!base64Data) throw new Error('Invalid Base64 data');
-
+    if (!base64Data) {
+      throw new Error('Invalid base64 file data');
+    }
     const fileBuffer = Buffer.from(base64Data, 'base64');
+    const fileType = file.startsWith('data:image') ? 'IMAGE' : 'VIDEO';
+    const fileName = `uploaded_file_${Date.now()}.${fileType === 'IMAGE' ? 'png' : 'mp4'}`;
+    const url = `${this.BASE_URL}/act_${adAccountId}/${fileType === 'IMAGE' ? 'adimages' : 'advideos'}`;
+    // Convert base64 string to buffer
     const formData = new FormData();
     formData.append('access_token', accessToken);
     formData.append('file', fileBuffer, { filename: fileName });
-
     try {
       const response = await axios.post(url, formData, { headers: formData.getHeaders() });
-      return type === 'image' ? response.data.images[Object.keys(response.data.images)[0]].hash : { videoId: response.data.id };
+      return fileType === 'IMAGE' ? response.data.images[Object.keys(response.data.images)[0]].hash : { videoId: response.data.id };
     } catch (error) {
-      throw new Error(`Failed to upload ${type}: ${error.response?.data?.error?.message || error.message}`);
+      throw new Error(`Failed to upload ${fileType}: ${error.response?.data?.error?.message || error.message}`);
     }
   }
-  
+
+
   // Create Ad Creative
   async createAdCreative(
     accessToken: string,
@@ -303,9 +305,9 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
   }
 
   // Create Full Campaign (Feed, Story, or Reel)
+
+
   async createFullCampaign(
-    // accessToken: string,
-    // adAccountId: string,
     campaignName: string,
     objective: string,
     ageMin: number,
@@ -330,11 +332,11 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
       const accessToken = 'EAAiBDujrpvgBOZBwSvnzPbspmVlWdVDcQ3e8lstlmWebDhKzzhnSYZAzWNcPBBgfkRLmfX3e8XZCPSdsAaZAHFOymS8kylYd9SWxpkOxXWqPXehC7gK8B3kgnbEHgdFHRaZAe5BxkHGs6ZCqcYqsJBSVidWOwx9DsfMAqDoHzyXwiXgIG3YSsQTGgvkYSJnmThjZA1Rf8ZAc';
       const adAccountId = '1579232156802346';
       const pageId = '509895802207941';
+
       // 1. Create Campaign
       const campaign = await this.createCampaign(accessToken, adAccountId, campaignName, objective);
-
       const campaignId = campaign.id;
-      console.log('campaign ' + campaignId)
+
       // 2. Create Ad Set
       const adSet = await this.createAdSets(
         accessToken,
@@ -356,43 +358,48 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
         applicationId,
         objectStoreUrl
       );
-
-      console.log(JSON.stringify(adSet))
       const adSetId = adSet.id;
-      let mediaType: 'IMAGE' | 'VIDEO' | 'CAROUSEL';
-      if (mediaFiles.length > 1) {
-        mediaType = 'CAROUSEL';
-      } else {
-        const extension = mediaFiles[0].split('.').pop()?.toLowerCase();
-        if (['jpg', 'jpeg', 'png', 'gif'].includes(extension || '')) {
-          mediaType = 'IMAGE';
-        } else if (['mp4', 'mov', 'avi'].includes(extension || '')) {
-          mediaType = 'VIDEO';
-        } else {
-          throw new Error('Unsupported media file format');
-        }
-      }
 
+      // 3. Upload Media & Create Ad Creative
       let creativeId;
-      if (mediaType === 'IMAGE') {
-        const imageHash = (await this.uploadMedia(accessToken, adAccountId, mediaFiles[0], 'image.jpg', 'image')) as string;
-        creativeId = await this.createAdCreative(accessToken, adAccountId, pageId, 'IMAGE', { imageHash, link: url, caption });
-      } else if (mediaType === 'VIDEO') {
-        const video = (await this.uploadMedia(accessToken, adAccountId, mediaFiles[0], 'video.mp4', 'video')) as { videoId: string };
-        creativeId = await this.createAdCreative(accessToken, adAccountId, pageId, 'VIDEO', { videoId: video.videoId, link: url, caption });
-      } else if (mediaType === 'CAROUSEL') {
-        const carouselData = await Promise.all(
-          mediaFiles.map(async (file) => {
-            const imageHash = (await this.uploadMedia(accessToken, adAccountId, file, 'image.jpg', 'image')) as string;
-            return { imageHash, link: url, caption };
-          })
-        );
-        creativeId = await this.createAdCreative(accessToken, adAccountId, pageId, 'CAROUSEL', { carouselData });
+      let creativeType: 'IMAGE' | 'VIDEO' | 'CAROUSEL';
+      let creativeData: any = { callToAction, link: url, caption };
+
+      if (mediaFiles.length === 1) {
+        // Single media (Image or Video)
+        const mediaFile = mediaFiles[0];
+        const mediaResponse = await this.uploadMedia(accessToken, adAccountId, mediaFile);
+
+        if (mediaFile.startsWith('data:image')) {
+          creativeType = 'IMAGE';
+          creativeData.imageHash = mediaResponse; 
+        } else {
+          creativeType = 'VIDEO';
+          creativeData.videoId = mediaResponse.videoId;
+        }
+      } else if (mediaFiles.length > 1) {
+        // Multiple images for Carousel
+        creativeType = 'CAROUSEL';
+        creativeData.carouselData = [];
+
+        for (const mediaFile of mediaFiles) {
+          const mediaResponse = await this.uploadMedia(accessToken, adAccountId, mediaFile);
+          creativeData.carouselData.push({
+            imageHash: mediaResponse,
+            link: url,
+            caption: caption,
+          });
+        }
+      } else {
+        throw new Error('No media files provided.');
       }
+      // Create Ad Creative
+      creativeId = await this.createAdCreative(accessToken, adAccountId, pageId, creativeType, creativeData);
 
       // 4. Create Ad
-      const ad = await this.createAd(accessToken, adAccountId, adSetId, creativeId.id, campaignName);
+      const ad = await this.createAd(accessToken, adAccountId, adSetId, creativeId, campaignName);
       return { campaignId, adSetId, adId: ad.id };
+
     } catch (error) {
       throw new Error(`Failed to create full campaign: ${error.message}`);
     }
