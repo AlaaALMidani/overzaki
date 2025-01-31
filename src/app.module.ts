@@ -21,6 +21,7 @@ import { AuthModule } from './auth/auth.module';
 import { DecodeTokenMiddleware } from './middleware/decode-token.middleware';
 import { JwtModule } from '@nestjs/jwt';
 import { UserModule } from './user/user.module';
+import { AppStoreModule } from './app-store/app-store.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { UserModule } from './user/user.module';
     AuthModule,
     OrderModule,
     UserModule,
+    AppStoreModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '1d' },
