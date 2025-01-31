@@ -243,7 +243,7 @@ export class FacebookCampaignService extends PassportStrategy(
       );
     }
   }
-
+  
   // Create Ad Creative
   async createAdCreative(
     accessToken: string,
@@ -341,7 +341,6 @@ export class FacebookCampaignService extends PassportStrategy(
       status: 'PAUSED',
       access_token: accessToken,
     };
-
     try {
       const response = await axios.post(url, payload);
       return response.data;
@@ -372,7 +371,7 @@ export class FacebookCampaignService extends PassportStrategy(
     startTime: string,
     endTime: string,
     osType: 'ALL' | 'IOS' | 'Android',
-    callToAction: string,
+    callToAction?: string,
     applicationId?: string,
     objectStoreUrl?: string,
   ) {
