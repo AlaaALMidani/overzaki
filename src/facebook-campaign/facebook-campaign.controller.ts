@@ -62,7 +62,6 @@ export class FacebookController {
       interests,
       platform,
       placements,
-      mediaType,
       mediaFiles,
       url,
       caption,

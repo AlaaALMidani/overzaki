@@ -213,7 +213,7 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
       throw new Error(`Failed to upload ${type}: ${error.response?.data?.error?.message || error.message}`);
     }
   }
-
+  
   // Create Ad Creative
   async createAdCreative(
     accessToken: string,
@@ -294,7 +294,6 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
       status: 'PAUSED',
       access_token: accessToken,
     };
-
     try {
       const response = await axios.post(url, payload);
       return response.data;
@@ -323,7 +322,7 @@ export class FacebookCampaignService extends PassportStrategy(Strategy, 'faceboo
     startTime: string,
     endTime: string,
     osType: 'ALL' | 'IOS' | 'Android',
-    callToAction: string,
+    callToAction?: string,
     applicationId?: string,
     objectStoreUrl?: string,
   ) {
