@@ -49,6 +49,7 @@ export class FacebookController {
       startTime,
       endTime,
       osType,
+      callToAction,
       applicationId,
     } = body;
 
@@ -68,7 +69,9 @@ export class FacebookController {
       budget,
       startTime,
       endTime,
-      osType
+      osType,
+      callToAction,
+      applicationId,
     );
   }
 }
