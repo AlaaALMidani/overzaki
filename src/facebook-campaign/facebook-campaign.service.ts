@@ -365,7 +365,7 @@ export class FacebookCampaignService extends PassportStrategy(
     startTime: string,
     endTime: string,
     osType: 'ALL' | 'IOS' | 'Android',
-    callToAction?: string,
+    callToAction: string,
     applicationId?: string,
     objectStoreUrl?: string,
   ) {
@@ -434,6 +434,7 @@ export class FacebookCampaignService extends PassportStrategy(
       } else {
         throw new Error('No media files provided.');
       }
+      console.log(JSON.stringify(creativeData))
       // Create Ad Creative
       creativeId = await this.createAdCreative(accessToken, adAccountId, pageId, creativeType, creativeData);
 
@@ -442,7 +443,7 @@ export class FacebookCampaignService extends PassportStrategy(
       return { campaignId, adSetId, adId: ad.id };
 
     } catch (error) {
-      throw new Error(`Failed to create full campaign: ${error.message}`);
+      throw error;
     }
   }
 }
