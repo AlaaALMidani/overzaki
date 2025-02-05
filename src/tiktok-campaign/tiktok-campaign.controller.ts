@@ -156,8 +156,6 @@ export class TiktokCampaignController {
     const locationIdsArray=this.ensureArray(locationIds);
     const operatingSystemsArray = this.ensureArray(operatingSystems);
      
-
-
     try {
       const result = await this.campaignService.CreateSpark(
         req.user.id,
