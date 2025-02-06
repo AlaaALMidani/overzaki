@@ -1,9 +1,15 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Get, Post, Req,Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Req, Body, UseGuards } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { FacebookCampaignService } from './facebook-campaign.service';
-
-@Controller('facebook')
+import {
+  Query,
+  Redirect,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
+@Controller('meta')
 export class FacebookController {
   constructor(private readonly facebookCampaignService: FacebookCampaignService) { }
 
@@ -39,9 +45,9 @@ export class FacebookController {
       gender,
       countries,
       interests,
+      languages,
       platform,
       placements,
-      mediaType,
       mediaFiles,
       url,
       caption,
@@ -49,7 +55,9 @@ export class FacebookController {
       startTime,
       endTime,
       osType,
+      callToAction,
       applicationId,
+      objectStoreUrl,
     } = body;
 
     return this.facebookCampaignService.createFullCampaign(
@@ -60,17 +68,77 @@ export class FacebookController {
       gender,
       countries,
       interests,
+      languages,
       platform,
       placements,
       mediaFiles,
-      url,
       caption,
       budget,
       startTime,
       endTime,
       osType,
-      applicationId
+      url,
+      callToAction,
+      applicationId,
+      objectStoreUrl,
     );
   }
+
+  @Post('create-feed')
+  async createFeedCampaign(@Body() body: any) {
+    try {
+      const {
+        campaignName,
+        objective,
+        ageMin,
+        ageMax,
+        gender,
+        countries,
+        interests,
+        languages,
+        mediaFiles,
+        caption,
+        budget,
+        startTime,
+        endTime,
+        osType,
+        url,
+        callToAction,
+        applicationId,
+        objectStoreUrl,
+      } = body;
+
+      // Call createFullCampaign with fixed placement and platform
+      const result = await this.facebookCampaignService.createFullCampaign(
+        campaignName,
+        objective,
+        ageMin,
+        ageMax,
+        gender,
+        countries,
+        interests,
+        languages,
+        'facebook', // Fixed platform
+        'feed', // Fixed placement
+        mediaFiles,
+        caption,
+        budget,
+        startTime,
+        endTime,
+        osType,
+        url,
+        callToAction,
+        applicationId,
+        objectStoreUrl,
+      );
+
+      return { message: 'Facebook feed campaign created successfully', result };
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+  
 }
+
+
 
