@@ -34,34 +34,44 @@ export class FacebookCampaignService extends PassportStrategy(
   async getPixels(accessToken: string, adAccountId: string) {
     const url = `${this.BASE_URL}/act_${adAccountId}/owned_pixels`;
     try {
-      const response = await lastValueFrom(this.httpService.get(url, { params: { access_token: accessToken } }));
+      const response = await lastValueFrom(
+        this.httpService.get(url, { params: { access_token: accessToken } }),
+      );
       return response.data.data;
     } catch (error) {
-      throw new Error(`Failed to fetch pixels: ${error.response?.data?.error?.message || error.message}`);
+      throw new Error(
+        `Failed to fetch pixels: ${error.response?.data?.error?.message || error.message}`,
+      );
     }
   }
 
   async getPages(accessToken: string) {
     const url = `${this.BASE_URL}/me/accounts`;
     try {
-      const response = await lastValueFrom(this.httpService.get(url, { params: { access_token: accessToken } }));
+      const response = await lastValueFrom(
+        this.httpService.get(url, { params: { access_token: accessToken } }),
+      );
       return response.data.data;
     } catch (error) {
-      throw new Error(`Failed to fetch pages: ${error.response?.data?.error?.message || error.message}`);
+      throw new Error(
+        `Failed to fetch pages: ${error.response?.data?.error?.message || error.message}`,
+      );
     }
   }
 
   async getPagePosts(accessToken: string, pageId: string) {
     const url = `${this.BASE_URL}/${pageId}/posts`;
     try {
-      const response = await lastValueFrom(this.httpService.get(url, { params: { access_token: accessToken } }));
+      const response = await lastValueFrom(
+        this.httpService.get(url, { params: { access_token: accessToken } }),
+      );
       return response.data.data;
     } catch (error) {
-      throw new Error(`Failed to fetch posts: ${error.response?.data?.error?.message || error.message}`);
+      throw new Error(
+        `Failed to fetch posts: ${error.response?.data?.error?.message || error.message}`,
+      );
     }
   }
-
-
 
   // Fetch Ad Accounts
   async fetchAdAccounts(accessToken: string) {
@@ -177,7 +187,9 @@ export class FacebookCampaignService extends PassportStrategy(
       OUTCOME_AWARENESS: {
         billing_event: 'IMPRESSIONS',
         optimization_goal: 'REACH',
-        frequency_control_specs: [{ event: 'IMPRESSIONS', interval_days: 7, max_frequency: 3 }],
+        frequency_control_specs: [
+          { event: 'IMPRESSIONS', interval_days: 7, max_frequency: 3 },
+        ],
       },
       OUTCOME_ENGAGEMENT: {
         billing_event: 'IMPRESSIONS',
@@ -199,10 +211,13 @@ export class FacebookCampaignService extends PassportStrategy(
       OUTCOME_APP_PROMOTION: {
         billing_event: 'IMPRESSIONS',
         optimization_goal: 'APP_INSTALLS',
-        promoted_object: applicationId && objectStoreUrl ? {
-          application_id: applicationId,
-          object_store_url: objectStoreUrl
-        } : undefined,
+        promoted_object:
+          applicationId && objectStoreUrl
+            ? {
+                application_id: applicationId,
+                object_store_url: objectStoreUrl,
+              }
+            : undefined,
       },
     };
 
@@ -215,7 +230,10 @@ export class FacebookCampaignService extends PassportStrategy(
     const placementMapping: Record<string, any> = {
       feed: { [`${platform}_positions`]: ['feed'] },
       story: { [`${platform}_positions`]: ['story'] },
-      reels: { [`${platform}_positions`]: platform === 'facebook' ? ['instream_video'] : ['reels'] },
+      reels: {
+        [`${platform}_positions`]:
+          platform === 'facebook' ? ['instream_video'] : ['reels'],
+      },
     };
 
     if (placement in placementMapping) {
@@ -237,19 +255,13 @@ export class FacebookCampaignService extends PassportStrategy(
     } catch (error) {
       console.error('API Error:', error.response?.data || error.message);
       throw new Error(
-        error.response?.data?.error?.message || 'Unknown error occurred'
+        error.response?.data?.error?.message || 'Unknown error occurred',
       );
     }
   }
 
-
-
   // Upload Media (Image or Video) using Base64
-  async uploadMedia(
-    accessToken: string,
-    adAccountId: string,
-    file: string,
-  ) {
+  async uploadMedia(accessToken: string, adAccountId: string, file: string) {
     const base64Data = file.split(';base64,').pop();
     if (!base64Data) {
       throw new Error('Invalid base64 file data');
@@ -264,10 +276,16 @@ export class FacebookCampaignService extends PassportStrategy(
     formData.append('access_token', accessToken);
     formData.append('file', fileBuffer, { filename: fileName });
     try {
-      const response = await axios.post(url, formData, { headers: formData.getHeaders() });
-      return fileType === 'IMAGE' ? response.data.images[Object.keys(response.data.images)[0]].hash : { videoId: response.data.id };
+      const response = await axios.post(url, formData, {
+        headers: formData.getHeaders(),
+      });
+      return fileType === 'IMAGE'
+        ? response.data.images[Object.keys(response.data.images)[0]].hash
+        : { videoId: response.data.id };
     } catch (error) {
-      throw new Error(`Failed to upload ${fileType}: ${error.response?.data?.error?.message || error.message}`);
+      throw new Error(
+        `Failed to upload ${fileType}: ${error.response?.data?.error?.message || error.message}`,
+      );
     }
   }
   // Create Ad Creative
@@ -285,10 +303,9 @@ export class FacebookCampaignService extends PassportStrategy(
       caption?: string;
       carouselData?: { imageHash: string; link: string; caption: string }[];
     },
-
   ) {
     const url = `${this.BASE_URL}/act_${adAccountId}/adcreatives`;
-    let payload: any = { access_token: accessToken };
+    const payload: any = { access_token: accessToken };
 
     const shouldIncludeCTA = [
       'OUTCOME_TRAFFIC',
@@ -306,7 +323,12 @@ export class FacebookCampaignService extends PassportStrategy(
             link: data.link,
             message: data.caption,
             ...(shouldIncludeCTA && data.callToAction
-              ? { call_to_action: { type: data.callToAction, value: { link: data.link } } }
+              ? {
+                  call_to_action: {
+                    type: data.callToAction,
+                    value: { link: data.link },
+                  },
+                }
               : {}),
           },
         };
@@ -319,7 +341,12 @@ export class FacebookCampaignService extends PassportStrategy(
             video_id: data.videoId,
             message: data.caption,
             ...(shouldIncludeCTA && data.callToAction
-              ? { call_to_action: { type: data.callToAction, value: { link: data.link } } }
+              ? {
+                  call_to_action: {
+                    type: data.callToAction,
+                    value: { link: data.link },
+                  },
+                }
               : {}),
           },
         };
@@ -337,7 +364,12 @@ export class FacebookCampaignService extends PassportStrategy(
               message: item.caption,
             })),
             ...(shouldIncludeCTA && data.callToAction
-              ? { call_to_action: { type: data.callToAction, value: { link: data.link } } }
+              ? {
+                  call_to_action: {
+                    type: data.callToAction,
+                    value: { link: data.link },
+                  },
+                }
               : {}),
           },
         };
@@ -352,11 +384,10 @@ export class FacebookCampaignService extends PassportStrategy(
       return response.data.id;
     } catch (error) {
       throw new Error(
-        `Failed to create ad creative: ${error.response?.data?.error?.message || error.message}`
+        `Failed to create ad creative: ${error.response?.data?.error?.message || error.message}`,
       );
     }
   }
-
 
   // Create Ad
   async createAd(
@@ -414,9 +445,14 @@ export class FacebookCampaignService extends PassportStrategy(
       const pageId = '509895802207941';
 
       // 1. Create Campaign
-      const campaign = await this.createCampaign(accessToken, adAccountId, campaignName, objective);
+      const campaign = await this.createCampaign(
+        accessToken,
+        adAccountId,
+        campaignName,
+        objective,
+      );
       const campaignId = campaign.id;
-      console.log("campaignId :" + campaignId)
+      console.log('campaignId :' + campaignId);
       // 2. Create Ad Set
       const adSet = await this.createAdSets(
         accessToken,
@@ -438,19 +474,23 @@ export class FacebookCampaignService extends PassportStrategy(
         languages,
         applicationId,
         objectStoreUrl,
-        pageId
+        pageId,
       );
       const adSetId = adSet.id;
 
       // 3. Upload Media & Create Ad Creative
       let creativeId;
       let creativeType: 'IMAGE' | 'VIDEO' | 'CAROUSEL';
-      let creativeData: any = { callToAction, link: url, caption };
+      const creativeData: any = { callToAction, link: url, caption };
 
       if (mediaFiles.length === 1) {
         // Single media (Image or Video)
         const mediaFile = mediaFiles[0];
-        const mediaResponse = await this.uploadMedia(accessToken, adAccountId, mediaFile);
+        const mediaResponse = await this.uploadMedia(
+          accessToken,
+          adAccountId,
+          mediaFile,
+        );
         if (mediaFile.startsWith('data:image')) {
           creativeType = 'IMAGE';
           creativeData.imageHash = mediaResponse;
@@ -464,7 +504,11 @@ export class FacebookCampaignService extends PassportStrategy(
         creativeData.carouselData = [];
 
         for (const mediaFile of mediaFiles) {
-          const mediaResponse = await this.uploadMedia(accessToken, adAccountId, mediaFile);
+          const mediaResponse = await this.uploadMedia(
+            accessToken,
+            adAccountId,
+            mediaFile,
+          );
           creativeData.carouselData.push({
             imageHash: mediaResponse,
             link: url,
@@ -474,12 +518,18 @@ export class FacebookCampaignService extends PassportStrategy(
       } else {
         throw new Error('No media files provided.');
       }
-      console.log(JSON.stringify(creativeData))
+      console.log(JSON.stringify(creativeData));
       // Create Ad Creative
       // creativeId = await this.createAdCreative(accessToken, adAccountId, pageId, objective, creativeType, creativeData);
 
       // 4. Create Ad
-      const ad = await this.createAd(accessToken, adAccountId, adSetId, "3148862335245423", campaignName);
+      const ad = await this.createAd(
+        accessToken,
+        adAccountId,
+        adSetId,
+        '3148862335245423',
+        campaignName,
+      );
       return { campaignId, adSetId, adId: ad.id };
     } catch (error) {
       throw error;
