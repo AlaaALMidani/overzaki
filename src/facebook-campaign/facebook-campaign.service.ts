@@ -243,7 +243,6 @@ export class FacebookCampaignService extends PassportStrategy(
       );
     }
   }
-  
   // Create Ad Creative
   async createAdCreative(
     accessToken: string,

@@ -417,9 +417,9 @@ export class YouTubeCampaignService {
       );
     }
   }
-  private cleanBase64(base64: string): string {
-    return base64.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
-  }
+    private cleanBase64(base64: string): string {
+      return base64.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
+    }
   private async createImageAsset(images: string[], assetName: string): Promise<string[]> {
     try {
       let result = [];
@@ -449,6 +449,7 @@ export class YouTubeCampaignService {
       );
     }
   }
+
   public async  getYoutubeVideosSuggestions(
     query: string,
     maxResults: number = 10,
